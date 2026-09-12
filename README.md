@@ -14,7 +14,7 @@
 
 > **Research software, not an investment adviser.** Oryntra does not connect to a brokerage account, create orders, or tell a user what to buy or sell. Historical simulations are analytical outputs, not forecasts, recommendations, or a promise of performance.
 
-> **Product and ownership boundary.** Oryntra is in development and is not yet operated by Cowles Quantitative Corporation. Any future CQC proprietary research uses only CQC-owned capital through separately authorized accounts; Oryntra users do not invest in CQC, provide it capital, or receive rights to its trading results. Public Oryntra access is software access only.
+> **Product and ownership boundary.** Oryntra remains in pre-transfer operating status until its written IP assignment to Cowles Quantitative Corporation (CQC) is executed and verified. Until then, Oryntra is not operated by CQC. CQC proprietary research uses only CQC-owned capital through separately authorized accounts; Oryntra users do not invest in CQC, provide it capital, or receive rights to its trading results. Public Oryntra access is software access only.
 
 ## Why I built it
 

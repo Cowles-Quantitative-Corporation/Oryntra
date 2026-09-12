@@ -11,10 +11,19 @@ thresholds, contracts, and app-store rules can change; qualified Florida
 corporate, securities, privacy, tax, and payments counsel must approve the
 actual operating model before launch.
 
-Oryntra remains in the pre-formation legal configuration until CQC is formed
-and a written Oryntra IP assignment is complete. The deployment flag must stay
-false until both facts are confirmed; no source-code change establishes either
-fact.
+Oryntra remains in the pre-transfer legal configuration until CQC formation and
+a written Oryntra IP assignment are both confirmed. The deployment flag must
+stay false until both facts are confirmed; no source-code change establishes
+either fact.
+
+### September 12, 2026 — corporate-context record update
+
+- CQC formation has been reported in the corporate records context. The Oryntra
+  IP assignment retained with those records remains unexecuted, so public
+  ownership and operation language remains in its pre-transfer state.
+- `ORYNTRA_CQC_FORMED_AND_IP_ASSIGNED` remains `false`. Do not set it to
+  `true`, change legal-page ownership language, or describe Oryntra as operated
+  by CQC until the completed assignment is verified.
 
 ## 2026-09-08 — ownership and product-boundary controls
 
