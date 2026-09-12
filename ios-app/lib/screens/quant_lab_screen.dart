@@ -15,27 +15,11 @@ class QuantLabScreen extends StatefulWidget {
 
 class QuantLabScreenState extends State<QuantLabScreen> {
   final _tickers = TextEditingController(text: 'SPY, QQQ, IWM, TLT');
-  String _period = '2y';
-  String _model = 'v1_corporate_quant_system';
-  String _rebalance = 'weekly';
-  double _targetVolatility = 12;
-  double _costBps = 12;
-  double _maxNameWeight = 35;
-  bool _longShort = true;
-  bool _regimeWeights = true;
-  bool _liquidityCosts = true;
   bool _running = false;
   String _progress = '';
   String? _error;
   Map<String, dynamic>? _report;
   final _savedResults = QuantLabStore();
-  final Set<String> _strategies = {
-    'time_series_trend',
-    'cross_sectional_momentum',
-    'mean_reversion',
-    'defensive_low_volatility',
-    'corporate_quality',
-  };
 
   @override
   void dispose() {
@@ -51,24 +35,8 @@ class QuantLabScreenState extends State<QuantLabScreen> {
     });
   }
 
-  Map<String, double> _weights() => {
-    'time_series_trend': _strategies.contains('time_series_trend') ? 25 : 0,
-    'cross_sectional_momentum': _strategies.contains('cross_sectional_momentum')
-        ? 25
-        : 0,
-    'mean_reversion': _strategies.contains('mean_reversion') ? 10 : 0,
-    'defensive_low_volatility': _strategies.contains('defensive_low_volatility')
-        ? 15
-        : 0,
-    'corporate_quality': _strategies.contains('corporate_quality') ? 25 : 0,
-  };
-
   Future<void> _run() async {
     final symbols = _tickers.text.split(',');
-    if (_strategies.isEmpty) {
-      setState(() => _error = 'Select at least one research sleeve.');
-      return;
-    }
     setState(() {
       _running = true;
       _error = null;
@@ -79,20 +47,6 @@ class QuantLabScreenState extends State<QuantLabScreen> {
     try {
       final report = await widget.api.runQuantResearch(
         tickers: symbols,
-        period: _period,
-        model: _model,
-        strategies: _strategies.toList(),
-        strategyWeights: _weights(),
-        lookback: 126,
-        targetVolatility: _targetVolatility,
-        maxGrossExposure: 1,
-        maxNameWeight: _maxNameWeight / 100,
-        rebalanceFrequency: _rebalance,
-        costBps: _costBps,
-        borrowBps: 50,
-        longShort: _longShort,
-        regimeConditionedWeights: _regimeWeights,
-        liquidityAwareCosts: _liquidityCosts,
         onProgress: (message) async {
           if (mounted) setState(() => _progress = message);
         },
@@ -147,7 +101,7 @@ class QuantLabScreenState extends State<QuantLabScreen> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
-            'Generate a report with sleeve returns, a portfolio equity path, drawdown, simulated costs, current hypothetical weights, regime history, and a chronological holdout. It does not execute orders.',
+            'Run the published frozen historical research profile. It does not build your portfolio, execute orders, or use personal financial information.',
             style: TextStyle(color: colors.muted, height: 1.45),
           ),
         ),
@@ -158,7 +112,7 @@ class QuantLabScreenState extends State<QuantLabScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Research specification',
+                'Published research profile',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 14),
@@ -172,172 +126,16 @@ class QuantLabScreenState extends State<QuantLabScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: _period,
-                decoration: const InputDecoration(labelText: 'Sample window'),
-                items: const [
-                  DropdownMenuItem(value: '1y', child: Text('1 year')),
-                  DropdownMenuItem(value: '2y', child: Text('2 years')),
-                  DropdownMenuItem(value: '5y', child: Text('5 years')),
-                  DropdownMenuItem(value: 'all', child: Text('All available')),
-                ],
-                onChanged: _running
-                    ? null
-                    : (value) => setState(() => _period = value!),
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: _model,
-                decoration: const InputDecoration(labelText: 'Research model'),
-                items: const [
-                  DropdownMenuItem(
-                    value: 'v1_corporate_quant_system',
-                    child: Text('V1.0 corporate quant system'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'v8_regime_diversified',
-                    child: Text('V1.0 diversified price baseline'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'v8_trend_first',
-                    child: Text('V1.0 trend-first price baseline'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'v8_relative_strength',
-                    child: Text('V1.0 relative-strength baseline'),
-                  ),
-                ],
-                onChanged: _running
-                    ? null
-                    : (value) => setState(() => _model = value!),
-              ),
+              const SizedBox(height: 10),
+              const Text('Fixed profile: V1.0 corporate quant system · weekly rebalancing · long-only · fixed implementation assumptions. You may choose a research universe, but cannot tune this public model.'),
             ],
           ),
         ),
-        const InstitutionalSectionLabel(label: 'Strategy sleeves'),
+        const InstitutionalSectionLabel(label: 'Frozen methodology'),
         AppCard(
           child: Column(
             children: [
-              _strategyToggle(
-                'time_series_trend',
-                'Trend',
-                'Persistent direction across each symbol.',
-              ),
-              _strategyToggle(
-                'cross_sectional_momentum',
-                'Relative strength',
-                'Rank leaders and laggards in the universe.',
-              ),
-              _strategyToggle(
-                'mean_reversion',
-                'Mean reversion',
-                'Contrarian comparator after large moves.',
-              ),
-              _strategyToggle(
-                'defensive_low_volatility',
-                'Defensive low volatility',
-                'Favor lower realized-volatility baskets.',
-              ),
-              _strategyToggle(
-                'corporate_quality',
-                'Corporate quality',
-                'Use time-stamped public fundamental evidence when available.',
-              ),
-            ],
-          ),
-        ),
-        const InstitutionalSectionLabel(label: 'Portfolio controls'),
-        AppCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Text(
-                'Choose constraints that match the portfolio you want to test—not a return forecast.',
-                style: TextStyle(fontSize: 12),
-              ),
-              const SizedBox(height: 14),
-              _portfolioChoice(
-                label: 'Target annual volatility',
-                description:
-                    'A lower target asks the model to reduce exposure sooner.',
-                selected: _targetVolatility,
-                options: const [
-                  _PortfolioOption('Conservative', 8, '%'),
-                  _PortfolioOption('Balanced', 12, '%'),
-                  _PortfolioOption('Active', 18, '%'),
-                ],
-                onChanged: (value) => setState(() => _targetVolatility = value),
-              ),
-              const SizedBox(height: 16),
-              _portfolioChoice(
-                label: 'Maximum name weight',
-                description:
-                    'Hard cap for one symbol after portfolio controls.',
-                selected: _maxNameWeight,
-                options: const [
-                  _PortfolioOption('Diversified', 15, '%'),
-                  _PortfolioOption('Core', 25, '%'),
-                  _PortfolioOption('Concentrated', 35, '%'),
-                ],
-                onChanged: (value) => setState(() => _maxNameWeight = value),
-              ),
-              const SizedBox(height: 16),
-              _portfolioChoice(
-                label: 'Trading-cost assumption',
-                description:
-                    'Deducted from simulated turnover; it is not a provider fee.',
-                selected: _costBps,
-                options: const [
-                  _PortfolioOption('Liquid', 5, ' bps'),
-                  _PortfolioOption('Base case', 12, ' bps'),
-                  _PortfolioOption('Conservative', 25, ' bps'),
-                ],
-                onChanged: (value) => setState(() => _costBps = value),
-              ),
-              const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
-                initialValue: _rebalance,
-                decoration: const InputDecoration(labelText: 'Rebalance'),
-                items: const [
-                  DropdownMenuItem(value: 'daily', child: Text('Daily')),
-                  DropdownMenuItem(value: 'weekly', child: Text('Weekly')),
-                  DropdownMenuItem(value: 'monthly', child: Text('Monthly')),
-                ],
-                onChanged: _running
-                    ? null
-                    : (value) => setState(() => _rebalance = value!),
-              ),
-              SwitchListTile.adaptive(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Long / short research'),
-                subtitle: const Text('Research simulation only.'),
-                value: _longShort,
-                onChanged: _running
-                    ? null
-                    : (value) => setState(() => _longShort = value),
-              ),
-              SwitchListTile.adaptive(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Regime-conditioned weights'),
-                subtitle: const Text(
-                  'Condition sleeves on reported market state.',
-                ),
-                value: _regimeWeights,
-                onChanged: _running
-                    ? null
-                    : (value) => setState(() => _regimeWeights = value),
-              ),
-              SwitchListTile.adaptive(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Liquidity-aware costs'),
-                subtitle: const Text(
-                  'Apply impact and participation diagnostics.',
-                ),
-                value: _liquidityCosts,
-                onChanged: _running
-                    ? null
-                    : (value) => setState(() => _liquidityCosts = value),
-              ),
+              const Text('The public profile uses fixed, documented sleeves and fixed exposure constraints. Internal research controls are not available in the mobile app.'),
             ],
           ),
         ),
@@ -407,60 +205,6 @@ class QuantLabScreenState extends State<QuantLabScreen> {
     );
   }
 
-  Widget _strategyToggle(String id, String title, String subtitle) =>
-      CheckboxListTile(
-        contentPadding: EdgeInsets.zero,
-        value: _strategies.contains(id),
-        onChanged: _running
-            ? null
-            : (value) => setState(
-                () => value == true
-                    ? _strategies.add(id)
-                    : _strategies.remove(id),
-              ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
-        subtitle: Text(subtitle),
-        controlAffinity: ListTileControlAffinity.leading,
-      );
-
-  Widget _portfolioChoice({
-    required String label,
-    required String description,
-    required double selected,
-    required List<_PortfolioOption> options,
-    required ValueChanged<double> onChanged,
-  }) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(label, style: const TextStyle(fontWeight: FontWeight.w800)),
-      const SizedBox(height: 3),
-      Text(description, style: const TextStyle(fontSize: 11)),
-      const SizedBox(height: 8),
-      Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: options
-            .map(
-              (option) => ChoiceChip(
-                label: Text(
-                  '${option.label} · ${option.value.round()}${option.suffix}',
-                ),
-                selected: selected == option.value,
-                onSelected: _running ? null : (_) => onChanged(option.value),
-              ),
-            )
-            .toList(),
-      ),
-    ],
-  );
-}
-
-class _PortfolioOption {
-  const _PortfolioOption(this.label, this.value, this.suffix);
-
-  final String label;
-  final double value;
-  final String suffix;
 }
 
 class _QuantReport extends StatelessWidget {
@@ -607,21 +351,21 @@ class _QuantReport extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 8),
-                ...['timing', 'portfolio', 'execution', 'evidence'].expand(
-                  (group) {
-                    final rows = ledger[group] is List
-                        ? List<dynamic>.from(ledger[group])
-                        : const <dynamic>[];
-                    return rows.whereType<Map>().map(
-                      (item) => ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        dense: true,
-                        title: Text(item['label']?.toString() ?? 'Assumption'),
-                        subtitle: Text(item['value']?.toString() ?? '—'),
-                      ),
-                    );
-                  },
-                ),
+                ...['timing', 'portfolio', 'execution', 'evidence'].expand((
+                  group,
+                ) {
+                  final rows = ledger[group] is List
+                      ? List<dynamic>.from(ledger[group])
+                      : const <dynamic>[];
+                  return rows.whereType<Map>().map(
+                    (item) => ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      dense: true,
+                      title: Text(item['label']?.toString() ?? 'Assumption'),
+                      subtitle: Text(item['value']?.toString() ?? '—'),
+                    ),
+                  );
+                }),
                 if (ledger['omissions'] is List) ...[
                   const SizedBox(height: 8),
                   const Text(

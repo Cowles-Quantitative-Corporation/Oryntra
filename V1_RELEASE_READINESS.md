@@ -40,6 +40,32 @@ Passing a lower row is not implied by passing a higher row. In particular, backe
 - Private research, server-provider, cache, Pattern Lab, VAI training, and Pro routes must remain behind explicit operating-mode controls.
 - Market-data display, storage, and redistribution rights must be evaluated against the actual provider plan.
 - Database, market cache, and trained-model artifacts are persistent operational state and must not be overwritten by a source deployment.
+- Public ownership copy must remain in the pre-formation configuration until a real CQC formation and signed Oryntra IP assignment are confirmed. This source change does not establish either fact.
+- Public users cannot access the configurable Portfolio Lab directive ledger. It is disabled by default and requires a server-provisioned internal operator record; public Quant demonstrations use a frozen profile rather than user-tuned portfolio settings.
+
+## Controlled security-audit workstream
+
+Run this workstream before a material production release or after a material authentication, deployment, upload, or public-route change. It is a release-readiness audit, not permission to conduct intrusive testing. Create and verify a recoverable backup of the deployment configuration and persistent operational state before any live check.
+
+| Work area | Repository/deployment review | Owner-authorized public-site confirmation | Required verification if changed |
+| --- | --- | --- | --- |
+| Access boundaries | Review authentication, route mounting, ownership checks, private/public flags, and account-state handling. | Use only the owner’s test accounts to confirm cross-account reads/writes are rejected. | Regression test the denied and allowed paths; verify no other account data was accessed. |
+| Sessions | Review expiry, logout, reset, cookie/token storage, and error paths. | Confirm logout/revocation and reset behavior with controlled accounts at a low request rate. | Exercise expiry/logout/reset paths and confirm old credentials no longer work. |
+| Uploads and inputs | Review CSV/browser-bar validation, size limits, MIME/format handling, parser failures, and route schemas. | Submit only harmless, deliberately malformed small fixtures at a low rate. | Add a regression fixture for each fixed validation failure. |
+| Exposure controls | Review CORS, rate limits, debug settings, secret loading, error disclosure, security headers, and public/private route separation. | Inspect ordinary responses and intended public/private endpoints; check Cloudflare/origin exposure only with the owner’s approved hostname/IP scope. | Confirm headers/configuration on the deployed response and recheck intended route visibility. |
+| Deployment boundary | Review reverse-proxy/Cloudflare configuration and confirm backups exclude secrets from source control. | Make low-rate, authenticated health and route checks only. | Record exact environment, timestamp, paths checked, and whether evidence was static or live. |
+
+### Safety limits
+
+- Do not brute-force credentials, enumerate accounts, test another user’s account, flood endpoints, or run high-rate scanners against the home server.
+- Do not use destructive payloads, attempt to bypass Cloudflare, or probe hosts outside the owner-approved public scope.
+- Treat static findings, local runtime findings, and live production findings as separate evidence. A repository review does not prove the deployed configuration; a successful low-rate check does not prove the absence of vulnerabilities.
+- Patch each confirmed issue narrowly, add a regression test where feasible, rerun the affected release checks, and record the remediation and evidence before declaring the workstream complete.
+
+### Current static remediation record
+
+- 2026-09-05: added a per-email login-failure lockout (default: eight failures, 15 minutes), uniform password-hash work for unknown accounts, baseline anti-framing/content-sniffing/referrer/permissions headers, and no-store handling for API responses. Local regression tests passed for the lockout and headers, plus authenticated provider/public Quant paths. This is source and local-runtime evidence only; it does not verify the deployed Cloudflare/origin configuration or public hostname.
+- 2026-09-05 live low-rate check of `https://oryntraai.com`: root, health, and unauthenticated account-status endpoints responded through Cloudflare; private docs/developer/analysis paths returned `404`; an untrusted-origin CORS preflight returned `400`. The deployed responses did **not** include the newly added baseline security headers, so the source fix is not yet live. Do not close this finding until the intended build is deployed and the same header checks pass.
 
 ## Documentation gate
 

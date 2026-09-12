@@ -64,11 +64,11 @@ async def main_async(args):
     if not tickers:
         raise SystemExit('No tickers supplied. Use --tickers or --ticker-file.')
     req=PatternLabRequest(tickers=tickers, period=args.period, horizon_days=args.horizon, step=args.step, min_history=args.min_history, max_tests_per_ticker=args.max_tests_per_ticker, data_source=args.data_source, engine_modes=['official'])
-    print('VAI2.1 HEADLESS TRAINING START')
+    print('VAI2.2 HEADLESS TRAINING START')
     print(f'Tickers={len(tickers)} period={args.period} horizon={args.horizon} step={args.step} max_tests/ticker={args.max_tests_per_ticker} data={args.data_source}')
     job={}
     stop_event=asyncio.Event()
-    monitor=asyncio.create_task(_progress_monitor(job, stop_event, label='VAI2.1 Pattern Lab'))
+    monitor=asyncio.create_task(_progress_monitor(job, stop_event, label='VAI2.2 Pattern Lab'))
     try:
         lab=await _run_pattern_lab_core(req, job=job)
     finally:
@@ -98,7 +98,7 @@ async def main_async(args):
     return 0 if result.get('ok') else 2
 
 def main():
-    ap=argparse.ArgumentParser(description='Headless VAI2.1 trainer.')
+    ap=argparse.ArgumentParser(description='Headless VAI2.2 trainer.')
     ap.add_argument('--tickers', default='AAPL,MSFT,NVDA,TSLA,AMZN,META,GOOGL,AMD,AVGO,JPM,V,XOM,CVX,UNH,LLY,JNJ,WMT,COST,HD,MCD,NKE,CAT,BA,RTX,NEE,PLTR,CRWD,SPY,QQQ,SMH')
     ap.add_argument('--ticker-file', default='')
     ap.add_argument('--training150', action='store_true')
@@ -116,4 +116,3 @@ def main():
     args=ap.parse_args()
     return asyncio.run(main_async(args))
 if __name__=='__main__': raise SystemExit(main())
-

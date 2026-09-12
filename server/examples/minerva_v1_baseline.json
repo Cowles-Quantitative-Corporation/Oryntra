@@ -1,0 +1,23 @@
+{
+  "alpha_model": "walk_forward_ridge",
+  "research_profile": "minerva_v1",
+  "ridge_training_sessions": 756,
+  "ridge_retrain_sessions": 21,
+  "ridge_horizon_sessions": 5,
+  "ridge_penalty": 1.0,
+  "ridge_score_smoothing": 0.0,
+  "ridge_residual_momentum_21": false,
+  "ridge_residual_momentum_63": false,
+  "fundamental_quality_overlay_weight": 0.0,
+  "fundamental_acceleration_overlay_weight": 0.0,
+  "entry_threshold": 0.2,
+  "vol_target": 0.18,
+  "maximum_positions": 24,
+  "rebalance": "weekly",
+  "cost_bps": 12.0,
+  "impact_bps": 18.0,
+  "participation": 0.02,
+  "market_context": {"enabled": false},
+  "peer_shock": {"enabled": false},
+  "position_policy": {"enabled": false}
+}

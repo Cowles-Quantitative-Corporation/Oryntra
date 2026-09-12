@@ -128,11 +128,11 @@ def _clean_period(period: str) -> str:
 
 
 def _clean_engine_modes(values: list[str] | None) -> list[str]:
-    aliases = {"v7": "official", "vai2.1": "vai2"}
+    aliases = {"v7": "official", "vai2.1": "vai2", "vai2.2": "vai2"}
     selected: list[str] = []
     for raw in values or []:
         mode = aliases.get(str(raw or "").strip().lower(), str(raw or "").strip().lower())
-        if mode in {"official", "v8", "vai2"} and mode not in selected:
+        if mode in {"official", "v8", "vai2", "universal_v2"} and mode not in selected:
             selected.append(mode)
     return selected or ["official", "v8"]
 
@@ -144,6 +144,7 @@ async def pattern_modes():
         "default_lab_tickers": DEFAULT_PATTERN_LAB_TICKERS,
         "training_tickers_150": TRAINING_TICKERS_150,
         "modes": [
+            {"id": "universal_v2", "label": "Universal V2 research", "description": "Shared causal signal engine used by the scanner and portfolio ledger."},
             {"id": "official", "label": "V1.0 Official Momentum", "description": "Current production candidate engine."},
             {"id": "v8", "label": "V1.0 Analytics Research", "description": "Directional candidates scored symmetrically with Oryntra analytics."},
             {"id": "vai2", "label": "V1.0 Quant Experimental", "description": "Optional promoted local model layer retained for controlled comparison."},
@@ -305,7 +306,7 @@ async def _run_vai_training_job(job_id: str, req: VAITrainRequest):
             raise RuntimeError(lab_status.get("message") or "Pattern Lab dataset worker failed.")
         rows = (lab_result.get("rows") or {}).get("official") or []
         job.update({"phase": "training_model", "progress_pct": 85.0, "message": f"Training on {len(rows)} causal rows."})
-        use_vai2 = str(req.model_version or "vai2").lower() in {"vai2", "vai_2_0", "vai2.1", "vai_2_1", "2"}
+        use_vai2 = str(req.model_version or "vai2").lower() in {"vai2", "vai_2_0", "vai2.1", "vai_2_1", "vai2.2", "vai_2_2", "2"}
         if use_vai2:
             train_result = await asyncio.to_thread(
                 train_vai2_research, rows, horizon_days=req.horizon_days,

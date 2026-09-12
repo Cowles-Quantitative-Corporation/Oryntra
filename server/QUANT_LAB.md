@@ -1,4 +1,4 @@
-# Oryntra V1.0 Quant Lab
+# Oryntra Quant Lab
 
 Quant Lab is a daily-bar historical research and paper-simulation workspace. It has no broker client, does not create orders, and does not choose a real trade for a user.
 
@@ -6,7 +6,7 @@ Quant Lab is a daily-bar historical research and paper-simulation workspace. It 
 
 `daily market history + eligible point-in-time corporate/macro facts → deterministic sleeves → optional regime-conditioned weights → portfolio limits → next-session simulation → costs and diagnostics`
 
-Quant Lab is independent of the scanner models. V1.0 Official Momentum, V8, VAI 1.0, and VAI 2.2 are scanner/setup research paths; Quant Lab constructs multi-asset sleeve portfolios.
+The legacy Quant Lab profiles are independent of the scanner models. V1.0 Official Momentum, V8, VAI 1.0, and VAI 2.2 are scanner/setup research paths. New `universal_v2` explicitly shares its signal implementation across scanner, Pattern Lab and portfolio research. Its cash/shares simulator, controls, alpha definition and actual failed validation results are documented in [Universal V2 backend](../docs/UNIVERSAL_V2_BACKEND.md). The remainder of the sleeve/timing sections below describes the legacy profiles unless stated otherwise.
 
 ## Model profiles
 
@@ -18,8 +18,16 @@ Quant Lab is independent of the scanner models. V1.0 Official Momentum, V8, VAI 
 | V1.0 trend-first price baseline | `v8_trend_first` | 65% trend, 25% relative strength, 10% mean reversion |
 | V1.0 relative-strength price baseline | `v8_relative_strength` | 25% trend, 65% relative strength, 10% mean reversion |
 | V1.0 equal-weight baseline | `equal_weight_baseline` | 34% trend, 33% relative strength, 33% mean reversion |
+| Oryntra V1.1 long-only trend/momentum research | `v1_long_only_trend_momentum_research` | 60% trend, 40% relative strength; long-only |
+| Universal V2 research engine | `universal_v2` | Shared bounded price features; separate cash/shares ledger, not legacy sleeve allocations |
 
 The server keeps the older `v8_*` identifiers for compatibility. They do not mean these profiles use the scanner’s V8 evidence model. Selected positive sleeve allocations are normalized to 100%.
+
+Universal V2's full configurable scan and alpha-test endpoints are under `/api/universal` when the full Quant/private route flag is enabled. The existing Quant request also accepts its model ID and maps risk/cost settings, but does not supply the benchmark/cash series needed for alpha. Its report preserves exact V2 parameters as `engine_configuration`. This candidate is not automatically selected in the browser or mobile app.
+
+Implementation audit: legacy portfolio profiles maintain shifted target weights and charge target changes rather than maintaining actual drifting shares. They must not be treated as execution-equivalent to V2. Old scanner backtests also need rerunning after the missing stop/target return and two-sided-commission fixes. Earlier research entries are historical evidence, not validation of the corrected implementation.
+
+The V1.1 long-only trend/momentum profile defaults to long-only when a caller has not explicitly selected a shorting policy. It is a research candidate, not a default or trading recommendation. It was added only after a fixed 12 bps cost, 12% one-way volatility-cap, weekly-rebalance study passed the stated chronological-holdout and walk-forward gate on one volatility-selected development universe and an untouched volatility-selected stock universe. The study does not establish live performance, broad-market robustness, or suitability; the profile remains subject to the same experiment records, capacity scenarios, correlation stress diagnostics, and review process as every other Quant Lab profile.
 
 ## Sleeves
 
@@ -112,7 +120,7 @@ Supported macro metrics are `policy_rate`, `yield_2y`, `yield_10y`, `credit_spre
 
 ### Validation
 
-The engine reserves at least 63 sessions or the final 20% of history as a chronological holdout when at least 126 sessions exist. Earlier development history is divided into sequential walk-forward report slices. The fixed sleeve rules are not fitted by this function, so the split is a robustness comparison rather than model training.
+The engine reserves at least 63 sessions or the final 20% of history as a chronological holdout when at least 126 sessions exist. Earlier development history is divided into sequential walk-forward report slices. Development and holdout summaries retain their actual simulated turnover and gross exposure, so implementation intensity remains visible in the validation comparison. The fixed sleeve rules are not fitted by this function, so the split is a robustness comparison rather than model training.
 
 Every report also includes an equal-weight buy-and-hold reference over the exact selected symbols. It is intentionally simple and has no rebalancing, borrow, or liquidity cost, so it is a comparison reference rather than an apples-to-apples executable portfolio. A higher strategy result alone is not a pass: compare its holdout path, drawdown, turnover, cost assumptions, coverage, and diagnostics with the reference.
 
@@ -144,6 +152,8 @@ It reports baseline and stressed 21-session/annualized volatility plus a risk mu
 Every completed report returns and displays an assumption ledger. It records the exact timing convention, rebalancing schedule, one-way volatility target, gross and single-name limits, short-borrow assumption, base cost, liquidity-proxy inputs, corporate/macro point-in-time coverage, and correlation-stress construction used for that run. It also lists material omissions: order-book/venue depth, bid-ask series, fill or best-execution simulation, delisted-security point-in-time coverage, taxes, financing beyond stated borrow, and unfilled-order opportunity cost.
 
 The ledger is an audit aid. It does not convert daily OHLCV into a liquidity classification or execution claim, and it does not change a portfolio’s simulated holdings.
+
+Each report also includes a shared `research_governance` record used across Oryntra’s research paths. For Quant Lab it preserves the profile, configured universe and fingerprint, validation expectation, portfolio scope, and the boundary between daily-bar cost/capacity scenarios and a real order-book or fire-sale model.
 
 ## Reproducible strategy experiments
 

@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 from .indicators import calculate_all_indicators
 from .market_repository import get_market_repository, normalize_ticker
 from .research_experiments import fingerprint, record_experiment
+from .research_governance import scanner_research_governance
 from .setup_detector import detect_setup
 from .trade_scorer import calculate_trade_plan
 
@@ -108,7 +109,7 @@ def _pnl_pct(trade: dict[str, Any], exit_price: float, commission_pct: float) ->
         gross = (exit_price - entry) / entry * 100.0
     else:
         gross = (entry - exit_price) / entry * 100.0
-    return gross - commission_pct
+    return gross - 2 * commission_pct
 
 
 def _check_exit(
@@ -139,7 +140,12 @@ def _check_exit(
     exit_reason: str | None = None
     raw_exit: float | None = None
     ambiguous = stop_hit and target_hit
-    if ambiguous:
+    open_price = _finite(row.get("Open"), close)
+    if direction == "LONG" and open_price <= stop or direction == "SHORT" and open_price >= stop:
+        exit_reason, raw_exit = "STOP_GAP", open_price
+    elif direction == "LONG" and open_price >= target or direction == "SHORT" and open_price <= target:
+        exit_reason, raw_exit = "TARGET_GAP", target
+    elif ambiguous:
         if policy == "target_first":
             exit_reason, raw_exit = "TARGET_HIT_AMBIGUOUS", target
         else:
@@ -155,7 +161,7 @@ def _check_exit(
         return None
     exit_price = _adjust_exit(raw_exit, direction, slippage_pct)
     pnl = _pnl_pct(trade, exit_price, commission_pct)
-    return {
+    result = {
         **trade,
         "date_out": pd.Timestamp(date).date().isoformat(),
         "exit_price": round(exit_price, 6),
@@ -166,6 +172,7 @@ def _check_exit(
         "winner": pnl > 0,
         "candles_held": held,
     }
+    return result
 
 
 def _run_one(
@@ -208,7 +215,7 @@ def _run_one(
         try:
             indicators = calculate_all_indicators(signal_history)
             indicators["ticker"] = ticker
-            pattern_history = signal_history.tail(180)
+            pattern_history = signal_history if req.engine_mode == "universal_v2" else signal_history.tail(180)
             setup = detect_setup(indicators, pattern_history, pattern_mode=req.engine_mode)
             plan = calculate_trade_plan(indicators, setup)
         except Exception:
@@ -257,6 +264,14 @@ def _run_one(
             "engine_mode": req.engine_mode,
         }
 
+    if open_trade is not None:
+        final_exit = _check_exit(open_trade, row=history.iloc[-1], date=history.index[-1],
+                                 candle_idx=len(history) - 1, max_hold=max_hold,
+                                 slippage_pct=slippage_pct, commission_pct=commission_pct,
+                                 policy=req.target_stop_policy)
+        if final_exit is not None:
+            trades.append(final_exit)
+            open_trade = None
     if open_trade is not None:
         last_close = _finite(history["Close"].iloc[-1])
         exit_price = _adjust_exit(last_close, open_trade["direction"], slippage_pct)
@@ -489,6 +504,26 @@ def _finalize_backtest(
         },
         "warning": "Daily bars cannot determine exact intraday execution order when both target and stop trade during one session.",
     }
+    # The backtest is a portfolio-aware evaluation of one scanner mode.  Preserve
+    # the scanner's shared provenance contract alongside its trade assumptions.
+    result["research_governance"] = scanner_research_governance(
+        req.engine_mode, pd.DataFrame(columns=["Close", "Volume"])
+    )
+    result["research_governance"]["data_lineage"].update({
+        "observations": result["candles_tested"],
+        "symbols": tickers,
+        "fingerprint": dataset_fp,
+        "first_session": min((str(trade.get("signal_date")) for trade in trades), default=None),
+        "last_session": max((str(trade.get("date_out")) for trade in trades), default=None),
+    })
+    result["research_governance"]["execution_scope"] = (
+        "Next-session daily-bar simulation with configured commission and slippage. "
+        "It does not model intraday order priority, order-book liquidity, fire sales, or executable fills."
+    )
+    result["research_governance"]["portfolio_scope"] = (
+        "Cross-ticker backtest with a concurrent-position cap; it is not the multi-sleeve Quant Lab portfolio simulator."
+    )
+    return result
 
 
 def _run_backtest_sync(req: BacktestRequest) -> dict[str, Any]:

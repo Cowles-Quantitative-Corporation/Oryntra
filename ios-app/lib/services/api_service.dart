@@ -388,20 +388,6 @@ class ApiService {
 
   Future<Map<String, dynamic>> runQuantResearch({
     required List<String> tickers,
-    required String period,
-    required String model,
-    required List<String> strategies,
-    required Map<String, double> strategyWeights,
-    required int lookback,
-    required double targetVolatility,
-    required double maxGrossExposure,
-    required double maxNameWeight,
-    required String rebalanceFrequency,
-    required double costBps,
-    required double borrowBps,
-    required bool longShort,
-    required bool regimeConditionedWeights,
-    required bool liquidityAwareCosts,
     Future<void> Function(String message)? onProgress,
   }) async {
     final universe = <String>[];
@@ -417,7 +403,9 @@ class ApiService {
         'Mobile Quant Lab supports up to eight symbols per run.',
       );
     }
-    if (AppConfig.previewMode) return _previewQuantReport(universe, model);
+    if (AppConfig.previewMode) {
+      return _previewQuantReport(universe, 'v1_corporate_quant_system');
+    }
     final connection = await _providerKeyStore.readConnection();
     if (connection == null) {
       throw ApiException(
@@ -441,7 +429,7 @@ class ApiService {
       var completed = 0;
       final histories = await Future.wait(
         universe.map((ticker) async {
-          final bars = await _fetchDirectDailyBars(ticker, period, connection);
+          final bars = await _fetchDirectDailyBars(ticker, '2y', connection);
           completed += 1;
           await onProgress?.call(
             'Loaded $completed of ${universe.length} daily histories…',
@@ -458,24 +446,8 @@ class ApiService {
             headers: await _headers(jsonBody: true),
             body: jsonEncode({
               'tickers': universe,
-              'period': period,
               'provider': connection.provider,
               'histories': histories,
-              'model': model,
-              'strategies': strategies,
-              'strategy_weights': strategyWeights,
-              'trend_lookback': lookback,
-              'momentum_lookback': lookback,
-              'cost_bps': costBps,
-              'borrow_bps_annual': borrowBps,
-              'long_short': longShort,
-              'target_annual_volatility': targetVolatility,
-              'max_gross_exposure': maxGrossExposure,
-              'max_single_name_weight': maxNameWeight,
-              'rebalance_frequency': rebalanceFrequency,
-              'walk_forward_folds': 3,
-              'regime_conditioned_weights': regimeConditionedWeights,
-              'liquidity_aware_costs': liquidityAwareCosts,
             }),
           )
           .timeout(const Duration(seconds: 150));

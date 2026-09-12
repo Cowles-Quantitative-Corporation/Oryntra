@@ -244,9 +244,9 @@ function apiJson(response) {
   return response.json().catch(() => ({})).then(payload => {
     if (response.ok) return payload;
     const detail = payload.detail || payload;
-    if (response.status === 402 || (detail && detail.code === 'SUBSCRIPTION_REQUIRED')) {
-      showSubscriptionModal();
-      throw new Error('An active Oryntra AI Pro subscription is required for analysis.');
+    if (response.status === 402 || (detail && ['SUBSCRIPTION_REQUIRED', 'MODEL_SUBSCRIPTION_REQUIRED'].includes(detail.code))) {
+      showSubscriptionModal(detail?.model || 'membership');
+      throw new Error(detail?.message || 'An active Oryntra AI Pro subscription is required for this feature.');
     }
     if (response.status === 401) {
       openAuthModal('login');
@@ -271,22 +271,22 @@ function apiJson(response) {
 
 
 const API = {
-  scan: (ticker, period='6mo') => apiFetch('/api/intelligence/scan', {
+  scan: (ticker, period='6mo', model='official') => apiFetch('/api/intelligence/scan', {
     method: 'POST',
     headers: authHeaders(true),
-    body: JSON.stringify({ticker, period})
+    body: JSON.stringify({ticker, period, model})
   }).then(apiJson),
 
-  scanMultiple: (tickers, period='6mo') => apiFetch('/api/intelligence/scan-multiple', {
+  scanMultiple: (tickers, period='6mo', model='official') => apiFetch('/api/intelligence/scan-multiple', {
     method: 'POST',
     headers: authHeaders(true),
-    body: JSON.stringify({tickers, period})
+    body: JSON.stringify({tickers, period, model})
   }).then(apiJson),
 
-  scanUploaded: (ticker, period, provider, bars) => apiFetch('/api/intelligence/scan-upload', {
+  scanUploaded: (ticker, period, provider, bars, model='official') => apiFetch('/api/intelligence/scan-upload', {
     method: 'POST',
     headers: authHeaders(true),
-    body: JSON.stringify({ticker, period, provider, bars})
+    body: JSON.stringify({ticker, period, provider, bars, model})
   }).then(apiJson),
 
   explain: (ticker, analysis, question=null) => apiFetch(`/api/ai/explain`, {
@@ -303,6 +303,21 @@ const API = {
     runUploaded: (data) => apiFetch('/api/quant/run-upload', {method:'POST', headers:authHeaders(true), body:JSON.stringify(data)}).then(apiJson),
   },
 
+  universal: {
+    blueprint: () => apiFetch('/api/universal/blueprint', {headers:authHeaders(false), cache:'no-store'}).then(apiJson),
+    taxonomySymbol: (symbol) => apiFetch(`/api/universal/taxonomy/${encodeURIComponent(symbol)}`, {headers:authHeaders(false), cache:'no-store'}).then(apiJson),
+  },
+
+  portfolioLab: {
+    runUploaded: (data) => apiFetch('/api/portfolio-lab/run-upload', {method:'POST', headers:authHeaders(true), body:JSON.stringify(data)}).then(apiJson),
+    runs: () => apiFetch('/api/portfolio-lab/runs', {headers:authHeaders(false), cache:'no-store'}).then(apiJson),
+  },
+
+  debug: {
+    access: () => apiFetch('/api/internal/debug/access', {headers:authHeaders(false), cache:'no-store'}).then(apiJson),
+    subscription: (plan) => apiFetch('/api/internal/debug/subscription', {method:'POST', headers:authHeaders(true), body:JSON.stringify({plan})}).then(apiJson),
+  },
+
   backtest: {
     runUploaded: (data) => apiFetch('/api/backtest/run-upload', {method:'POST', headers:authHeaders(true), body:JSON.stringify(data)}).then(apiJson),
   },
@@ -315,6 +330,7 @@ const API = {
   auth: {
     signup: (data) => apiFetch('/api/auth/signup', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)}).then(apiJson),
     login:  (data) => apiFetch('/api/auth/login',  {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)}).then(apiJson),
+    oauthProviders: () => apiFetch('/api/auth/oauth/providers', {cache:'no-store'}).then(apiJson),
     me:     () => apiFetch('/api/auth/me', {headers: authHeaders(false)}).then(r => r.json()),
     logout: () => apiFetch('/api/auth/logout', {method:'POST', headers: authHeaders(false)}).then(r => r.json()),
     deleteAccount: (password) => apiFetch('/api/auth/account', {method:'DELETE', headers:authHeaders(true), body:JSON.stringify({password})}).then(apiJson),
@@ -474,6 +490,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initRuntimeCapabilities();
   initTabs();
   initQuantLab();
+  initPortfolioLab();
   initScanner();
   initWatchlist();
   initPaperTrades();
@@ -481,6 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadSearchCounter();
   initDevTools();
   initSettingsPage();
+  initOwnerDebugMenu();
   initAdSlots();
   initAccessibility();
 });
@@ -515,6 +533,8 @@ function initAccessibility() {
         event.preventDefault();
         if (modal.id === 'authModal') closeAuthModal();
         if (modal.id === 'paperModal') closeModal();
+        if (modal.id === 'subscriptionModal') closeSubscriptionModal();
+        if (modal.id === 'ownerDebugModal') closeAccessibleDialog(modal);
         return;
       }
       if (event.key === 'Tab') {
@@ -545,8 +565,212 @@ function initAccessibility() {
   });
 }
 
+function mountOwnerDebugMenu() {
+  if (document.getElementById('ownerDebugModal')) return;
+  document.body.insertAdjacentHTML('beforeend', `<div class="modal-overlay" id="ownerDebugModal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="ownerDebugTitle"><div class="modal-box owner-debug-box"><button class="oryntra-auth-close" id="ownerDebugClose" type="button" aria-label="Close debug menu">×</button><p class="eyebrow">Owner diagnostic controls</p><h2 id="ownerDebugTitle">Workspace entitlement</h2><p class="auth-modal-subtitle">This changes only the signed-in account’s owner test entitlement. It does not create a payment, App Store purchase, or customer subscription.</p><label>Subscription test state<select id="ownerDebugPlan"><option value="actual">Use actual billing state</option><option value="base">Base</option><option value="pro">Oryntra Pro</option><option value="max_bundle">Max Bundle</option></select></label><p id="ownerDebugStatus" class="form-footnote">Checking access…</p><button class="button button-primary" id="ownerDebugApply" type="button">Apply test entitlement</button></div></div>`);
+  document.getElementById('ownerDebugClose')?.addEventListener('click', () => closeAccessibleDialog(document.getElementById('ownerDebugModal')));
+  document.getElementById('ownerDebugApply')?.addEventListener('click', applyOwnerDebugPlan);
+}
+
+async function openOwnerDebugMenu() {
+  if (!currentUser) return;
+  try {
+    const access = await API.debug.access();
+    if (!access?.enabled) return;
+    mountOwnerDebugMenu();
+    const plan = String(access.test_override?.plan_code || 'actual').toLowerCase();
+    const select = document.getElementById('ownerDebugPlan');
+    if (select) select.value = ['base', 'pro', 'max_bundle'].includes(plan) ? plan : 'actual';
+    const status = document.getElementById('ownerDebugStatus');
+    if (status) status.textContent = access.test_override ? `Current test state: ${access.test_override.plan_name}.` : 'Using actual billing state.';
+    openAccessibleDialog(document.getElementById('ownerDebugModal'), select);
+  } catch (_) {
+    // A normal account should not be able to distinguish this from no menu.
+  }
+}
+
+async function applyOwnerDebugPlan() {
+  const select = document.getElementById('ownerDebugPlan');
+  const status = document.getElementById('ownerDebugStatus');
+  const button = document.getElementById('ownerDebugApply');
+  if (!select || !button) return;
+  button.disabled = true;
+  try {
+    const response = await API.debug.subscription(select.value);
+    currentUser = {...currentUser, subscription: response.subscription || null};
+    storeCachedAuthUser(currentUser);
+    setAuthUI(currentUser);
+    if (status) status.textContent = response.test_override ? `Test state applied: ${response.test_override.plan_name}.` : 'Actual billing state restored.';
+    refreshAnalysisAccess({force:true, silent:true}).catch(() => {});
+  } catch (_) {
+    if (status) status.textContent = 'The debug entitlement could not be changed.';
+  } finally {
+    button.disabled = false;
+  }
+}
+
+function initOwnerDebugMenu() {
+  document.addEventListener('keydown', event => {
+    if (event.ctrlKey && event.shiftKey && event.altKey && event.code === 'KeyO') {
+      event.preventDefault();
+      openOwnerDebugMenu();
+    }
+  });
+}
+
+
+function mountIdentityProviderOptions() {
+  const form = document.getElementById('authForm');
+  if (!form || document.getElementById('oauthProviderOptions')) return;
+  form.insertAdjacentHTML('afterend', `<div id="oauthProviderOptions" class="oauth-provider-options"><div class="auth-divider"><span>or continue with</span></div><div class="oauth-provider-buttons" aria-label="Continue with an identity provider"><button class="oauth-provider-button" data-oauth-provider="google" type="button" disabled><span class="oauth-provider-mark oauth-google-mark" aria-hidden="true">G</span>Continue with Google</button><button class="oauth-provider-button" data-oauth-provider="apple" type="button" disabled><span class="oauth-provider-mark oauth-apple-mark" aria-hidden="true">●</span>Continue with Apple</button></div><p id="oauthProviderStatus" class="oauth-provider-status" role="status">Checking sign-in options…</p></div>`);
+}
+
+function mountSubscriptionStructure() {
+  const modal = document.getElementById('subscriptionModal');
+  if (!modal || modal.querySelector('.subscription-shell')) return;
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-labelledby', 'subscriptionTitle');
+  const features = [
+    ['Official scanner & evidence cards', 'Included', 'Included', 'Included'],
+    ['Daily scanner reviews', '10 / day', '200 / day', 'Unlimited'],
+    ['Watchlist & paper journal', '20 symbols', 'Unlimited', 'Unlimited'],
+    ['Historical research demonstrations', 'Included', 'Included', 'Included'],
+    ['Frozen public Quant profile', 'Included', 'Included', 'Included'],
+    ['Personalized portfolio construction', 'Not offered', 'Not offered', 'Not offered'],
+    ['Saved research presets & exports', '✕', 'Included', 'Included'],
+    ['Rule Mirror Pro', '✕', '✕', 'Included'],
+  ];
+  const rows = features.map(([feature, base, plus, max]) => `<tr><th scope="row">${escapeHtml(feature)}</th><td>${escapeHtml(base)}</td><td>${escapeHtml(plus)}</td><td>${escapeHtml(max)}</td></tr>`).join('');
+  modal.innerHTML = `<div class="modal-box subscription-shell"><button class="oryntra-auth-close" id="subscriptionClose" type="button" aria-label="Close subscription page">×</button><p class="eyebrow">Oryntra membership</p><h2 id="subscriptionTitle">Research software access.</h2><p id="subscriptionCopy" class="auth-modal-subtitle">Subscriptions are temporarily unavailable while checkout is under maintenance. Any future subscription provides software access only—not CQC equity, profits, trading participation, or a managed strategy.</p><div class="subscription-plan-headings"><section><span>BASE</span><b>Research essentials</b><small>Official scanner and bounded historical research.</small><button class="button button-secondary subscription-buy" data-subscription-maintenance type="button">Buy Base</button></section><section><span>PLUS</span><b>Oryntra Pro</b><small>More research workspace capacity; no personalized portfolio service.</small><button class="button button-primary subscription-buy" data-subscription-maintenance type="button">Buy Plus</button></section><section><span>MAX BUNDLE</span><b>Oryntra Pro + Rule Mirror Pro</b><small>Expanded software access only.</small><button class="button button-secondary subscription-buy" data-subscription-maintenance type="button">Buy Max Bundle</button></section></div><div class="subscription-compare-scroll"><table class="subscription-compare"><thead><tr><th>Feature</th><th>Base</th><th>Plus</th><th>Max bundle</th></tr></thead><tbody>${rows}</tbody></table></div><p class="subscription-footnote">Research candidates remain gated by validation and are never unlocked merely by payment.</p></div>`;
+}
+
+function estCalendarDate() {
+  try {
+    return new Intl.DateTimeFormat('en-CA', {timeZone:'America/New_York', year:'numeric', month:'2-digit', day:'2-digit'}).format(new Date());
+  } catch (_) {
+    return new Date().toISOString().slice(0, 10);
+  }
+}
+
+function showDailySubscriptionOffer(user) {
+  if (!user?.show_subscription_offer) return false;
+  const key = `oryntra_subscription_offer_seen_${user.id}_${estCalendarDate()}`;
+  try {
+    if (sessionStorage.getItem(key)) return false;
+    sessionStorage.setItem(key, '1');
+  } catch (_) {}
+  window.setTimeout(() => showSubscriptionModal('daily_offer'), 0);
+  return true;
+}
+
+function mountMinervaModelGate() {
+  ['quantModel', 'settingsQuantModel'].forEach(id => {
+    const select = document.getElementById(id);
+    if (!select || select.dataset.minervaGateMounted) return;
+    if (!select.querySelector('option[value="minerva_v1"]')) {
+      const option = new Option('Minerva V1 research candidate · subscriber access', 'minerva_v1');
+      option.dataset.access = 'subscription';
+      select.append(option);
+    }
+    select.dataset.minervaGateMounted = 'true';
+    let lastAvailable = select.value;
+    select.addEventListener('change', () => {
+      if (select.value !== 'minerva_v1') {
+        lastAvailable = select.value;
+        return;
+      }
+      select.value = lastAvailable;
+      showSubscriptionModal('minerva_v1');
+    });
+  });
+}
+
+const WORKSPACE_MODEL_KEY = 'oryntra_workspace_model';
+const WORKSPACE_MODELS = [
+  ['official', 'Official scanner model'],
+  ['universal_v2', 'Universal V2 research model'],
+  ['minerva_v1', 'Minerva V1 · subscriber access'],
+];
+
+function workspaceModel() {
+  const value = safeStorageGet(WORKSPACE_MODEL_KEY) || 'official';
+  return WORKSPACE_MODELS.some(([id]) => id === value) ? value : 'official';
+}
+
+function syncWorkspaceModelControls(value) {
+  document.querySelectorAll('[data-workspace-model]').forEach(select => { select.value = value; });
+}
+
+function chooseWorkspaceModel(value) {
+  if (value === 'minerva_v1') {
+    syncWorkspaceModelControls(workspaceModel());
+    showSubscriptionModal('minerva_v1');
+    return;
+  }
+  safeStorageSet(WORKSPACE_MODEL_KEY, value);
+  currentPatternMode = value;
+  safeStorageSet('oryntra_pattern_engine_mode', value);
+  syncWorkspaceModelControls(value);
+  updatePatternModePill();
+  updateSettingsEngineDisplay();
+}
+
+function mountWorkspaceModelControls() {
+  currentPatternMode = workspaceModel() === 'minerva_v1' ? 'official' : workspaceModel();
+  document.querySelectorAll('.tab-panel > .page-header').forEach(header => {
+    if (header.parentElement?.id === 'tab-portfolio') return;
+    if (header.querySelector('[data-workspace-model]')) return;
+    const select = document.createElement('select');
+    select.dataset.workspaceModel = 'true';
+    select.setAttribute('aria-label', 'Workspace research model');
+    select.innerHTML = WORKSPACE_MODELS.map(([id, label]) => `<option value="${id}">${escapeHtml(label)}</option>`).join('');
+    select.value = workspaceModel();
+    select.addEventListener('change', () => chooseWorkspaceModel(select.value));
+    const control = document.createElement('label');
+    control.className = 'workspace-model-control';
+    control.innerHTML = '<span>Research model</span>';
+    control.append(select);
+    header.append(control);
+  });
+  syncWorkspaceModelControls(workspaceModel());
+}
+
+async function refreshIdentityProviderOptions() {
+  const status = document.getElementById('oauthProviderStatus');
+  const buttons = Array.from(document.querySelectorAll('[data-oauth-provider]'));
+  if (!buttons.length) return;
+  try {
+    const result = await API.auth.oauthProviders();
+    const enabled = result?.providers || {};
+    buttons.forEach(button => {
+      const provider = button.dataset.oauthProvider;
+      button.disabled = !enabled?.[provider]?.enabled;
+      button.title = button.disabled ? `${provider[0].toUpperCase()}${provider.slice(1)} sign-in is being configured.` : '';
+      button.onclick = () => beginIdentityProviderSignIn(provider);
+    });
+    if (status) status.textContent = buttons.some(button => !button.disabled) ? 'Use the same verified email to link an existing password account.' : 'Google and Apple sign-in will become available after their secure provider credentials are configured.';
+  } catch (_) {
+    buttons.forEach(button => { button.disabled = true; });
+    if (status) status.textContent = 'Sign-in options are temporarily unavailable.';
+  }
+}
+
+function beginIdentityProviderSignIn(provider) {
+  const error = document.getElementById('authError');
+  const acceptLegal = Boolean(document.getElementById('authLegalAccept')?.checked);
+  if (authMode === 'signup' && !acceptLegal) {
+    if (error) error.textContent = 'Accept the Terms, Privacy Policy, and research-only disclosure before creating an account with an identity provider.';
+    return;
+  }
+  window.location.assign(`/api/auth/oauth/${encodeURIComponent(provider)}/start?intent=${encodeURIComponent(authMode)}&accept_legal=${acceptLegal ? 'true' : 'false'}`);
+}
 
 function initAuth() {
+  mountIdentityProviderOptions();
+  mountSubscriptionStructure();
+  mountMinervaModelGate();
+  mountWorkspaceModelControls();
+  refreshIdentityProviderOptions();
   const authBtn = document.getElementById('authOpenBtn');
   if (authBtn) authBtn.addEventListener('click', () => currentUser ? logoutUser() : openAuthModal('login'));
 
@@ -575,6 +799,12 @@ function initAuth() {
   if (subClose) subClose.addEventListener('click', closeSubscriptionModal);
   const betaPreviewAuthBtn = document.getElementById('betaPreviewAuthBtn');
   if (betaPreviewAuthBtn) betaPreviewAuthBtn.addEventListener('click', () => openAuthModal(currentUser ? 'login' : 'signup'));
+  document.querySelectorAll('[data-subscription-maintenance]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const copy = document.getElementById('subscriptionCopy');
+      if (copy) copy.textContent = 'Subscriptions under maintenance. Check back again later.';
+    });
+  });
   document.querySelectorAll('.plan-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
       if (!currentUser) {
@@ -629,6 +859,7 @@ async function refreshAuthState() {
       currentUser = res.user;
       storeCachedAuthUser(currentUser);
       setAuthUI(currentUser);
+      showDailySubscriptionOffer(currentUser);
       loadPersistedProviderKeys().then(() => refreshProviderCredentialSettings()).catch(() => {});
       refreshAnalysisAccess({silent:true}).catch(() => {});
       return;
@@ -655,6 +886,7 @@ function setAuthUI(user) {
     if (btn) btn.textContent = 'LOGIN';
     analysisAccessState = {ready:false, policy:null, quota:null};
     renderAnalysisAccess();
+    renderPortfolioLabAccess();
     openAuthModal('login');
     return;
   }
@@ -667,6 +899,7 @@ function setAuthUI(user) {
   if (workspaceSubtitle) workspaceSubtitle.textContent = 'Private research workspace';
   closeAuthModal();
   renderAnalysisAccess();
+  renderPortfolioLabAccess();
 }
 
 function openAuthModal(mode='login') {
@@ -853,9 +1086,9 @@ async function submitAuth() {
     const res = authMode === 'signup'
       ? await API.auth.signup({email, password, display_name, accept_legal})
       : await API.auth.login({email, password});
-    applyAuthResponse(res, {resume: completedMode !== 'signup'});
+    const openedDailyOffer = applyAuthResponse(res, {resume: completedMode !== 'signup'});
     closeAuthModal();
-    if (completedMode === 'signup') openProviderOnboarding();
+    if (completedMode === 'signup' && !openedDailyOffer) openProviderOnboarding();
   } catch (e) {
     if (err) err.textContent = String(e);
   }
@@ -872,6 +1105,8 @@ function applyAuthResponse(res, {resume=true} = {}) {
   const user = res.user || null;
   storeCachedAuthUser(user);
   setAuthUI(user);
+  const openedDailyOffer = showDailySubscriptionOffer(user);
+  loadUniversalBlueprint();
   loadPersistedProviderKeys().then(() => refreshProviderCredentialSettings()).catch(() => {});
   clearTickerIfAutofilledEmail();
   if (document.querySelector('#tab-paper.active')) {
@@ -883,6 +1118,7 @@ function applyAuthResponse(res, {resume=true} = {}) {
       .catch(() => resumePendingAnalysisIntent());
   }
   refreshProviderCredentialSettings().catch(() => {});
+  return openedDailyOffer;
 }
 
 async function logoutUser() {
@@ -901,19 +1137,32 @@ async function logoutUser() {
   loadPaperTrades().catch(() => {});
 }
 
-function showSubscriptionModal() {
+function showSubscriptionModal(context='membership') {
   const modal = document.getElementById('subscriptionModal');
-  if (modal) modal.style.display = 'flex';
+  if (!modal) return;
+  const title = document.getElementById('subscriptionTitle');
+  const copy = document.getElementById('subscriptionCopy');
+  if (context === 'minerva_v1') {
+    if (title) title.textContent = 'Minerva access';
+    if (copy) copy.textContent = 'Minerva is reserved for active subscribers. Membership and checkout will be configured here after the subscription experience is designed.';
+  } else if (context === 'daily_offer') {
+    if (title) title.textContent = 'Welcome to your research workspace.';
+    if (copy) copy.textContent = 'Here is the current membership comparison. Subscriptions are under maintenance — check back again later.';
+  } else {
+    if (title) title.textContent = 'Choose the research workspace.';
+    if (copy) copy.textContent = 'Compare the workspaces below. Subscriptions are temporarily unavailable while checkout is under maintenance.';
+  }
+  openAccessibleDialog(modal, document.getElementById('subscriptionClose'));
 }
 
 function closeSubscriptionModal() {
   const modal = document.getElementById('subscriptionModal');
-  if (modal) modal.style.display = 'none';
+  closeAccessibleDialog(modal);
 }
 
 function initTabs() {
   const tabs = Array.from(document.querySelectorAll('.tab-btn'));
-  const labels = {scanner: 'Market scanner', watchlist: 'Watchlist', paper: 'Paper trades', backtest: 'Historical backtest', quant: 'Systematic research', settings: 'Settings'};
+  const labels = {scanner: 'Market scanner', watchlist: 'Watchlist', paper: 'Paper trades', backtest: 'Historical backtest', quant: 'Systematic research', portfolio: 'Portfolio Lab', settings: 'Settings'};
   const activate = btn => {
     const tab = btn.dataset.tab;
     tabs.forEach(item => {
@@ -931,6 +1180,8 @@ function initTabs() {
     if (crumb) crumb.textContent = labels[tab] || 'Workspace';
     if (tab === 'watchlist') loadWatchlist();
     if (tab === 'paper') loadPaperTrades();
+    if (tab === 'quant') loadUniversalBlueprint();
+    if (tab === 'portfolio') loadPortfolioLedger();
     if (tab === 'settings' && currentUser) {
       refreshAnalysisAccess({silent:true}).catch(() => {});
       refreshProviderCredentialSettings().catch(() => {});
@@ -957,6 +1208,12 @@ function initTabs() {
 function initQuantLab() {
   const button = document.getElementById('quantRunBtn');
   if (!button) return;
+  // Public Quant Lab is deliberately a frozen historical demonstration. The
+  // server repeats this boundary; these removals prevent misleading controls.
+  document.querySelector('.universal-blueprint-panel')?.setAttribute('hidden', '');
+  document.querySelector('.quant-workbench-grid')?.setAttribute('hidden', '');
+  ['quantModel', 'quantLookback', 'quantLongShort'].forEach(id => document.getElementById(id)?.closest('label')?.setAttribute('hidden', ''));
+  document.querySelectorAll('[data-quant-preset]').forEach(item => item.closest('.quant-preset-row')?.setAttribute('hidden', ''));
   button.addEventListener('click', runQuantResearch);
   document.querySelectorAll('.quant-allocation-slider, .quant-strategy-set input[type="checkbox"]').forEach(input => {
     input.addEventListener('input', updateQuantAllocationUI);
@@ -964,7 +1221,9 @@ function initQuantLab() {
   });
   document.getElementById('quantModel')?.addEventListener('change', event => {
     const profiles = {
-      v1_corporate_quant_system: {time_series_trend: 25, cross_sectional_momentum: 20, mean_reversion: 10, defensive_low_volatility: 15, corporate_quality: 30},
+      v1_corporate_quant_system: {time_series_trend: 25, cross_sectional_momentum: 20, mean_reversion: 10, defensive_low_volatility: 10, corporate_quality: 35},
+      universal_v2: {time_series_trend: 100, cross_sectional_momentum: 0, mean_reversion: 0, defensive_low_volatility: 0, corporate_quality: 0},
+      v1_long_only_trend_momentum_research: {time_series_trend: 60, cross_sectional_momentum: 40, mean_reversion: 0, defensive_low_volatility: 0, corporate_quality: 0},
       v8_regime_diversified: {time_series_trend: 35, cross_sectional_momentum: 30, mean_reversion: 15, defensive_low_volatility: 20},
       v8_balanced: {time_series_trend: 45, cross_sectional_momentum: 40, mean_reversion: 15, defensive_low_volatility: 0},
       v8_trend_first: {time_series_trend: 65, cross_sectional_momentum: 25, mean_reversion: 10, defensive_low_volatility: 0},
@@ -977,6 +1236,10 @@ function initQuantLab() {
       const checkbox = document.querySelector(`.quant-strategy-set input[type="checkbox"][value="${strategy}"]`);
       if (checkbox && (value > 0 || strategy === 'corporate_quality')) checkbox.checked = value > 0;
     });
+    if (event.target.value === 'v1_long_only_trend_momentum_research' || event.target.value === 'universal_v2') {
+      const longShort = document.getElementById('quantLongShort');
+      if (longShort) longShort.checked = false;
+    }
     updateQuantAllocationUI();
   });
   const portfolioPresets = {
@@ -996,6 +1259,48 @@ function initQuantLab() {
     });
   });
   updateQuantAllocationUI();
+}
+
+async function loadUniversalBlueprint() {
+  const target = document.getElementById('universalBlueprint');
+  if (!target) return;
+  if (!currentUser) {
+    target.innerHTML = '<p class="muted">Sign in to inspect the research foundation. This does not enable broker execution or a new public scanner.</p>';
+    return;
+  }
+  target.innerHTML = '<p class="muted">Loading research foundation…</p>';
+  try {
+    renderUniversalBlueprint(await API.universal.blueprint());
+  } catch (error) {
+    target.innerHTML = '<p class="muted">The Universal V2 foundation is available only when the private-research or full Quant Lab route is enabled.</p>';
+  }
+}
+
+function renderUniversalBlueprint(blueprint) {
+  const target = document.getElementById('universalBlueprint');
+  if (!target) return;
+  const policy = blueprint?.position_policy || {};
+  const market = blueprint?.market_context || {};
+  const taxonomy = blueprint?.taxonomy || {};
+  const seed = taxonomy.seed_snapshot || {};
+  const workstreams = Array.isArray(blueprint?.workstreams) ? blueprint.workstreams : [];
+  const states = (policy.state_fields || []).map(field => `<code>${escapeHtml(field)}</code>`).join('') || '<span>Not available</span>';
+  const cards = workstreams.map(item => `<article class="universal-workstream"><div><span class="universal-readiness">${escapeHtml(String(item.readiness || '').replaceAll('_', ' '))}</span><h3>${escapeHtml(item.title || item.id || '')}</h3></div><p>${escapeHtml(item.next_gate || '')}</p><details><summary>Inputs, tuning surface & safeguards</summary><div class="universal-workstream-detail"><strong>Inputs</strong><span>${escapeHtml((item.inputs || []).join(' · '))}</span><strong>May tune</strong><span>${escapeHtml((item.tunable_knobs || []).join(' · '))}</span><strong>Fixed</strong><span>${escapeHtml((item.fixed_invariants || []).join(' · '))}</span></div></details></article>`).join('');
+  target.innerHTML = `<div class="universal-policy-summary"><div><span>POSITION POLICY</span><b>${escapeHtml(String(policy.status || 'foundation').replaceAll('_', ' '))}</b><small>${escapeHtml(policy.integration_status || '')}</small></div><div><span>POSITION STATE</span><div class="universal-state-fields">${states}</div></div></div><div class="universal-policy-summary"><div><span>MARKET CONTEXT</span><b>${escapeHtml(String(market.status || 'foundation').replaceAll('_', ' '))}</b><small>${escapeHtml(market.integration_status || '')}</small></div><div><span>MULTI-FAMILY TAXONOMY</span><b>${escapeHtml(String(taxonomy.status || 'foundation').replaceAll('_', ' '))}</b><small>${escapeHtml(`${taxonomy.family_count || 0} curated families. ${seed.available ? '25,000-security automated seed loaded; not point-in-time backtest data.' : taxonomy.snapshot_contract?.universe_definition || ''}`)}</small></div></div>${seed.available ? `<form id="universalTaxonomyLookup" class="universal-taxonomy-lookup"><label><span>Inspect a seed member</span><input name="symbol" value="AAPL" maxlength="32" autocomplete="off" aria-label="Seed taxonomy ticker"></label><button type="submit" class="ghost-btn">Show families</button><p id="universalTaxonomyResult" class="muted">This lookup shows classification context only; it does not alter a model or create a trade.</p></form>` : ''}<div class="universal-workstream-grid">${cards}</div><details class="universal-astra-handoff"><summary>Astra tuning handoff</summary><ol>${(blueprint?.astra_handoff || []).map(step => `<li>${escapeHtml(step)}</li>`).join('')}</ol></details>`;
+  target.querySelector('#universalTaxonomyLookup')?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const symbol = new FormData(event.currentTarget).get('symbol')?.toString().trim();
+    const result = target.querySelector('#universalTaxonomyResult');
+    if (!symbol || !result) return;
+    result.textContent = 'Loading family context…';
+    try {
+      const response = await API.universal.taxonomySymbol(symbol);
+      const matches = (response.matches || []).map(match => `${match.security?.name || match.security?.symbol || symbol}: ${(match.memberships || []).map(edge => edge.family_id).join(' · ')}`).join(' | ');
+      result.textContent = matches || 'No family memberships were found.';
+    } catch (error) {
+      result.textContent = 'That symbol is not present in the local seed universe.';
+    }
+  });
 }
 
 function updateQuantAllocationUI() {
@@ -1094,19 +1399,15 @@ async function runQuantResearch() {
     return;
   }
   const tickers = (document.getElementById('quantTickers')?.value || '').split(/[\s,]+/).map(sanitizeTickerSymbol).filter(Boolean);
-  const strategies = Array.from(document.querySelectorAll('.quant-strategy-set input:checked')).map(input => input.value);
-  if (tickers.length < 2 || !strategies.length) { status.textContent = 'Choose at least two symbols and one strategy family.'; return; }
-  const weights = Object.fromEntries(Array.from(document.querySelectorAll('.quant-allocation-slider')).map(slider => [slider.dataset.strategy, Number(slider.value) || 0]));
-  if (!strategies.some(strategy => weights[strategy] > 0)) { status.textContent = 'Give at least one selected strategy an allocation above 0%.'; return; }
+  if (tickers.length < 2) { status.textContent = 'Choose at least two symbols for the fixed public research profile.'; return; }
   const provider = document.getElementById('quantProvider')?.value || 'auto';
   const requestedProvider = provider === 'cache_only' ? 'auto' : provider;
   if (!await requireProviderKey({type:'quant'}, requestedProvider)) {
     status.textContent = 'Connect the selected provider key in this browser to use Quant Lab.';
     return;
   }
-  const lookback = Number(document.getElementById('quantLookback')?.value || 126);
   const period = document.getElementById('quantPeriod')?.value || '2y';
-  const payload = {tickers, strategies, period, model: document.getElementById('quantModel')?.value || 'v1_corporate_quant_system', strategy_weights: weights, trend_lookback: lookback, momentum_lookback: lookback, cost_bps: Number(document.getElementById('quantCost')?.value || 12), borrow_bps_annual: Number(document.getElementById('quantBorrow')?.value || 50), long_short: Boolean(document.getElementById('quantLongShort')?.checked), target_annual_volatility: Number(document.getElementById('quantTargetVol')?.value || 12), max_gross_exposure: Number(document.getElementById('quantMaxGross')?.value || 1), max_single_name_weight: Number(document.getElementById('quantMaxName')?.value || 35) / 100, rebalance_frequency: document.getElementById('quantRebalance')?.value || 'weekly', walk_forward_folds: Number(document.getElementById('quantWalkForward')?.value || 3), regime_conditioned_weights: Boolean(document.getElementById('quantRegimeWeights')?.checked), liquidity_aware_costs: Boolean(document.getElementById('quantLiquidityCosts')?.checked), portfolio_value_assumption: Number(document.getElementById('quantPortfolioValue')?.value || 1000000), impact_coefficient_bps: Number(document.getElementById('quantImpactCoefficient')?.value || 18), max_adv_participation_pct: Number(document.getElementById('quantAdvParticipation')?.value || 2)};
+  const payload = {tickers};
   button.disabled = true; results.hidden = true; status.textContent = 'Loading histories, applying fixed rules, and modeling next-session execution…';
   try {
     const activeProvider = directProviderFor(requestedProvider);
@@ -1290,6 +1591,86 @@ async function resumePendingAnalysisIntent() {
   if (intent.type === 'scan') runScan(intent.ticker, intent.period);
   if (intent.type === 'scan-all') scanAllWatchlist();
   if (intent.type === 'quant') runQuantResearch();
+  if (intent.type === 'portfolio') runPortfolioLab();
+}
+
+function renderPortfolioLabAccess() {
+  const lock = document.getElementById('portfolioAccessLock');
+  const workspace = document.getElementById('portfolioWorkspace');
+  if (!lock || !workspace) return;
+  const allowed = hasPortfolioProAccess(currentUser);
+  lock.hidden = allowed;
+  workspace.hidden = !allowed;
+}
+
+function hasPortfolioProAccess(user) {
+  return ['pro', 'plus', 'max', 'max_bundle', 'max-bundle'].includes(String(user?.subscription?.plan_code || '').toLowerCase());
+}
+
+function portfolioDirectiveCard(row) {
+  const action = String(row.action || 'HOLD').toLowerCase();
+  const lifecycle = row.lifecycle || {};
+  const lifecycleLine = lifecycle.current_stop
+    ? `Active research stop ${Number(lifecycle.current_stop).toFixed(2)} · ${Number(lifecycle.held_sessions || 0)} sessions held`
+    : 'No active lifecycle state recorded for this symbol.';
+  return `<article class="portfolio-directive portfolio-${escapeHtml(action)}"><div class="portfolio-directive-head"><strong>${escapeHtml(row.symbol || '—')}</strong><span>${escapeHtml(row.action || 'HOLD')}</span></div><div class="portfolio-directive-values"><div><small>Target</small><b>${Number(row.target_weight_pct || row.target_weight || 0).toFixed(2)}%</b></div><div><small>Prior</small><b>${Number(row.prior_weight_pct || row.prior_weight || 0).toFixed(2)}%</b></div><div><small>Reference close</small><b>${Number(row.reference_close || row.reference_price || 0).toFixed(2)}</b></div><div><small>Target shares</small><b>${Number(row.estimated_target_shares || row.estimated_shares || 0).toFixed(2)}</b></div></div><p>${escapeHtml(row.rationale || '')}</p><small class="portfolio-lifecycle">${escapeHtml(lifecycleLine)}</small></article>`;
+}
+
+function renderPortfolioDecision(report, {stored=false} = {}) {
+  const results = document.getElementById('portfolioResults');
+  if (!results) return;
+  const directives = report.directives || [];
+  const actions = directives.reduce((counts, row) => { counts[row.action] = (counts[row.action] || 0) + 1; return counts; }, {});
+  const summary = ['BUY', 'SELL', 'TRIM', 'HOLD'].filter(key => actions[key]).map(key => `<span><b>${actions[key]}</b> ${key.toLowerCase()}</span>`).join('') || '<span>No directives</span>';
+  results.innerHTML = `<section class="panel portfolio-decision-summary"><div><p class="eyebrow">${stored ? 'Latest saved ledger' : 'Decision saved'}</p><h2>${escapeHtml(report.label || 'Portfolio Lab')}</h2><p>${escapeHtml(report.execution_note || 'This record is research-only. No broker order was created.')}</p></div><div class="portfolio-action-summary">${summary}</div><div class="portfolio-fingerprints"><span>AS OF <b>${escapeHtml(report.as_of || '—')}</b></span><span>DATASET <code>${escapeHtml(String(report.dataset_fingerprint || '').slice(0, 14))}…</code></span><span>CONFIG <code>${escapeHtml(String(report.configuration_fingerprint || '').slice(0, 14))}…</code></span></div></section><section class="portfolio-directive-grid">${directives.map(portfolioDirectiveCard).join('')}</section>`;
+}
+
+async function loadPortfolioLedger() {
+  renderPortfolioLabAccess();
+  if (!hasPortfolioProAccess(currentUser)) return;
+  try {
+    const response = await API.portfolioLab.runs();
+    if (response.runs?.length) renderPortfolioDecision(response.runs[0], {stored:true});
+  } catch (error) {
+    if (error.statusCode !== 402) console.warn('Portfolio ledger could not load', error);
+  }
+}
+
+async function runPortfolioLab() {
+  if (!currentUser) { openAuthModal('login'); return; }
+  if (!hasPortfolioProAccess(currentUser)) { showSubscriptionModal('membership'); return; }
+  const button = document.getElementById('portfolioRunBtn');
+  const loading = document.getElementById('portfolioLoading');
+  const tickers = (document.getElementById('portfolioTickers')?.value || '').split(/[\s,]+/).map(sanitizeTickerSymbol).filter((ticker, index, all) => ticker && all.indexOf(ticker) === index);
+  if (tickers.length < 2) { showError('Portfolio Lab needs at least two unique ticker symbols.'); return; }
+  if (tickers.length > 24) { showError('Portfolio Lab accepts up to 24 symbols per research ledger.'); return; }
+  const preferredProvider = document.getElementById('portfolioProvider')?.value || 'auto';
+  if (!await requireProviderKey({type:'portfolio'}, preferredProvider)) return;
+  try {
+    const access = await refreshAnalysisAccess({silent:true});
+    if (!access.ready) throw new Error('Analysis is not enabled for this account or server license mode.');
+    button.disabled = true;
+    loading.style.display = '';
+    const activeProvider = directProviderFor(preferredProvider);
+    const markets = await Promise.all(tickers.map(ticker => fetchDirectMarketBars(ticker, '2y', activeProvider, 254)));
+    const report = await API.portfolioLab.runUploaded({
+      label: (document.getElementById('portfolioLabel')?.value || 'Portfolio Lab').trim() || 'Portfolio Lab',
+      histories: markets.map((market, index) => ({ticker: tickers[index], bars: market.bars})),
+    });
+    renderPortfolioDecision(report);
+  } catch (error) {
+    if (error.code === 'SUBSCRIPTION_REQUIRED' || error.statusCode === 402) showSubscriptionModal('membership');
+    else showError(error.message || String(error));
+  } finally {
+    if (button) button.disabled = false;
+    if (loading) loading.style.display = 'none';
+  }
+}
+
+function initPortfolioLab() {
+  document.getElementById('portfolioAccessBtn')?.addEventListener('click', () => showSubscriptionModal('membership'));
+  document.getElementById('portfolioRunBtn')?.addEventListener('click', runPortfolioLab);
+  renderPortfolioLabAccess();
 }
 
 function initAnalysisAccess() {
@@ -1299,6 +1680,7 @@ function initAnalysisAccess() {
   });
   document.getElementById('analysisAccessRefreshBtn')?.addEventListener('click', () => refreshAnalysisAccess({force:true}));
   renderAnalysisAccess();
+  renderPortfolioLabAccess();
 }
 
 function initScanner() {
@@ -1421,7 +1803,7 @@ async function runScan(ticker = null, period = null) {
   try {
     animateLoadingSteps();
     const market = await fetchDirectMarketBars(raw, currentPeriod, 'auto', 320);
-    const data = await API.scanUploaded(raw, currentPeriod, market.provider, market.bars);
+    const data = await API.scanUploaded(raw, currentPeriod, market.provider, market.bars, workspaceModel());
     currentAnalysis = data;
     if (Number.isFinite(Number(data.search_counter))) {
       updateSearchCounter(data.search_counter);
@@ -2075,10 +2457,15 @@ function initDevTools() {
 
   if (select) {
     if (!Array.from(select.options).some(opt => opt.value === currentPatternMode)) {
-      currentPatternMode = 'official';
-      safeStorageSet('oryntra_pattern_engine_mode', 'official');
+      // Pattern Lab has its own small comparison catalog.  Do not overwrite
+      // the workspace-wide Universal V2 selection just because this developer
+      // control does not offer that research engine.
+      if (currentPatternMode !== 'universal_v2') {
+        currentPatternMode = 'official';
+        safeStorageSet('oryntra_pattern_engine_mode', 'official');
+      }
     }
-    select.value = currentPatternMode;
+    select.value = Array.from(select.options).some(opt => opt.value === currentPatternMode) ? currentPatternMode : 'official';
     if (select.value !== currentPatternMode) {
       currentPatternMode = 'official';
       select.value = 'official';
@@ -2176,15 +2563,17 @@ function updatePatternModePill() {
 
 
 function engineLabel(mode) {
-  const labels = {official: 'V1.0 OFFICIAL', v8: 'V1.0 ANALYTICS', vai2: 'V1.0 QUANT'};
+  const labels = {official: 'V1.0 OFFICIAL', universal_v2: 'UNIVERSAL V2 RESEARCH', v8: 'V1.0 ANALYTICS', vai2: 'V1.0 QUANT'};
   return labels[String(mode || '').toLowerCase()] || String(mode || 'official').toUpperCase();
 }
 
 function setAppEngine(mode, opts={}) {
-  const allowed = ['official'];
+  const allowed = ['official', 'universal_v2'];
   const next = allowed.includes(String(mode || '').toLowerCase()) ? String(mode).toLowerCase() : 'official';
   currentPatternMode = next;
   safeStorageSet('oryntra_pattern_engine_mode', next);
+  safeStorageSet(WORKSPACE_MODEL_KEY, next);
+  syncWorkspaceModelControls(next);
   const devSelect = document.getElementById('patternEngineSelect');
   if (devSelect && Array.from(devSelect.options).some(o => o.value === next)) devSelect.value = next;
   const settingsSelect = document.getElementById('settingsEngineSelect');
@@ -2851,6 +3240,7 @@ function renderVAITrainingStatus(job) {
       .replaceAll('VAI 2.2', 'V1.0 Quant')
       .replaceAll('VAI2.2', 'V1.0 Quant')
       .replaceAll('VAI 2.1', 'V1.0 Quant')
+      .replaceAll('VAI 2.2', 'V1.0 Quant')
       .replaceAll('VAI2.1', 'V1.0 Quant')
       .replaceAll('V7', 'V1.0')
       .replaceAll('V8', 'V1.0');
@@ -3064,7 +3454,7 @@ async function scanAllWatchlist() {
       btn.textContent = `⟳ ${index + 1}/${tickers.length}`;
       try {
         const market = await fetchDirectMarketBars(tickers[index], currentPeriod, 'auto', 320);
-        results.push(await API.scanUploaded(tickers[index], currentPeriod, market.provider, market.bars));
+        results.push(await API.scanUploaded(tickers[index], currentPeriod, market.provider, market.bars, workspaceModel()));
       } catch (error) {
         errors.push({ticker: tickers[index], error: error.message || String(error)});
       }
@@ -3646,6 +4036,7 @@ async function runBacktest() {
       period,
       min_score: minScore,
       setups: setupFil ? [setupFil] : [],
+      engine_mode: workspaceModel(),
       provider: market.provider,
       bars: market.bars,
     });

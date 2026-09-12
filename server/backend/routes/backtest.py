@@ -4,6 +4,7 @@ from pydantic import Field, field_validator
 from ..backtest import BacktestRequest, run_backtest, run_backtest_from_histories
 from .analysis import browser_bars_to_history
 from .auth import require_current_user
+from ..model_access import SCANNER_MODEL_IDS, require_model_access
 
 router = APIRouter()
 public_router = APIRouter()
@@ -46,7 +47,10 @@ async def quick_backtest(ticker: str, period: str = "1y", min_score: float = 55)
 @router.post("/run-upload")
 async def browser_backtest_endpoint(req: BrowserBacktestRequest, request: Request):
     """Run authenticated research on browser-fetched daily bars only."""
-    require_current_user(request)
+    user = require_current_user(request)
+    if req.engine_mode not in SCANNER_MODEL_IDS:
+        raise HTTPException(status_code=400, detail="Choose a supported research model.")
+    require_model_access(user, req.engine_mode)
     try:
         history = browser_bars_to_history(req.bars, max(40, int(req.min_history)) + 2)
         report = await run_backtest_from_histories(

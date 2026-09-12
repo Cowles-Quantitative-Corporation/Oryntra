@@ -14,9 +14,19 @@
 
 > **Research software, not an investment adviser.** Oryntra does not connect to a brokerage account, create orders, or tell a user what to buy or sell. Historical simulations are analytical outputs, not forecasts, recommendations, or a promise of performance.
 
+> **Product and ownership boundary.** Oryntra is in development and is not yet operated by Cowles Quantitative Corporation. Any future CQC proprietary research uses only CQC-owned capital through separately authorized accounts; Oryntra users do not invest in CQC, provide it capital, or receive rights to its trading results. Public Oryntra access is software access only.
+
 ## Why I built it
 
 Oryntra began as my high-school passion project. I want to become a quantitative researcher and, eventually, build my own firm. This is where I am teaching myself to take that ambition seriously: by building real software, asking better market questions, documenting the answers, and being honest about what I still do not know.
+
+### My next backend: Universal V2
+
+I am building a shared research engine so my scanner, Pattern Lab and portfolio tests use the same signal definitions. Universal V2 now combines multi-horizon price evidence with covariance-aware risk controls, a cash-and-shares execution ledger, capacity limits, trading costs and explicit annual alpha tests. It is selectable for research; I have not replaced the public Official Momentum scanner.
+
+The first studies did **not** establish consistent alpha. The initial separate-stock test averaged +1.01% annual alpha, while its later-period test averaged −2.10%; a cost-aware retune failed on another stock basket. I am keeping those failures visible and fixing the measurement infrastructure before making performance claims. The [Universal V2 backend guide](docs/UNIVERSAL_V2_BACKEND.md) explains the architecture, exact rules, API, tests, research findings and limitations; the [validation record](docs/UNIVERSAL_V2_VALIDATION.json) retains every candidate from these studies.
+
+I call the next research candidate **Minerva**. Its wider 250-stock price-only robustness check is encouraging but does not meet my release gates, so it remains private research while I test its timestamped corporate-quality and filing-acceleration sleeves separately. The full [Minerva V1 research record](docs/MINERVA_V1_RESEARCH_RECORD.md) includes the good result, the failed breadth tune, and the exact next gate.
 
 I built Oryntra around a simple premise: a useful research product should make its assumptions visible. Instead of hiding a conclusion behind an opaque score, I want the product to show where market data came from, use deterministic calculations where they matter, expose the controls applied to a hypothetical portfolio, and report where the historical evidence is weak. Oryntra is for forming and challenging research hypotheses—not manufacturing certainty.
 
@@ -105,6 +115,8 @@ For repeatable hypothesis testing, a small declarative experiment runner takes d
 | Corporate quality and change sleeve | Do eligible public changes in growth, margins, cash generation, revisions, ownership, and capital structure produce a persistent cross-sectional signal? | Sparse, revised, incomparable, or late-tagged corporate records |
 
 The V1.0 corporate quant system combines the price sleeves with the corporate-quality sleeve, then adjusts their visible contribution weights through a probability-like regime model. Its macro features are policy rate, 2-year/10-year yield curve, credit spread, and inflation, all eligible only after their recorded public availability timestamp. It also reports a daily-dollar-volume cost proxy, factor/relative-value decomposition, and recent strategy-health decay. The V1.0 price baselines remain transparent comparators. The server normalizes selected positive allocations to 100%; it does not silently apply unbounded leverage.
+
+The selectable V1.1 long-only trend/momentum research profile is a constrained candidate, not a replacement for the corporate system or a recommendation. It uses a 60% trend / 40% cross-sectional-momentum mix and defaults to long-only while retaining the same next-session timing, one-way volatility cap, liquidity proxy, capacity checks, correlation stress, and experiment-recording contract. Its documented validation evidence and limitations are in [docs/QUANT_MODEL_VALIDATION_LOG.md](docs/QUANT_MODEL_VALIDATION_LOG.md).
 
 ### How a Quant Lab run works
 
@@ -230,6 +242,7 @@ The default address is `http://127.0.0.1:8001`. Configure `ORYNTRA_PUBLIC_SCANNE
 | Category | Examples | Purpose |
 | --- | --- | --- |
 | Network | `PORT`, `PUBLIC_BASE_URL`, `ORYNTRA_CORS_ORIGINS` | Local service address and allowed origins |
+| Sign-in protection | `ORYNTRA_LOGIN_MAX_FAILURES`, `ORYNTRA_LOGIN_LOCK_SECONDS` | Per-email in-process lockout after repeated failed passwords; pair with edge rate limiting in production |
 | Provider access | `POLYGON_API_KEY`, `TWELVEDATA_API_KEY` | Private server-side market-data credentials |
 | Provider safety | `ORYNTRA_POLYGON_CALLS_PER_MINUTE`, `ORYNTRA_TWELVEDATA_CALLS_PER_MINUTE` | Rate limits aligned to the configured data plan |
 | Research boundary | `ORYNTRA_PRIVATE_RESEARCH_ROUTES`, `ORYNTRA_PUBLIC_DERIVED_ANALYSIS_ENABLED` | Public/private capability separation |

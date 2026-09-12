@@ -4,9 +4,10 @@ import numpy as np
 from typing import Dict, Any, List
 
 from .patterns import detect_all_patterns
+from .research_governance import scanner_research_governance
 
 
-VALID_PATTERN_ENGINE_MODES = {"old", "new", "experimental", "risky", "selective", "balanced", "official", "v8", "vai", "vai2"}
+VALID_PATTERN_ENGINE_MODES = {"old", "new", "experimental", "risky", "selective", "balanced", "official", "v8", "vai", "vai2", "universal_v2"}
 
 
 def normalize_pattern_engine_mode(mode: str | None = None) -> str:
@@ -29,7 +30,7 @@ def normalize_pattern_engine_mode(mode: str | None = None) -> str:
         return "v8"
     if raw in {"vai", "vai1", "vai1.0", "vai_1_0", "vai_10", "vai_experimental", "vai1_experimental"}:
         return "vai"
-    if raw in {"vai2", "vai2.0", "vai_2_0", "vai20", "vai_20", "vai2_experimental", "vai_ai2", "vai2.1", "vai_2_1", "vai21"}:
+    if raw in {"vai2", "vai2.0", "vai_2_0", "vai20", "vai_20", "vai2_experimental", "vai_ai2", "vai2.1", "vai_2_1", "vai21", "vai2.2", "vai_2_2", "vai22"}:
         return "vai2"
     return raw if raw in VALID_PATTERN_ENGINE_MODES else "new"
 
@@ -871,19 +872,19 @@ def _vai_2_0_advanced_patterns(hist: pd.DataFrame, ind: Dict[str, Any]) -> Dict[
     for p in base.get("patterns") or []:
         ctx = dict(p.get("context") or {})
         ctx["engine"] = "vai2"
-        ctx["vai_policy"] = "VAI 2.1 uses V7 candidates plus promoted local models for accept/return/stop-risk/confidence-size decisions."
+        ctx["vai_policy"] = "VAI 2.2 uses V7 candidates plus promoted local models for accept/return/stop-risk/confidence-size decisions."
         p["context"] = ctx
     summary = dict(base.get("summary") or {})
     summary.update({
         "engine_mode": "vai2",
-        "release_version": "VAI-2.1-confidence-weighted-experimental",
-        "vai_policy": "Trainable confidence-weighted model layer with promotion gates; optimizes return quality, stop-risk, and bet sizing, not win rate alone.",
+        "release_version": "VAI-2.2-chronological-pit-experimental",
+        "vai_policy": "Trainable chronological, purge-gapped model layer with promotion gates; evaluates return quality, stop-risk, and confidence sizing rather than win rate alone.",
     })
     out = dict(base)
     out["engine_mode"] = "vai2"
     out["summary"] = summary
-    out["warnings"] = list(base.get("warnings", [])) + ["VAI 2.1 is experimental. Train/validate before trusting outputs."]
-    out["disclaimer"] = "VAI 2.1 Confidence-Weighted Experimental is educational only and not financial advice."
+    out["warnings"] = list(base.get("warnings", [])) + ["VAI 2.2 is experimental. Train/validate before trusting outputs."]
+    out["disclaimer"] = "VAI 2.2 Chronological PIT Experimental is educational only and not financial advice."
     return out
 
 
@@ -973,7 +974,11 @@ def analyze_patterns_multi(
             advanced = detect_all_patterns(hist, ind, timeframe="1d")
             advanced["engine_mode"] = "new"
             advanced.setdefault("summary", {})["engine_mode"] = "new"
-        output[mode] = _compose_pattern_report(hist, ind, advanced, common=common)
+        report = _compose_pattern_report(hist, ind, advanced, common=common)
+        # A common contract makes Official, V8, VAI, and VAI2 outputs
+        # comparable without altering their independent scoring policies.
+        report["research_governance"] = scanner_research_governance(mode, hist)
+        output[mode] = report
     return output
 
 
@@ -1167,4 +1172,3 @@ def _confirm_momentum(ind: Dict[str, Any]) -> Dict[str, Any]:
             "agreeing": max(bullish_signals, bearish_signals),
             "total": total_factors,
         }
-

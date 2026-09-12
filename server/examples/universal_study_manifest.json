@@ -1,0 +1,137 @@
+{
+  "hypothesis": "Shared bounded multi-horizon evidence with covariance and capacity control produces positive, consistent beta-adjusted alpha after costs.",
+  "universe_rule": "Predeclared long-history current-survivor US stocks; alphabetical alternating split. Exploratory, not point-in-time index membership.",
+  "development_symbols": [
+    "ADBE",
+    "BA",
+    "COST",
+    "DE",
+    "F",
+    "GS",
+    "IBM",
+    "JNJ",
+    "MCD",
+    "ORCL",
+    "QCOM",
+    "TGT"
+  ],
+  "confirmation_symbols": [
+    "AMAT",
+    "BAC",
+    "CVX",
+    "DIS",
+    "GE",
+    "HD",
+    "INTC",
+    "LRCX",
+    "MU",
+    "PFE",
+    "SLB",
+    "WMT"
+  ],
+  "development_start": "2016-01-01",
+  "development_end": "2020-12-31",
+  "forward_start": "2021-01-01",
+  "forward_end": "2025-12-31",
+  "confirmation_start": "2016-01-01",
+  "confirmation_end": "2025-12-31",
+  "risk_free_source": "Kenneth French daily RF; contemporaneous published return series, not a forecast feature",
+  "candidates": [
+    {
+      "trend_weight": 0.4,
+      "momentum_weight": 0.35,
+      "breakout_weight": 0.15,
+      "pullback_weight": 0.1,
+      "entry_threshold": 0.1,
+      "vol_target": 0.12
+    },
+    {
+      "trend_weight": 0.4,
+      "momentum_weight": 0.35,
+      "breakout_weight": 0.15,
+      "pullback_weight": 0.1,
+      "entry_threshold": 0.1,
+      "vol_target": 0.18
+    },
+    {
+      "trend_weight": 0.4,
+      "momentum_weight": 0.35,
+      "breakout_weight": 0.15,
+      "pullback_weight": 0.1,
+      "entry_threshold": 0.25,
+      "vol_target": 0.12
+    },
+    {
+      "trend_weight": 0.4,
+      "momentum_weight": 0.35,
+      "breakout_weight": 0.15,
+      "pullback_weight": 0.1,
+      "entry_threshold": 0.25,
+      "vol_target": 0.18
+    },
+    {
+      "trend_weight": 0.2,
+      "momentum_weight": 0.6,
+      "breakout_weight": 0.1,
+      "pullback_weight": 0.1,
+      "entry_threshold": 0.1,
+      "vol_target": 0.12
+    },
+    {
+      "trend_weight": 0.2,
+      "momentum_weight": 0.6,
+      "breakout_weight": 0.1,
+      "pullback_weight": 0.1,
+      "entry_threshold": 0.1,
+      "vol_target": 0.18
+    },
+    {
+      "trend_weight": 0.2,
+      "momentum_weight": 0.6,
+      "breakout_weight": 0.1,
+      "pullback_weight": 0.1,
+      "entry_threshold": 0.25,
+      "vol_target": 0.12
+    },
+    {
+      "trend_weight": 0.2,
+      "momentum_weight": 0.6,
+      "breakout_weight": 0.1,
+      "pullback_weight": 0.1,
+      "entry_threshold": 0.25,
+      "vol_target": 0.18
+    },
+    {
+      "trend_weight": 0.6,
+      "momentum_weight": 0.2,
+      "breakout_weight": 0.1,
+      "pullback_weight": 0.1,
+      "entry_threshold": 0.1,
+      "vol_target": 0.12
+    },
+    {
+      "trend_weight": 0.6,
+      "momentum_weight": 0.2,
+      "breakout_weight": 0.1,
+      "pullback_weight": 0.1,
+      "entry_threshold": 0.1,
+      "vol_target": 0.18
+    },
+    {
+      "trend_weight": 0.6,
+      "momentum_weight": 0.2,
+      "breakout_weight": 0.1,
+      "pullback_weight": 0.1,
+      "entry_threshold": 0.25,
+      "vol_target": 0.12
+    },
+    {
+      "trend_weight": 0.6,
+      "momentum_weight": 0.2,
+      "breakout_weight": 0.1,
+      "pullback_weight": 0.1,
+      "entry_threshold": 0.25,
+      "vol_target": 0.18
+    }
+  ]
+}

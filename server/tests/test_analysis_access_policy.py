@@ -59,3 +59,24 @@ def test_daily_quota_reserve_and_refund(monkeypatch, tmp_path):
     refunded = refund_quota(7, 1)
     assert refunded["used"] == 1
     assert usage_status(7)["remaining"] == 1
+
+
+def test_pro_scanner_limit_is_200_and_max_bundle_is_unlimited(monkeypatch, tmp_path):
+    monkeypatch.setattr(database, "DB_PATH", str(tmp_path / "plans.db"))
+    monkeypatch.delenv("ORYNTRA_DAILY_ANALYSIS_LIMIT", raising=False)
+    database.init_db()
+    conn = database.get_connection()
+    conn.executemany(
+        "INSERT INTO users(id, email, display_name, password_salt, password_hash) VALUES (?, ?, ?, ?, ?)",
+        [(1, "plus@example.com", "Plus", "00", "00"), (2, "max@example.com", "Max", "00", "00")],
+    )
+    conn.executemany(
+        "INSERT INTO subscriptions (user_id, plan_code, plan_name, status) VALUES (?, ?, ?, 'ACTIVE')",
+        [(1, "pro", "Oryntra Pro"), (2, "max_bundle", "Max Bundle")],
+    )
+    conn.commit()
+    conn.close()
+    assert usage_status(1)["limit"] == 200
+    assert usage_status(1)["remaining"] == 200
+    assert usage_status(2)["limit"] is None
+    assert usage_status(2)["remaining"] is None

@@ -1,10 +1,14 @@
 # Oryntra AI: Features, Models, and Architecture
 
-Source basis: current Git checkout on 2026-09-03. This guide describes implemented code, not a proposed roadmap or a claim about a live deployment.
+Source basis: current Git checkout on 2026-09-05. This guide describes implemented code, not a proposed roadmap or a claim about a live deployment.
+
+Universal V2 implementation and measured limitations are documented in [Universal V2 backend](UNIVERSAL_V2_BACKEND.md). It introduces shared scanner/portfolio signals and a separate cash-funded execution engine; it has not replaced public Official Momentum or achieved the requested consistent-alpha gate.
 
 ## 1. Product boundary
 
 Oryntra is an educational market-analysis and historical-research product. It has a shared Python backend, a browser client, and a Flutter/iOS client. It can calculate derived indicators, detect rule-defined patterns and setups, create hypothetical research levels, save watchlists and paper trades, run historical backtests, and produce portfolio-research diagnostics.
+
+Public access is intentionally separate from CQC internal research. Until a formation-and-IP-assignment configuration is explicitly confirmed, Oryntra publicly states that it is not operated by CQC. Subscribers never receive CQC equity, proprietary results, managed-account access, internal directives, or an authorization to trade. Portfolio Lab’s configurable directive ledger is server-authorized CQC-internal research only and disabled by default; public Quant Lab accepts only a frozen historical demonstration profile.
 
 It cannot connect to a brokerage, submit or route orders, custody funds, trade autonomously, guarantee a fill, or provide a reliable forecast merely because a score is high. The words “signal,” “entry,” “stop,” “target,” “confidence,” and “expected” appear in legacy/internal structures and user-facing research plans; they describe deterministic or simulated output, not personalized advice.
 
@@ -16,9 +20,10 @@ It cannot connect to a brokerage, submit or route orders, custody funds, trade a
 | Browser workspace | Controlled by `ORYNTRA_PUBLIC_SCANNER_WEBSITE` | Six-tab user interface served by FastAPI |
 | Flutter client | Separate build in `ios-app/` | Five-tab mobile interface using the same account and analysis API |
 | Browser-upload backtest | Mounted outside private mode | Authenticated historical research from bars fetched directly by the client |
-| Quant Lab upload | Authenticated route always available; broader Quant API is flag-controlled | Historical multi-asset portfolio research from client-supplied normalized bars |
+| Public Quant Lab upload | Authenticated route always available | Frozen historical research profile using client-supplied normalized bars; public users cannot tune model, allocation, risk, or execution settings |
 | Private research API | Controlled by `ORYNTRA_PRIVATE_RESEARCH_ROUTES` | Alternate engines, server-provider scans, cache, Pattern Lab, VAI training, private backtests, pattern records, and Pro tools |
 | Public Quant Lab administration | Controlled by `ORYNTRA_PUBLIC_QUANT_LAB_ENABLED` | Enables the full authenticated Quant router without enabling all private research routes |
+| Internal Quant / Universal V2 research | Explicit private-research operating mode plus server-provisioned internal authorization | Configurable signals, next-open portfolio ledger, and explicit benchmark/cash alpha evaluation; never subscriber access |
 | Maintenance site | Separate small application | Branded availability page independent of the main workspace |
 
 The existence of code does not mean a feature is enabled in a deployed environment. Startup flags decide which route groups are mounted. Provider plans, browser CORS, authentication policy, mobile permissions, ad configuration, and App Store state impose additional runtime boundaries.
@@ -53,7 +58,17 @@ The model fits accept/reject probability and auxiliary return/stop-risk quantiti
 
 ### 3.5 Historical pattern-engine modes
 
-Private Pattern Lab can compare `old`, `new`, `experimental`, `risky`, `selective`, `balanced`, `official`, `v8`, `vai`, and `vai2`. Alias normalization maps historical labels such as V1 through V7 to those modes. These are experiment families retained for reproducible comparisons; they are not ten simultaneous public products.
+The pattern engine retains historical modes such as `old`, `new`, `experimental`, `risky`, `selective`, `balanced`, `official`, `v8`, `vai`, and `vai2`. The current private Pattern Lab comparison order is `official`, `v8`, `vai2`, `universal_v2`; its mode cleaner restricts that surface to these supported choices. These are research families, not simultaneous public products.
+
+### 3.5.0 Universal V2 — shared price-evidence research engine
+
+`universal_v2` uses identical causal trend, skip-month momentum, closing-range breakout and trend-conditioned pullback features for scanner and portfolio consumers. Its portfolio path adds target caps, covariance shrinkage/correlation stress, a long-only cash/shares ledger, next-open transactions, drift, volume-constrained fills and costs. The dedicated upload API accepts explicit daily SPY/QQQ benchmark and risk-free returns for annual CAPM alpha with HAC uncertainty. Pattern Lab and scanner backtests share its signals but retain their separate diagnostic outcome models. Macro/corporate data are not used by V2. Both tested configurations failed the acceptance criteria and remain research-only.
+
+Universal V2 also has a disabled position-lifecycle foundation: a serializable position state, precommitted stop/limit phase, monotone trailing stop, partial-profit, spike/time/signal directive contract and audit reasons. It is CQC-internal research infrastructure, not an activated public model. Residual selection, event sleeves, sector/beta controls, regime exposure and meta-labeling each remain separately gated by point-in-time data and frozen-test requirements.
+
+### 3.5.1 Shared research contract
+
+Every scanner result now carries the same `research_governance` record: model identity/maturity, a daily-bar input fingerprint and date range, the validation requirement, and explicit portfolio/execution limits. Official, V8, VAI 1.0, and VAI 2.2 therefore expose comparable provenance without sharing scores, thresholds, or model weights. VAI 2.2 additionally states its chronological train/validation/untouched-test promotion rule. This metadata does not alter a score or make a result executable.
 
 ### 3.6 Oryntra V1.0 Quant Lab — portfolio research, not scanner scoring
 
@@ -155,7 +170,11 @@ The lighter backtest feature evaluates setup rules for a single ticker over uplo
 
 This backtest is different from Quant Lab: it evaluates historical scanner/setup examples rather than a multi-asset sleeve portfolio.
 
+Its result carries the selected scanner engine’s shared research contract plus the actual tested candle count, symbols, date range, and dataset fingerprint. The execution statement remains deliberately narrow: next-session daily-bar simulation with configured commission/slippage, not intraday fills or market-impact modeling.
+
 ## 10. Quant Lab
+
+Quant Lab returns the same top-level `research_governance` structure as the scanner paths, adapted for a multi-asset run. It records its model profile, universe/configuration fingerprint, validation requirement, and the distinction between daily-bar cost/capacity proxies and a real order-book or fire-sale model. This makes cross-feature research boundaries explicit without conflating the scanner with portfolio construction.
 
 ### 10.1 Strategy sleeves
 
@@ -165,7 +184,9 @@ This backtest is different from Quant Lab: it evaluates historical scanner/setup
 - Defensive low volatility: favors the lowest 35% of trailing 63-session volatility and can short the highest 35%; requires at least four symbols.
 - Corporate quality and change: ranks point-in-time corporate scores and forms top/bottom baskets when at least four symbols have nonzero eligible evidence.
 
-### 10.2 Portfolio controls
+### 10.2 Model profiles and portfolio controls
+
+The V1.1 long-only trend/momentum research profile is a selectable, validation-gated candidate: 60% time-series trend and 40% cross-sectional momentum. Its profile default is long-only; callers can still explicitly request long/short construction for a separate research comparison. It retains the same next-session timing, one-way volatility scaler, liquidity-cost proxy, capacity scenarios, correlation-convergence diagnostics, chronology, and experiment-recording contract as the other profiles. It is not the application default and is not a live-trading signal.
 
 - signal lookback and selected sleeve allocations;
 - long-only or long/short construction;
@@ -218,7 +239,7 @@ The correlation stress is a diversification-breakdown sensitivity test. It is no
 
 ### 10.6 Client differences
 
-The browser exposes all six model profiles, editable sleeve sliders, lookback choices, cost/borrow/portfolio/impact/ADV controls, risk presets, and the full visual report. Mobile supports four displayed profiles, up to eight symbols per run, fixed 126-session lookback and three folds, user-selectable sleeves and core risk/cost controls, background execution time, and automatic local storage of completed reports. Polygon/Massive Basic mobile runs are capped at four symbols by the client; a larger mobile universe requires the other provider path and its applicable plan limits.
+The browser exposes all seven model profiles, editable sleeve sliders, lookback choices, cost/borrow/portfolio/impact/ADV controls, risk presets, and the full visual report. Mobile shows the corporate, diversified, trend-first, relative-strength, and V1.1 long-only trend/momentum profiles, up to eight symbols per run, fixed 126-session lookback and three folds, user-selectable sleeves and core risk/cost controls, background execution time, and automatic local storage of completed reports. Selecting the V1.1 profile applies its 60/40 weights and turns off the long/short switch; a user can deliberately re-enable it for a separate comparison. Polygon/Massive Basic mobile runs are capped at four symbols by the client; a larger mobile universe requires the other provider path and its applicable plan limits.
 
 ## 11. AI explanation
 

@@ -74,6 +74,7 @@ class AppConfig {
   static String get privacyUrl => '$authBaseUrl/legal/privacy';
   static String get termsUrl => '$authBaseUrl/legal/terms';
   static String get riskUrl => '$authBaseUrl/legal/risk-disclaimer';
+  static String get billingUrl => '$authBaseUrl/legal/refund';
   static String get methodologyUrl => '$authBaseUrl/legal/methodology';
   static String get contactUrl => '$authBaseUrl/legal/contact';
   static String get reportAdUrl => '$authBaseUrl/legal/contact?topic=ad-report';

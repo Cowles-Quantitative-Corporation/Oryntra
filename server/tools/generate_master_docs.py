@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Generate a plain-text Oryntra technical reference from tracked source.
+"""Generate a plain-text Oryntra technical reference from reviewed source.
 
 The output is intentionally source-derived: it inventories every Git-tracked
-file, parses readable source and configuration, and catalogues binary assets
+file plus explicitly reviewed additions, parses readable source and configuration, and catalogues binary assets
 without reading private `.env` values, local market-data files, or untracked
 build products.
 """
@@ -24,9 +24,26 @@ ROOT = Path(__file__).resolve().parents[2]
 SERVER = ROOT / "server"
 OUTPUT = ROOT / "docs" / "Oryntra_AI_Master_Technical_Documentation.txt"
 
+# Explicitly reviewed new sources are included before staging, never all untracked files.
+REVIEWED_ADDITIONS = (
+    "server/backend/universal_engine.py", "server/backend/portfolio_execution.py",
+    "server/backend/alpha_evaluation.py", "server/backend/universal_research.py",
+    "server/backend/universal_position_policy.py", "server/backend/universal_market_context.py", "server/backend/universal_taxonomy.py", "server/backend/universal_research_blueprint.py",
+    "server/backend/routes/universal.py", "server/tools/run_universal_study.py",
+    "server/tools/build_universal_taxonomy.py", "server/data/universal_taxonomy/family_catalog.json",
+    "server/data/universal_taxonomy/financedatabase_seed_25000.json",
+    "server/tests/test_universal_engine.py", "server/examples/universal_study_manifest.json",
+    "docs/UNIVERSAL_V2_BACKEND.md", "docs/UNIVERSAL_V2_VALIDATION.json", "docs/ASTRA_UNIVERSAL_TUNING_PLAYBOOK.md",
+    "server/backend/legal_operator.py", "server/backend/internal_access.py",
+    "server/frontend/legal/terms_canonical.html", "server/frontend/legal/privacy_canonical.html",
+    "server/frontend/legal/risk-disclaimer_canonical.html", "server/frontend/legal/methodology_canonical.html",
+    "server/frontend/legal/refund_canonical.html", "server/tests/test_legal_operator.py",
+    "docs/LEGAL_AND_REGULATORY_CHANGELOG.md",
+)
+
 
 def source_files() -> list[Path]:
-    """Return the exact version-controlled repository surface.
+    """Return the version-controlled surface plus explicitly reviewed additions.
 
     Git is the authority here. This prevents local Flutter output, credentials,
     databases, caches, virtual environments, and editor files from leaking into
@@ -36,7 +53,8 @@ def source_files() -> list[Path]:
         raw = subprocess.check_output(["git", "ls-files", "-z"], cwd=ROOT)
     except (OSError, subprocess.CalledProcessError) as error:
         raise RuntimeError("A Git checkout is required to generate the complete file reference.") from error
-    files = [ROOT / item.decode("utf-8") for item in raw.split(b"\0") if item]
+    files = {ROOT / item.decode("utf-8") for item in raw.split(b"\0") if item}
+    files.update(ROOT / item for item in REVIEWED_ADDITIONS)
     return sorted((path for path in files if path.is_file()), key=lambda item: rel(item))
 
 
@@ -44,6 +62,8 @@ def source_text(path: Path) -> str | None:
     """Read a tracked text file; return None for a binary asset."""
     if path == OUTPUT:
         return ""
+    if path.stat().st_size > 2_000_000:
+        return None
     payload = path.read_bytes()
     if b"\0" in payload[:8192]:
         return None
@@ -192,8 +212,9 @@ SYSTEM_CHAPTERS = [
     (
         "5. QUANT LAB RESEARCH MODEL",
         [
-            "Quant Lab is the most explicit part of the repository about simulation mechanics. It supports time-series trend, cross-sectional momentum, short-horizon mean reversion, defensive low volatility, and a point-in-time corporate-quality sleeve. Each sleeve converts information available by the simulated date into target weights. Six named profiles choose transparent starting allocations: the corporate system, diversified price, balanced price, trend-first, relative-strength, and equal-weight baselines. An ensemble is therefore a named combination of documented component rules rather than a hidden optimizer.",
-            "Execution timing is deliberately conservative for a daily-bar tool: a signal is formed with the session close at time t, then the target is held for the following session. Weight changes incur the user-entered base cost and, when enabled, a square-root market-impact estimate based on rolling daily dollar volume; negative weights carry the selected annual borrow cost. The controls cap individual names and gross exposure, rebalance on the requested cadence, and use trailing volatility targeting only to reduce exposure. Regime-conditioned sleeve weights can change the mixture but do not create brokerage orders.",
+            "Universal V2 is a new, separate shared-engine path selected as universal_v2. The same causal price features feed scanner, Pattern Lab and portfolio research; a new cash-and-shares ledger handles next-open transactions, drifting positions, no-trade bands, explicit cash returns, hard prior-volume capacity limits and costs. Stressed covariance affects target risk, rather than only adding a chart. The dedicated authenticated upload routes expose annual benchmark-adjusted alpha with HAC uncertainty. Initial 24-candidate development work and two separate-stock studies did not meet the requested consistency/alpha criteria; the public engine was not replaced. docs/UNIVERSAL_V2_BACKEND.md contains the exact contract and docs/UNIVERSAL_V2_VALIDATION.json retains the evidence.",
+            "Quant Lab is the most explicit part of the repository about simulation mechanics. It supports time-series trend, cross-sectional momentum, short-horizon mean reversion, defensive low volatility, and a point-in-time corporate-quality sleeve. Each sleeve converts information available by the simulated date into target weights. Seven named profiles choose transparent starting allocations: the corporate system, diversified price, balanced price, trend-first, relative-strength, equal-weight baselines, and a validation-gated V1.1 long-only trend/momentum research candidate. The V1.1 profile defaults to 60% trend and 40% relative strength without shorts unless a caller explicitly overrides that construction. An ensemble is therefore a named combination of documented component rules rather than a hidden optimizer.",
+            "Legacy Quant profiles calculate following-session returns using shifted target weights and charge target changes, not the trades needed to maintain actual drifting shares. That is a material execution limitation, not equivalence to V2's ledger. Their controls cap targets and gross exposure, apply trailing volatility scaling, and optionally blend regime-conditioned sleeve weights. They remain historical research comparators rather than execution-validated portfolio engines. The scanner backtest's missing stop/target return, final-bar handling and one-sided commission were corrected during the V2 work; earlier scanner-backtest results require rerunning.",
             "The report treats path, capacity, and data quality as first-class outputs. It includes return, volatility, drawdown, turnover, historical VaR and expected shortfall, concentration, current gross/net exposure, chronological development-versus-holdout results, walk-forward slices, regime results, factor/relative-value attribution, strategy-health decay, liquidity participation, a trailing correlation matrix, explicit correlation-convergence scenarios, a monthly net-return heatmap, equity/drawdown/rolling-volatility paths, and source coverage. The correlation scenarios preserve current marginal volatility and move pairwise correlations toward positive one; they diagnose diversification failure but do not forecast a loss or change allocations.",
         ],
     ),
@@ -217,6 +238,19 @@ SYSTEM_CHAPTERS = [
 
 
 DEEP_FILE_NOTES = {
+    "server/backend/universal_engine.py": "Universal V2 defines shared causal price features, validated configuration, signal provenance and portfolio target construction. Scanner, Pattern Lab and the V2 portfolio adapter use the same signal implementation. Shrunk and correlation-stressed covariance scales risk down once; the engine is a research candidate, not a proven alpha source.",
+    "server/backend/portfolio_execution.py": "The Universal V2 ledger maintains actual simulated cash and shares. Prior-close targets transact at the next open, with two-sided costs, prior-dollar-volume fill ceilings, a no-trade band and no borrowing. Shares drift between trades. Partial/unfilled orders and flat-to-flat episode outcomes are explicit; this is not live execution or a calibrated order-book simulator.",
+    "server/backend/alpha_evaluation.py": "Annual excess-return regressions estimate arithmetic CAPM alpha against an explicit benchmark and daily cash-return series. Newey-West uncertainty, full-calendar checks and the exact ten-year consistency gates prevent raw return, partial-year or eleven-year results being presented as the requested alpha test. Model-search uncertainty is not eliminated.",
+    "server/backend/universal_research.py": "This adapter joins shared targets, the cash/shares ledger and alpha statistics into a Quant-compatible report. It enforces evaluation warmup, keeps data/config/source fingerprints and distinguishes absent alpha inputs from zero alpha. Its output is research evidence, not an automatic promotion.",
+    "server/backend/universal_position_policy.py": "This disabled-by-default pure state machine defines the future adaptive-exit contract: entry risk plan, non-widening long stops, precommitted daily-bar stop/target behavior and close-only next-open directives. It is deliberately separate from the ledger until a frozen-manifest integration and accounting tests exist; it cannot place a real order.",
+    "server/backend/universal_market_context.py": "This disabled-by-default pure market overlay turns completed market return, breadth and correlation observations into an interpretable next-open exposure directive. It requires multiple confirming stress signals rather than treating one down index day as an automatic liquidation, and is not yet connected to the V2 ledger.",
+    "server/backend/universal_taxonomy.py": "This module validates a versioned many-to-many security/family graph with dated source, membership weight, downside sensitivity and confidence fields. It prevents parent/child double counting and requires point-in-time snapshot coverage before a classification can enter research.",
+    "server/backend/universal_research_blueprint.py": "This is the machine-readable roadmap used by the authenticated Quant Lab foundation panel. It names position management, residual selection, event data, regime exposure, diversification and meta-label workstreams, spelling out their inputs, tunable knobs, fixed invariants and evidence gates instead of treating ideas as deployed features.",
+    "server/backend/routes/universal.py": "Authenticated configurable scan/run uploads expose Universal V2 when full Quant or private-research routes are enabled. It bounds history sizes, validates daily bars and explicit cash/benchmark series, computes away from the event loop, and persists derived experiment records without raw vendor bars.",
+    "server/tools/run_universal_study.py": "The offline CSV/manifest runner selects among a bounded predeclared candidate list using development-period alpha with a fixed consistency penalty, then evaluates temporal and separate-stock tests. It records all attempts and refuses to overwrite an earlier result. Different stocks in reused eras remain exploratory, not independent prospective evidence.",
+    "server/tools/build_universal_taxonomy.py": "This operator tool builds a dated top-25,000 eligible-equity membership snapshot from a declared provider export and refuses incomplete coverage or an overwrite. It does not scrape, infer or silently treat a present-day universe as historical data.",
+    "server/data/universal_taxonomy/family_catalog.json": "This curated nested family tree supplies reusable market, sector, industry, structural-theme, commodity and rate/credit categories for Universal V2. It contains no claimed current stock memberships; source-backed snapshots supply those separately.",
+    "server/data/universal_taxonomy/financedatabase_seed_25000.json": "This 25,000-security generated seed maps active FinanceDatabase equities into multiple region, sector, industry, theme and macro-sensitivity families. It preserves attribution and confidence but is explicitly a current automated coverage seed, not point-in-time historical membership or backtest evidence.",
     "server/backend/main.py": "This is the server's composition root. It decides which routers exist in a given operating mode, protects frontend responses with no-cache headers, serves legal and static assets, and exposes health/version/ads diagnostics. A change here can alter the public attack surface or make a private research feature visible, so changes should be followed by a startup and route-boundary check rather than a syntax check alone.",
     "server/backend/market_repository.py": "This module is the canonical price-history abstraction. Its job is not merely to download bars: it validates symbol format, controls provider preference, normalizes cache and provider payloads into one frame shape, records source metadata, and calculates the reproducibility fingerprint used by research. Any provider change belongs here before downstream engines are allowed to rely on it.",
     "server/backend/quant_research.py": "This module is the Quant Lab calculation engine. It builds each transparent signal sleeve, applies weight and volatility controls, simulates next-session returns after modeled costs, and produces the risk, validation, data-quality, and visual-diagnostic objects rendered by the Quant Desk. It is deliberately daily-bar research code; it should not be extended with execution claims without new data, modeling, and policy work.",
@@ -763,7 +797,7 @@ def main() -> None:
     output.append("Git base revision at generation: " + git_value("rev-parse", "HEAD") + "\n")
     output.append("Git branch: " + git_value("branch", "--show-current") + "\n")
     output.append("\n")
-    output.append(paragraph("This manual is written for a reader who wants to understand how the checked-out Oryntra AI system behaves, how its pieces relate, and where a change can create risk. It is not a source-code mirror. It documents every Git-tracked file, parses readable source and configuration, and catalogues binary assets while excluding private environment files, local databases, cached market data, virtual environments, untracked build products, and credentials. A documented file proves only what this checkout contains; it does not by itself prove a live server, provider account, database, or App Store release is current and healthy."))
+    output.append(paragraph("This manual is written for a reader who wants to understand how the checked-out Oryntra AI system behaves, how its pieces relate, and where a change can create risk. It is not a source-code mirror. It documents every Git-tracked file plus explicitly reviewed new sources listed by the generator, parses readable source and configuration, and catalogues binary assets while excluding private environment files, local databases, cached market data, virtual environments, untracked build products, and credentials. A documented file proves only what this checkout contains; it does not by itself prove a live server, provider account, database, or App Store release is current and healthy."))
     output.append(paragraph("The document distinguishes released product labels from historical internal names and experimental candidates. It also distinguishes code capability from operating-mode availability: a route or screen in the repository may be private, feature-flagged, preview-only, or dependent on provider rights and device permissions. Those distinctions are part of the feature, not footnotes."))
     output.append("\nHIGH-LEVEL FLOW\n\n")
     output.append("  Data providers / local cache\n")

@@ -14,6 +14,7 @@ from ..analysis_access import (
     usage_status,
 )
 from ..public_payload import assert_no_raw_market_data, public_analysis_payload
+from ..model_access import SCANNER_MODEL_IDS, require_model_access
 from .analysis import ScanRequest, _run_scan_pipeline, _run_uploaded_scan_pipeline
 
 router = APIRouter()
@@ -22,6 +23,7 @@ router = APIRouter()
 class IntelligenceScanRequest(BaseModel):
     ticker: str
     period: str = "6mo"
+    model: str = "official"
 
     @field_validator("ticker")
     @classmethod
@@ -40,10 +42,18 @@ class IntelligenceScanRequest(BaseModel):
             raise ValueError("Unsupported analysis period.")
         return value
 
+    @field_validator("model")
+    @classmethod
+    def valid_model(cls, value: str) -> str:
+        if value not in SCANNER_MODEL_IDS:
+            raise ValueError("Choose a supported scanner model.")
+        return value
+
 
 class IntelligenceMultiScanRequest(BaseModel):
     tickers: list[str]
     period: str = "6mo"
+    model: str = "official"
 
     @field_validator("tickers")
     @classmethod
@@ -61,6 +71,11 @@ class IntelligenceMultiScanRequest(BaseModel):
     @classmethod
     def valid_period(cls, value: str) -> str:
         return IntelligenceScanRequest.valid_period(value)
+
+    @field_validator("model")
+    @classmethod
+    def valid_model(cls, value: str) -> str:
+        return IntelligenceScanRequest.valid_model(value)
 
 
 class BrowserMarketBar(BaseModel):
@@ -84,9 +99,9 @@ class BrowserScanRequest(IntelligenceScanRequest):
         return value
 
 
-async def _one_scan(ticker: str, period: str, quota: dict, policy: dict) -> dict:
+async def _one_scan(ticker: str, period: str, model: str, quota: dict, policy: dict) -> dict:
     raw = await _run_scan_pipeline(
-        ScanRequest(ticker=ticker, period=period, pattern_mode="official"),
+        ScanRequest(ticker=ticker, period=period, pattern_mode=model),
     )
     payload = public_analysis_payload(raw, quota=quota, policy=policy)
     assert_no_raw_market_data(payload)
@@ -114,12 +129,13 @@ async def quota_status(request: Request):
 @router.post("/scan")
 async def scan(req: IntelligenceScanRequest, request: Request):
     user = require_analysis_user(request)
+    require_model_access(user, req.model)
     if not policy_status(user)["owner_access"]:
         raise HTTPException(status_code=410, detail="Use the browser-direct scan endpoint. Oryntra does not accept provider keys.")
     quota = reserve_quota(user["id"], 1)
     policy = policy_status(user)
     try:
-        return await _one_scan(req.ticker, req.period, quota, policy)
+        return await _one_scan(req.ticker, req.period, req.model, quota, policy)
     except HTTPException:
         refund_quota(user["id"], 1)
         raise
@@ -132,11 +148,12 @@ async def scan(req: IntelligenceScanRequest, request: Request):
 async def scan_uploaded(req: BrowserScanRequest, request: Request):
     """Authenticated browser-direct path: Oryntra receives bars, never a provider key."""
     user = require_analysis_user(request)
+    require_model_access(user, req.model)
     quota = reserve_quota(user["id"], 1)
     policy = policy_status(user)
     try:
         raw = await _run_uploaded_scan_pipeline(
-            ScanRequest(ticker=req.ticker, period=req.period, pattern_mode="official"),
+            ScanRequest(ticker=req.ticker, period=req.period, pattern_mode=req.model),
             [bar.model_dump() for bar in req.bars],
             req.provider,
         )
@@ -154,6 +171,7 @@ async def scan_uploaded(req: BrowserScanRequest, request: Request):
 @router.post("/scan-multiple")
 async def scan_multiple(req: IntelligenceMultiScanRequest, request: Request):
     user = require_analysis_user(request)
+    require_model_access(user, req.model)
     cost = len(req.tickers)
     quota = reserve_quota(user["id"], cost)
     policy = policy_status(user)
@@ -162,7 +180,7 @@ async def scan_multiple(req: IntelligenceMultiScanRequest, request: Request):
     async def run_one(ticker: str):
         async with semaphore:
             try:
-                return ticker, await _one_scan(ticker, req.period, quota, policy), None
+                return ticker, await _one_scan(ticker, req.period, req.model, quota, policy), None
             except HTTPException as exc:
                 return ticker, None, exc.detail
             except Exception as exc:

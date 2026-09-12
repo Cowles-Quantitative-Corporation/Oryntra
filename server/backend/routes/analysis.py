@@ -112,19 +112,19 @@ def _compute_scan_artifacts(hist, ticker: str, pattern_mode: str):
     ind = calculate_all_indicators(analysis_hist)
     ind["ticker"] = ticker
     pattern_hist = analysis_hist.tail(_PATTERN_LOOKBACK_BARS)
-    setup = detect_setup(ind, pattern_hist, pattern_mode=pattern_mode)
+    setup = detect_setup(ind, analysis_hist if pattern_mode == "universal_v2" else pattern_hist, pattern_mode=pattern_mode)
     pattern_report = (setup.get("patterns") or {}).get("advanced_patterns", {})
     plan = calculate_trade_plan(ind, setup)
     return analysis_hist, ind, setup, pattern_report, plan
 
 
-def browser_bars_to_history(bars: list[dict], minimum_bars: int = _ANALYSIS_LOOKBACK_BARS) -> pd.DataFrame:
+def browser_bars_to_history(bars: list[dict], minimum_bars: int = _ANALYSIS_LOOKBACK_BARS, maximum_bars: int = 2_000) -> pd.DataFrame:
     """Validate browser-supplied daily bars without persisting their raw values."""
     minimum_bars = max(2, int(minimum_bars))
     if not isinstance(bars, list) or len(bars) < minimum_bars:
         raise ValueError(f"Provide at least {minimum_bars} daily bars for this analysis.")
-    if len(bars) > 2_000:
-        raise ValueError("A scanner upload may contain at most 2,000 bars.")
+    if len(bars) > maximum_bars:
+        raise ValueError(f"This upload may contain at most {maximum_bars:,} bars.")
     records: list[dict] = []
     seen: set[pd.Timestamp] = set()
     for item in bars:
@@ -133,7 +133,7 @@ def browser_bars_to_history(bars: list[dict], minimum_bars: int = _ANALYSIS_LOOK
             values = {name: float(item.get(name)) for name in ("open", "high", "low", "close", "volume")}
         except (TypeError, ValueError, OverflowError) as exc:
             raise ValueError("Each bar needs a valid timestamp, OHLC price, and volume.") from exc
-        if timestamp in seen or not all(math.isfinite(value) for value in values.values()):
+        if pd.isna(timestamp) or timestamp in seen or not all(math.isfinite(value) for value in values.values()):
             raise ValueError("Bars must have unique timestamps and finite numeric values.")
         if values["open"] <= 0 or values["high"] <= 0 or values["low"] <= 0 or values["close"] <= 0 or values["volume"] < 0:
             raise ValueError("Prices must be positive and volume cannot be negative.")

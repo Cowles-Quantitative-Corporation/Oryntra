@@ -1,0 +1,3435 @@
+{
+  "study_date": "2026-09-05",
+  "qualification": "Exploratory current-survivor baskets; shared historical regimes; no production promotion. Initial reports predate source-code fingerprint capture and chart-only reporting fixes.",
+  "market_source": "Yahoo adjusted daily OHLC, downloaded with yfinance auto_adjust=True; not point-in-time membership or independently verified corporate actions",
+  "risk_free_source": "Kenneth French daily RF, decimal returns",
+  "sources": [
+    "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/Data_Library/f-f_factors.html"
+  ],
+  "initial": {
+    "manifest": {
+      "hypothesis": "Shared bounded multi-horizon evidence with covariance and capacity control produces positive, consistent beta-adjusted alpha after costs.",
+      "universe_rule": "Predeclared long-history current-survivor US stocks; alphabetical alternating split. Exploratory, not point-in-time index membership.",
+      "development_symbols": [
+        "ADBE",
+        "BA",
+        "COST",
+        "DE",
+        "F",
+        "GS",
+        "IBM",
+        "JNJ",
+        "MCD",
+        "ORCL",
+        "QCOM",
+        "TGT"
+      ],
+      "confirmation_symbols": [
+        "AMAT",
+        "BAC",
+        "CVX",
+        "DIS",
+        "GE",
+        "HD",
+        "INTC",
+        "LRCX",
+        "MU",
+        "PFE",
+        "SLB",
+        "WMT"
+      ],
+      "development_start": "2016-01-01",
+      "development_end": "2020-12-31",
+      "forward_start": "2021-01-01",
+      "forward_end": "2025-12-31",
+      "confirmation_start": "2016-01-01",
+      "confirmation_end": "2025-12-31",
+      "risk_free_source": "Kenneth French daily RF; contemporaneous published return series, not a forecast feature",
+      "candidates": [
+        {
+          "trend_weight": 0.4,
+          "momentum_weight": 0.35,
+          "breakout_weight": 0.15,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.1,
+          "vol_target": 0.12
+        },
+        {
+          "trend_weight": 0.4,
+          "momentum_weight": 0.35,
+          "breakout_weight": 0.15,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.1,
+          "vol_target": 0.18
+        },
+        {
+          "trend_weight": 0.4,
+          "momentum_weight": 0.35,
+          "breakout_weight": 0.15,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.12
+        },
+        {
+          "trend_weight": 0.4,
+          "momentum_weight": 0.35,
+          "breakout_weight": 0.15,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.18
+        },
+        {
+          "trend_weight": 0.2,
+          "momentum_weight": 0.6,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.1,
+          "vol_target": 0.12
+        },
+        {
+          "trend_weight": 0.2,
+          "momentum_weight": 0.6,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.1,
+          "vol_target": 0.18
+        },
+        {
+          "trend_weight": 0.2,
+          "momentum_weight": 0.6,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.12
+        },
+        {
+          "trend_weight": 0.2,
+          "momentum_weight": 0.6,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.18
+        },
+        {
+          "trend_weight": 0.6,
+          "momentum_weight": 0.2,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.1,
+          "vol_target": 0.12
+        },
+        {
+          "trend_weight": 0.6,
+          "momentum_weight": 0.2,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.1,
+          "vol_target": 0.18
+        },
+        {
+          "trend_weight": 0.6,
+          "momentum_weight": 0.2,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.12
+        },
+        {
+          "trend_weight": 0.6,
+          "momentum_weight": 0.2,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.18
+        }
+      ]
+    },
+    "selected_configuration": {
+      "trend_weight": 0.6,
+      "momentum_weight": 0.2,
+      "breakout_weight": 0.1,
+      "pullback_weight": 0.1,
+      "entry_threshold": 0.25,
+      "vol_target": 0.18,
+      "name_cap": 0.25,
+      "gross_cap": 1,
+      "covariance_shrinkage": 0.5,
+      "correlation_stress": 0.25,
+      "risk_window": 63,
+      "rebalance": "weekly",
+      "trade_buffer": 0.015,
+      "cost_bps": 12,
+      "impact_bps": 18,
+      "participation": 0.02,
+      "initial_equity": 1000000
+    },
+    "selected_fingerprint": "3b2a54aa1d521021f6839cc302839103799920facbda1b89db62c330d75a829d",
+    "candidate_count": 12,
+    "development": [
+      {
+        "configuration": {
+          "trend_weight": 0.4,
+          "momentum_weight": 0.35,
+          "breakout_weight": 0.15,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.1,
+          "vol_target": 0.12,
+          "name_cap": 0.25,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "weekly",
+          "trade_buffer": 0.015,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        "config_fingerprint": "a70c848a487540f95c174141db934d3253da9ab5e3fb7eaefb3c4a5a072e5d3b",
+        "dataset_fingerprint": "e83813cad35cccd5597504143bf2f20da2e543bb9809e745831bd5dbd5438ac1",
+        "objective": -5.198884494121455,
+        "mean_alpha_pct": -0.2055354769134937,
+        "annual": [
+          {
+            "year": 2016,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -5.456764335483802,
+            "beta": 0.5618780933534337
+          },
+          {
+            "year": 2017,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 13.939067701472338,
+            "beta": 0.72904400275905
+          },
+          {
+            "year": 2018,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -6.792795704906854,
+            "beta": 0.5494516940223579
+          },
+          {
+            "year": 2019,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -2.738522986252797,
+            "beta": 0.5507525665275825
+          },
+          {
+            "year": 2020,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 0.02133794060364672,
+            "beta": 0.37814069152489316
+          }
+        ],
+        "negative_years": 3,
+        "performance": {
+          "id": "strategy_ensemble",
+          "label": "Universal V2 research engine",
+          "status": "research_only",
+          "observations": 1259,
+          "total_return_pct": 66.6,
+          "annualized_return_pct": 10.76,
+          "annualized_volatility_pct": 12.41,
+          "sharpe_zero_cash_rate": 0.89,
+          "max_drawdown_pct": -17.28,
+          "annualized_turnover": 8.68,
+          "average_gross_exposure": 0.801,
+          "worst_day_pct": -4.52,
+          "historical_var_95_pct": -1.11,
+          "historical_expected_shortfall_95_pct": -2,
+          "calmar_ratio": 0.62,
+          "longest_drawdown_sessions": 337
+        }
+      },
+      {
+        "configuration": {
+          "trend_weight": 0.4,
+          "momentum_weight": 0.35,
+          "breakout_weight": 0.15,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.1,
+          "vol_target": 0.18,
+          "name_cap": 0.25,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "weekly",
+          "trade_buffer": 0.015,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        "config_fingerprint": "18e61e57cda180728164558d398a3c93e02d0ff0453f55ec5b414e744e620d35",
+        "dataset_fingerprint": "e83813cad35cccd5597504143bf2f20da2e543bb9809e745831bd5dbd5438ac1",
+        "objective": -4.876282522896053,
+        "mean_alpha_pct": -0.043248466566196256,
+        "annual": [
+          {
+            "year": 2016,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -5.619282911056989,
+            "beta": 0.6119443928619778
+          },
+          {
+            "year": 2017,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 13.948927948818305,
+            "beta": 0.7288249114145654
+          },
+          {
+            "year": 2018,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -8.914220395864092,
+            "beta": 0.6881571736665193
+          },
+          {
+            "year": 2019,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -1.0051706143320214,
+            "beta": 0.6562685982544544
+          },
+          {
+            "year": 2020,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 1.373503639603816,
+            "beta": 0.5265919598678354
+          }
+        ],
+        "negative_years": 3,
+        "performance": {
+          "id": "strategy_ensemble",
+          "label": "Universal V2 research engine",
+          "status": "research_only",
+          "observations": 1259,
+          "total_return_pct": 78.49,
+          "annualized_return_pct": 12.3,
+          "annualized_volatility_pct": 15.32,
+          "sharpe_zero_cash_rate": 0.83,
+          "max_drawdown_pct": -21.2,
+          "annualized_turnover": 10.08,
+          "average_gross_exposure": 0.915,
+          "worst_day_pct": -6.85,
+          "historical_var_95_pct": -1.32,
+          "historical_expected_shortfall_95_pct": -2.44,
+          "calmar_ratio": 0.58,
+          "longest_drawdown_sessions": 342
+        }
+      },
+      {
+        "configuration": {
+          "trend_weight": 0.4,
+          "momentum_weight": 0.35,
+          "breakout_weight": 0.15,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.12,
+          "name_cap": 0.25,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "weekly",
+          "trade_buffer": 0.015,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        "config_fingerprint": "8068937bb1b2c0ad7b7329c677a1d0c5875ff6dbde974d68aba7fe518b471f32",
+        "dataset_fingerprint": "e83813cad35cccd5597504143bf2f20da2e543bb9809e745831bd5dbd5438ac1",
+        "objective": -4.793828744032186,
+        "mean_alpha_pct": 0.22203585715172558,
+        "annual": [
+          {
+            "year": 2016,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -6.491955798590659,
+            "beta": 0.5054008836047783
+          },
+          {
+            "year": 2017,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 14.666635669197323,
+            "beta": 0.7335262332705652
+          },
+          {
+            "year": 2018,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -7.180221227219211,
+            "beta": 0.5345732948106336
+          },
+          {
+            "year": 2019,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -3.9071459801096866,
+            "beta": 0.49603904362502876
+          },
+          {
+            "year": 2020,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 4.022866622480862,
+            "beta": 0.2604663320808762
+          }
+        ],
+        "negative_years": 3,
+        "performance": {
+          "id": "strategy_ensemble",
+          "label": "Universal V2 research engine",
+          "status": "research_only",
+          "observations": 1259,
+          "total_return_pct": 61.17,
+          "annualized_return_pct": 10.02,
+          "annualized_volatility_pct": 11.63,
+          "sharpe_zero_cash_rate": 0.88,
+          "max_drawdown_pct": -16.83,
+          "annualized_turnover": 9.9,
+          "average_gross_exposure": 0.771,
+          "worst_day_pct": -4.47,
+          "historical_var_95_pct": -1.07,
+          "historical_expected_shortfall_95_pct": -1.85,
+          "calmar_ratio": 0.6,
+          "longest_drawdown_sessions": 478
+        }
+      },
+      {
+        "configuration": {
+          "trend_weight": 0.4,
+          "momentum_weight": 0.35,
+          "breakout_weight": 0.15,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.18,
+          "name_cap": 0.25,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "weekly",
+          "trade_buffer": 0.015,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        "config_fingerprint": "89996df3c97c483eed7ede6fa2fec3decdf41e9a679d93d69ebc0165ab676b4e",
+        "dataset_fingerprint": "e83813cad35cccd5597504143bf2f20da2e543bb9809e745831bd5dbd5438ac1",
+        "objective": -3.0442581185441333,
+        "mean_alpha_pct": 1.6805718671843386,
+        "annual": [
+          {
+            "year": 2016,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -6.77366340481403,
+            "beta": 0.5475841036599941
+          },
+          {
+            "year": 2017,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 14.687433590448265,
+            "beta": 0.7337006115060641
+          },
+          {
+            "year": 2018,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -6.617839276582204,
+            "beta": 0.661664889059259
+          },
+          {
+            "year": 2019,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -2.732647247246127,
+            "beta": 0.5906139455966624
+          },
+          {
+            "year": 2020,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 9.83957567411579,
+            "beta": 0.3195857684640229
+          }
+        ],
+        "negative_years": 3,
+        "performance": {
+          "id": "strategy_ensemble",
+          "label": "Universal V2 research engine",
+          "status": "research_only",
+          "observations": 1259,
+          "total_return_pct": 79.53,
+          "annualized_return_pct": 12.43,
+          "annualized_volatility_pct": 13.64,
+          "sharpe_zero_cash_rate": 0.93,
+          "max_drawdown_pct": -18.44,
+          "annualized_turnover": 11.33,
+          "average_gross_exposure": 0.878,
+          "worst_day_pct": -4.9,
+          "historical_var_95_pct": -1.27,
+          "historical_expected_shortfall_95_pct": -2.16,
+          "calmar_ratio": 0.67,
+          "longest_drawdown_sessions": 342
+        }
+      },
+      {
+        "configuration": {
+          "trend_weight": 0.2,
+          "momentum_weight": 0.6,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.1,
+          "vol_target": 0.12,
+          "name_cap": 0.25,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "weekly",
+          "trade_buffer": 0.015,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        "config_fingerprint": "01ae640c5fbc72b332a30a0802b0e8e5442d5e7dc91b82476c8693b80bcbdb44",
+        "dataset_fingerprint": "e83813cad35cccd5597504143bf2f20da2e543bb9809e745831bd5dbd5438ac1",
+        "objective": -5.233852398663574,
+        "mean_alpha_pct": -0.2729855413715148,
+        "annual": [
+          {
+            "year": 2016,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -6.430809149501808,
+            "beta": 0.604569674610587
+          },
+          {
+            "year": 2017,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 13.439406579602723,
+            "beta": 0.7434354597195044
+          },
+          {
+            "year": 2018,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -3.8858443168940564,
+            "beta": 0.6312448414852717
+          },
+          {
+            "year": 2019,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -2.4538700551659858,
+            "beta": 0.5702121711232806
+          },
+          {
+            "year": 2020,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -2.0338107648984467,
+            "beta": 0.42961855399549
+          }
+        ],
+        "negative_years": 4,
+        "performance": {
+          "id": "strategy_ensemble",
+          "label": "Universal V2 research engine",
+          "status": "research_only",
+          "observations": 1259,
+          "total_return_pct": 70.33,
+          "annualized_return_pct": 11.25,
+          "annualized_volatility_pct": 12.82,
+          "sharpe_zero_cash_rate": 0.9,
+          "max_drawdown_pct": -18.02,
+          "annualized_turnover": 6.36,
+          "average_gross_exposure": 0.813,
+          "worst_day_pct": -5.38,
+          "historical_var_95_pct": -1.19,
+          "historical_expected_shortfall_95_pct": -2.06,
+          "calmar_ratio": 0.62,
+          "longest_drawdown_sessions": 314
+        }
+      },
+      {
+        "configuration": {
+          "trend_weight": 0.2,
+          "momentum_weight": 0.6,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.1,
+          "vol_target": 0.18,
+          "name_cap": 0.25,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "weekly",
+          "trade_buffer": 0.015,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        "config_fingerprint": "1b72b21528212427e62113aeff1b13ce905bbe03c530edb545eb65f5e397b03d",
+        "dataset_fingerprint": "e83813cad35cccd5597504143bf2f20da2e543bb9809e745831bd5dbd5438ac1",
+        "objective": -6.727334383616324,
+        "mean_alpha_pct": -1.019736303601247,
+        "annual": [
+          {
+            "year": 2016,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -7.850335200065185,
+            "beta": 0.6871592579186115
+          },
+          {
+            "year": 2017,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 13.43930888206915,
+            "beta": 0.7434116065018564
+          },
+          {
+            "year": 2018,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -5.942909702611386,
+            "beta": 0.8139797648202901
+          },
+          {
+            "year": 2019,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -1.5148952347664142,
+            "beta": 0.6731919962880264
+          },
+          {
+            "year": 2020,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -3.2298502626324006,
+            "beta": 0.6162496664231905
+          }
+        ],
+        "negative_years": 4,
+        "performance": {
+          "id": "strategy_ensemble",
+          "label": "Universal V2 research engine",
+          "status": "research_only",
+          "observations": 1259,
+          "total_return_pct": 76.12,
+          "annualized_return_pct": 12,
+          "annualized_volatility_pct": 16.17,
+          "sharpe_zero_cash_rate": 0.78,
+          "max_drawdown_pct": -23.23,
+          "annualized_turnover": 7.46,
+          "average_gross_exposure": 0.928,
+          "worst_day_pct": -8.43,
+          "historical_var_95_pct": -1.41,
+          "historical_expected_shortfall_95_pct": -2.59,
+          "calmar_ratio": 0.52,
+          "longest_drawdown_sessions": 319
+        }
+      },
+      {
+        "configuration": {
+          "trend_weight": 0.2,
+          "momentum_weight": 0.6,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.12,
+          "name_cap": 0.25,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "weekly",
+          "trade_buffer": 0.015,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        "config_fingerprint": "9cb4bc5be9770c4a3e07e1d3854ae2c2b032879ae7015d626252b4ab35254047",
+        "dataset_fingerprint": "e83813cad35cccd5597504143bf2f20da2e543bb9809e745831bd5dbd5438ac1",
+        "objective": -7.4672718896073285,
+        "mean_alpha_pct": -1.3502755639302122,
+        "annual": [
+          {
+            "year": 2016,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -4.761918051152347,
+            "beta": 0.5243455681774513
+          },
+          {
+            "year": 2017,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 13.833603808734521,
+            "beta": 0.7413315159995638
+          },
+          {
+            "year": 2018,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -9.288752215671549,
+            "beta": 0.5945406798101373
+          },
+          {
+            "year": 2019,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -2.9692628328225923,
+            "beta": 0.5632564977638664
+          },
+          {
+            "year": 2020,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -3.5650485287390947,
+            "beta": 0.41145354386404437
+          }
+        ],
+        "negative_years": 4,
+        "performance": {
+          "id": "strategy_ensemble",
+          "label": "Universal V2 research engine",
+          "status": "research_only",
+          "observations": 1259,
+          "total_return_pct": 59.06,
+          "annualized_return_pct": 9.73,
+          "annualized_volatility_pct": 12.67,
+          "sharpe_zero_cash_rate": 0.8,
+          "max_drawdown_pct": -19.93,
+          "annualized_turnover": 7.58,
+          "average_gross_exposure": 0.789,
+          "worst_day_pct": -5.32,
+          "historical_var_95_pct": -1.18,
+          "historical_expected_shortfall_95_pct": -2.05,
+          "calmar_ratio": 0.49,
+          "longest_drawdown_sessions": 510
+        }
+      },
+      {
+        "configuration": {
+          "trend_weight": 0.2,
+          "momentum_weight": 0.6,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.18,
+          "name_cap": 0.25,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "weekly",
+          "trade_buffer": 0.015,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        "config_fingerprint": "6cea33a8b0b6da8aadcd0d8ea9ad26d364470e1264d0bed350842b38c55f27ec",
+        "dataset_fingerprint": "e83813cad35cccd5597504143bf2f20da2e543bb9809e745831bd5dbd5438ac1",
+        "objective": -9.996634879529307,
+        "mean_alpha_pct": -2.6162758589652775,
+        "annual": [
+          {
+            "year": 2016,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -7.004577329934879,
+            "beta": 0.5661947958788554
+          },
+          {
+            "year": 2017,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 13.820415807993758,
+            "beta": 0.7408512273501786
+          },
+          {
+            "year": 2018,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -13.314851722575288,
+            "beta": 0.7687771856085197
+          },
+          {
+            "year": 2019,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -2.737106005332846,
+            "beta": 0.6660018356001318
+          },
+          {
+            "year": 2020,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -3.845260044977132,
+            "beta": 0.5683503055649252
+          }
+        ],
+        "negative_years": 4,
+        "performance": {
+          "id": "strategy_ensemble",
+          "label": "Universal V2 research engine",
+          "status": "research_only",
+          "observations": 1259,
+          "total_return_pct": 58.34,
+          "annualized_return_pct": 9.63,
+          "annualized_volatility_pct": 15.82,
+          "sharpe_zero_cash_rate": 0.66,
+          "max_drawdown_pct": -26.01,
+          "annualized_turnover": 8.94,
+          "average_gross_exposure": 0.897,
+          "worst_day_pct": -8.01,
+          "historical_var_95_pct": -1.39,
+          "historical_expected_shortfall_95_pct": -2.55,
+          "calmar_ratio": 0.37,
+          "longest_drawdown_sessions": 544
+        }
+      },
+      {
+        "configuration": {
+          "trend_weight": 0.6,
+          "momentum_weight": 0.2,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.1,
+          "vol_target": 0.12,
+          "name_cap": 0.25,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "weekly",
+          "trade_buffer": 0.015,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        "config_fingerprint": "f0b264129a605496be923ae3ff44579cb10ff2238005948434fb2340568da67a",
+        "dataset_fingerprint": "e83813cad35cccd5597504143bf2f20da2e543bb9809e745831bd5dbd5438ac1",
+        "objective": -2.706949752249601,
+        "mean_alpha_pct": 1.4595124967863224,
+        "annual": [
+          {
+            "year": 2016,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -4.472991370037035,
+            "beta": 0.5436170421648986
+          },
+          {
+            "year": 2017,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 14.370820840245962,
+            "beta": 0.7254747768163045
+          },
+          {
+            "year": 2018,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -4.941297101872101,
+            "beta": 0.5414912918711892
+          },
+          {
+            "year": 2019,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -3.918022773270482,
+            "beta": 0.540405461238538
+          },
+          {
+            "year": 2020,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 6.259052888865268,
+            "beta": 0.2807143781471919
+          }
+        ],
+        "negative_years": 3,
+        "performance": {
+          "id": "strategy_ensemble",
+          "label": "Universal V2 research engine",
+          "status": "research_only",
+          "observations": 1259,
+          "total_return_pct": 75.05,
+          "annualized_return_pct": 11.86,
+          "annualized_volatility_pct": 11.71,
+          "sharpe_zero_cash_rate": 1.02,
+          "max_drawdown_pct": -15.06,
+          "annualized_turnover": 9.61,
+          "average_gross_exposure": 0.796,
+          "worst_day_pct": -4.21,
+          "historical_var_95_pct": -1.08,
+          "historical_expected_shortfall_95_pct": -1.87,
+          "calmar_ratio": 0.79,
+          "longest_drawdown_sessions": 325
+        }
+      },
+      {
+        "configuration": {
+          "trend_weight": 0.6,
+          "momentum_weight": 0.2,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.1,
+          "vol_target": 0.18,
+          "name_cap": 0.25,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "weekly",
+          "trade_buffer": 0.015,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        "config_fingerprint": "f5823b9897de5e242c8e7b5879399e220c2c6c6204d39cee1d6b18b2ee09e864",
+        "dataset_fingerprint": "e83813cad35cccd5597504143bf2f20da2e543bb9809e745831bd5dbd5438ac1",
+        "objective": -0.4194569377672823,
+        "mean_alpha_pct": 3.130100104469551,
+        "annual": [
+          {
+            "year": 2016,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -3.574552749936127,
+            "beta": 0.5820910202319094
+          },
+          {
+            "year": 2017,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 14.375678264219227,
+            "beta": 0.725556690697773
+          },
+          {
+            "year": 2018,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -4.276603570451991,
+            "beta": 0.6777243618117259
+          },
+          {
+            "year": 2019,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -2.396628890796048,
+            "beta": 0.6425910781126715
+          },
+          {
+            "year": 2020,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 11.522607469312694,
+            "beta": 0.34872564740616335
+          }
+        ],
+        "negative_years": 3,
+        "performance": {
+          "id": "strategy_ensemble",
+          "label": "Universal V2 research engine",
+          "status": "research_only",
+          "observations": 1259,
+          "total_return_pct": 97.73,
+          "annualized_return_pct": 14.62,
+          "annualized_volatility_pct": 13.87,
+          "sharpe_zero_cash_rate": 1.05,
+          "max_drawdown_pct": -16.78,
+          "annualized_turnover": 11.2,
+          "average_gross_exposure": 0.907,
+          "worst_day_pct": -5.3,
+          "historical_var_95_pct": -1.27,
+          "historical_expected_shortfall_95_pct": -2.2,
+          "calmar_ratio": 0.87,
+          "longest_drawdown_sessions": 310
+        }
+      },
+      {
+        "configuration": {
+          "trend_weight": 0.6,
+          "momentum_weight": 0.2,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.12,
+          "name_cap": 0.25,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "weekly",
+          "trade_buffer": 0.015,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        "config_fingerprint": "0c591603cf8be577d299a2dc1c683051ce6bff9533ff5caae24e7a690ad48d22",
+        "dataset_fingerprint": "e83813cad35cccd5597504143bf2f20da2e543bb9809e745831bd5dbd5438ac1",
+        "objective": -2.6725592323551473,
+        "mean_alpha_pct": 1.5283934565375634,
+        "annual": [
+          {
+            "year": 2016,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -2.1520673323703012,
+            "beta": 0.4737404950821298
+          },
+          {
+            "year": 2017,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 14.770598664394594,
+            "beta": 0.7206607125982002
+          },
+          {
+            "year": 2018,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -6.581650708664006,
+            "beta": 0.5071023087257565
+          },
+          {
+            "year": 2019,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -4.771045403429244,
+            "beta": 0.46258066838248935
+          },
+          {
+            "year": 2020,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 6.376132062756774,
+            "beta": 0.25614191339110176
+          }
+        ],
+        "negative_years": 3,
+        "performance": {
+          "id": "strategy_ensemble",
+          "label": "Universal V2 research engine",
+          "status": "research_only",
+          "observations": 1259,
+          "total_return_pct": 69.44,
+          "annualized_return_pct": 11.13,
+          "annualized_volatility_pct": 11.41,
+          "sharpe_zero_cash_rate": 0.98,
+          "max_drawdown_pct": -18.15,
+          "annualized_turnover": 10.6,
+          "average_gross_exposure": 0.768,
+          "worst_day_pct": -4.21,
+          "historical_var_95_pct": -1.06,
+          "historical_expected_shortfall_95_pct": -1.79,
+          "calmar_ratio": 0.61,
+          "longest_drawdown_sessions": 490
+        }
+      },
+      {
+        "configuration": {
+          "trend_weight": 0.6,
+          "momentum_weight": 0.2,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.18,
+          "name_cap": 0.25,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "weekly",
+          "trade_buffer": 0.015,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        "config_fingerprint": "3b2a54aa1d521021f6839cc302839103799920facbda1b89db62c330d75a829d",
+        "dataset_fingerprint": "e83813cad35cccd5597504143bf2f20da2e543bb9809e745831bd5dbd5438ac1",
+        "objective": -0.02368706139466159,
+        "mean_alpha_pct": 3.557419541600459,
+        "annual": [
+          {
+            "year": 2016,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -0.4901571255192705,
+            "beta": 0.5005209035836216
+          },
+          {
+            "year": 2017,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 14.872171725263012,
+            "beta": 0.7233220536810436
+          },
+          {
+            "year": 2018,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -5.848875414468728,
+            "beta": 0.6429724513502482
+          },
+          {
+            "year": 2019,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -4.066500474987604,
+            "beta": 0.5409181183150465
+          },
+          {
+            "year": 2020,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 13.320458997714887,
+            "beta": 0.2945214232036747
+          }
+        ],
+        "negative_years": 3,
+        "performance": {
+          "id": "strategy_ensemble",
+          "label": "Universal V2 research engine",
+          "status": "research_only",
+          "observations": 1259,
+          "total_return_pct": 92.02,
+          "annualized_return_pct": 13.95,
+          "annualized_volatility_pct": 13.25,
+          "sharpe_zero_cash_rate": 1.05,
+          "max_drawdown_pct": -20.13,
+          "annualized_turnover": 12.07,
+          "average_gross_exposure": 0.873,
+          "worst_day_pct": -4.56,
+          "historical_var_95_pct": -1.25,
+          "historical_expected_shortfall_95_pct": -2.04,
+          "calmar_ratio": 0.69,
+          "longest_drawdown_sessions": 485
+        }
+      }
+    ],
+    "forward": {
+      "engine": "universal_v2",
+      "engine_version": "2.0.0-research",
+      "configuration": {
+        "trend_weight": 0.6,
+        "momentum_weight": 0.2,
+        "breakout_weight": 0.1,
+        "pullback_weight": 0.1,
+        "entry_threshold": 0.25,
+        "vol_target": 0.18,
+        "name_cap": 0.25,
+        "gross_cap": 1,
+        "covariance_shrinkage": 0.5,
+        "correlation_stress": 0.25,
+        "risk_window": 63,
+        "rebalance": "weekly",
+        "trade_buffer": 0.015,
+        "cost_bps": 12,
+        "impact_bps": 18,
+        "participation": 0.02,
+        "initial_equity": 1000000
+      },
+      "config_fingerprint": "3b2a54aa1d521021f6839cc302839103799920facbda1b89db62c330d75a829d",
+      "dataset_fingerprint": "4ef0cf034f78c4def7c770d7e44ac6b9ce9ca8a3719b06d37424e0dcf6a0e95e",
+      "universe": {
+        "symbols": [
+          "ADBE",
+          "BA",
+          "COST",
+          "DE",
+          "F",
+          "GS",
+          "IBM",
+          "JNJ",
+          "MCD",
+          "ORCL",
+          "QCOM",
+          "TGT"
+        ],
+        "start": "2021-01-04",
+        "end": "2025-12-31",
+        "sessions": 1255
+      },
+      "results": [
+        {
+          "id": "strategy_ensemble",
+          "label": "Universal V2 research engine",
+          "status": "research_only",
+          "observations": 1255,
+          "total_return_pct": 61.2,
+          "annualized_return_pct": 10.06,
+          "annualized_volatility_pct": 14.53,
+          "sharpe_zero_cash_rate": 0.73,
+          "max_drawdown_pct": -28.49,
+          "annualized_turnover": 11.79,
+          "average_gross_exposure": 0.877,
+          "worst_day_pct": -5.02,
+          "historical_var_95_pct": -1.5,
+          "historical_expected_shortfall_95_pct": -2.07,
+          "calmar_ratio": 0.35,
+          "longest_drawdown_sessions": 543
+        }
+      ],
+      "alpha": {
+        "status": "available",
+        "benchmark": "daily 50/50 SPY/QQQ total-return proxy",
+        "definition": "252 times daily excess-return regression intercept; percentage points per year",
+        "uncertainty": "Newey-West HAC with Bartlett weights; confidence intervals do not adjust for model search",
+        "annual": [
+          {
+            "year": 2021,
+            "complete": true,
+            "status": "available",
+            "observations": 252,
+            "alpha_pct": 6.653615836118345,
+            "beta": 0.6231402733993434,
+            "alpha_ci95_pct": [
+              -13.176349543672703,
+              26.483581215909393
+            ],
+            "alpha_t_hac": 0.6576454768843055,
+            "hac_lags": 4,
+            "strategy_return_pct": 24.32467560545617,
+            "benchmark_return_pct": 28.211708301640993
+          },
+          {
+            "year": 2022,
+            "complete": true,
+            "status": "available",
+            "observations": 251,
+            "alpha_pct": -17.258342568771077,
+            "beta": 0.2808962913095246,
+            "alpha_ci95_pct": [
+              -39.21842421852672,
+              4.70173908098457
+            ],
+            "alpha_t_hac": -1.5403563599759067,
+            "hac_lags": 4,
+            "strategy_return_pct": -21.602248447311155,
+            "benchmark_return_pct": -25.617973149903296
+          },
+          {
+            "year": 2023,
+            "complete": true,
+            "status": "available",
+            "observations": 250,
+            "alpha_pct": -1.8283211426493922,
+            "beta": 0.636133514082488,
+            "alpha_ci95_pct": [
+              -21.683268925016577,
+              18.02662663971779
+            ],
+            "alpha_t_hac": -0.1804844555056074,
+            "hac_lags": 4,
+            "strategy_return_pct": 23.45492035608212,
+            "benchmark_return_pct": 39.89112062139877
+          },
+          {
+            "year": 2024,
+            "complete": true,
+            "status": "available",
+            "observations": 252,
+            "alpha_pct": -4.39823014345226,
+            "beta": 0.7956508470682309,
+            "alpha_ci95_pct": [
+              -23.850796920078864,
+              15.054336633174344
+            ],
+            "alpha_t_hac": -0.44315648316007844,
+            "hac_lags": 4,
+            "strategy_return_pct": 15.329532647367227,
+            "benchmark_return_pct": 25.317590627856745
+          },
+          {
+            "year": 2025,
+            "complete": true,
+            "status": "available",
+            "observations": 250,
+            "alpha_pct": 6.328784153562014,
+            "beta": 0.32056553346892247,
+            "alpha_ci95_pct": [
+              -16.42912004225934,
+              29.08668834938337
+            ],
+            "alpha_t_hac": 0.5450597222946022,
+            "hac_lags": 4,
+            "strategy_return_pct": 16.15791237617008,
+            "benchmark_return_pct": 19.298722351853282
+          }
+        ],
+        "pooled": {
+          "status": "available",
+          "observations": 1255,
+          "alpha_pct": 1.9132338110911997,
+          "beta": 0.43597721286312824,
+          "alpha_ci95_pct": [
+            -7.5969417337394844,
+            11.423409355921883
+          ],
+          "alpha_t_hac": 0.3943079969514395,
+          "hac_lags": 7,
+          "strategy_return_pct": 61.19763876591304,
+          "benchmark_return_pct": 99.44983132790222
+        },
+        "mean_annual_alpha_pct": -2.100498773038473,
+        "complete_years": 5,
+        "negative_years": 3,
+        "years_below_1_pct": 3,
+        "criteria": {
+          "exactly_ten_complete_years": false,
+          "mean_alpha_at_least_5_pct": false,
+          "at_most_one_negative": false,
+          "at_most_two_total_below_1_pct": false,
+          "remaining_years_at_least_2_5_pct": true,
+          "win_rate_at_least_55_pct": false
+        },
+        "passes": false,
+        "win_rate_pct": 29.166666666666668
+      },
+      "validation": {
+        "status": "fixed_rule_evaluation",
+        "note": "Calendar results are descriptive; unseen data and a frozen selection protocol are required for confirmation."
+      },
+      "execution": {
+        "model": "cash_and_shares_next_open",
+        "fill_count": 921,
+        "cost_pct_sum": 7.182301729011163,
+        "unfilled_notional": 0,
+        "maximum_participation_pct": 0.08188545928628048,
+        "note": "Unfilled quantity expires at that rebalance; volume capacity uses prior 20-session median dollar volume. No order-book model."
+      },
+      "trade_outcomes": {
+        "definition": "Cash-flow P&L of flat-to-flat position episodes, including partial fills and costs; open episodes excluded",
+        "open_count": 7,
+        "win_rate_pct": 29.166666666666668
+      },
+      "portfolio_risk": {
+        "latest_positions": [
+          {
+            "symbol": "BA",
+            "weight_pct": 7.301249639748668
+          },
+          {
+            "symbol": "F",
+            "weight_pct": 10.5465079579627
+          },
+          {
+            "symbol": "GS",
+            "weight_pct": 23.84199789057414
+          },
+          {
+            "symbol": "IBM",
+            "weight_pct": 13.993637354532144
+          },
+          {
+            "symbol": "JNJ",
+            "weight_pct": 25.51757223227138
+          },
+          {
+            "symbol": "MCD",
+            "weight_pct": 12.799891277115988
+          },
+          {
+            "symbol": "QCOM",
+            "weight_pct": 5.570730003638504
+          }
+        ]
+      },
+      "corporate_data": {
+        "status": "not_used",
+        "signal_coverage_pct": 0
+      },
+      "macro_data": {
+        "status": "not_used",
+        "signal_coverage_pct": 0
+      },
+      "methodology": {
+        "execution_timing": "t close signal -> t+1 open transaction -> mark at close",
+        "cash_rate": "explicit daily risk-free series",
+        "warnings": [
+          "Long-only research candidate; no validated alpha claim.",
+          "Adjusted OHLC must use consistent corporate-action adjustments; complete data required.",
+          "Current-survivor baskets are exploratory and may contain selection bias."
+        ]
+      }
+    },
+    "fresh_confirmation": {
+      "engine": "universal_v2",
+      "engine_version": "2.0.0-research",
+      "configuration": {
+        "trend_weight": 0.6,
+        "momentum_weight": 0.2,
+        "breakout_weight": 0.1,
+        "pullback_weight": 0.1,
+        "entry_threshold": 0.25,
+        "vol_target": 0.18,
+        "name_cap": 0.25,
+        "gross_cap": 1,
+        "covariance_shrinkage": 0.5,
+        "correlation_stress": 0.25,
+        "risk_window": 63,
+        "rebalance": "weekly",
+        "trade_buffer": 0.015,
+        "cost_bps": 12,
+        "impact_bps": 18,
+        "participation": 0.02,
+        "initial_equity": 1000000
+      },
+      "config_fingerprint": "3b2a54aa1d521021f6839cc302839103799920facbda1b89db62c330d75a829d",
+      "dataset_fingerprint": "d5c740b4ebe0f6c48c7fac62a78ea8f602cfe964a49135d5dc8fb9c02e961c14",
+      "universe": {
+        "symbols": [
+          "AMAT",
+          "BAC",
+          "CVX",
+          "DIS",
+          "GE",
+          "HD",
+          "INTC",
+          "LRCX",
+          "MU",
+          "PFE",
+          "SLB",
+          "WMT"
+        ],
+        "start": "2016-01-04",
+        "end": "2025-12-31",
+        "sessions": 2514
+      },
+      "results": [
+        {
+          "id": "strategy_ensemble",
+          "label": "Universal V2 research engine",
+          "status": "research_only",
+          "observations": 2514,
+          "total_return_pct": 268.47,
+          "annualized_return_pct": 13.97,
+          "annualized_volatility_pct": 15.12,
+          "sharpe_zero_cash_rate": 0.94,
+          "max_drawdown_pct": -19.42,
+          "annualized_turnover": 11.05,
+          "average_gross_exposure": 0.815,
+          "worst_day_pct": -5.91,
+          "historical_var_95_pct": -1.56,
+          "historical_expected_shortfall_95_pct": -2.31,
+          "calmar_ratio": 0.72,
+          "longest_drawdown_sessions": 454
+        }
+      ],
+      "alpha": {
+        "status": "available",
+        "benchmark": "daily 50/50 SPY/QQQ total-return proxy",
+        "definition": "252 times daily excess-return regression intercept; percentage points per year",
+        "uncertainty": "Newey-West HAC with Bartlett weights; confidence intervals do not adjust for model search",
+        "annual": [
+          {
+            "year": 2016,
+            "complete": true,
+            "status": "available",
+            "observations": 252,
+            "alpha_pct": 2.4366237987097787,
+            "beta": 0.5921306369561061,
+            "alpha_ci95_pct": [
+              -14.441310507453046,
+              19.314558104872603
+            ],
+            "alpha_t_hac": 0.2829601394838545,
+            "hac_lags": 4,
+            "strategy_return_pct": 8.027407584036016,
+            "benchmark_return_pct": 9.585088897864026
+          },
+          {
+            "year": 2017,
+            "complete": true,
+            "status": "available",
+            "observations": 251,
+            "alpha_pct": -1.1312089149110978,
+            "beta": 1.0450190373995403,
+            "alpha_ci95_pct": [
+              -17.206150922821486,
+              14.94373309299929
+            ],
+            "alpha_t_hac": -0.13792705890538795,
+            "hac_lags": 4,
+            "strategy_return_pct": 26.729230306707574,
+            "benchmark_return_pct": 27.132326873868195
+          },
+          {
+            "year": 2018,
+            "complete": true,
+            "status": "available",
+            "observations": 251,
+            "alpha_pct": -3.6862871605105076,
+            "beta": 0.6139034867712898,
+            "alpha_ci95_pct": [
+              -23.743171015686226,
+              16.370596694665213
+            ],
+            "alpha_t_hac": -0.36023157369663567,
+            "hac_lags": 4,
+            "strategy_return_pct": -4.178363015330488,
+            "benchmark_return_pct": -2.2791333615323928
+          },
+          {
+            "year": 2019,
+            "complete": true,
+            "status": "available",
+            "observations": 252,
+            "alpha_pct": -6.712202121504378,
+            "beta": 0.6187932962759113,
+            "alpha_ci95_pct": [
+              -25.362732151330604,
+              11.938327908321847
+            ],
+            "alpha_t_hac": -0.7053910069638466,
+            "hac_lags": 4,
+            "strategy_return_pct": 13.503784647067253,
+            "benchmark_return_pct": 35.096791413011964
+          },
+          {
+            "year": 2020,
+            "complete": true,
+            "status": "available",
+            "observations": 253,
+            "alpha_pct": -9.83082539467853,
+            "beta": 0.3466030328714105,
+            "alpha_ci95_pct": [
+              -36.476667285353074,
+              16.81501649599601
+            ],
+            "alpha_t_hac": -0.7231303800655456,
+            "hac_lags": 4,
+            "strategy_return_pct": 0.7092448242983274,
+            "benchmark_return_pct": 32.790108433540375
+          },
+          {
+            "year": 2021,
+            "complete": true,
+            "status": "available",
+            "observations": 252,
+            "alpha_pct": 5.357969862372006,
+            "beta": 0.737369937573533,
+            "alpha_ci95_pct": [
+              -17.490616272162278,
+              28.20655599690629
+            ],
+            "alpha_t_hac": 0.4596179767279584,
+            "hac_lags": 4,
+            "strategy_return_pct": 26.102925649341756,
+            "benchmark_return_pct": 28.211708301640993
+          },
+          {
+            "year": 2022,
+            "complete": true,
+            "status": "available",
+            "observations": 251,
+            "alpha_pct": 2.6541780813765063,
+            "beta": 0.20887992303564196,
+            "alpha_ci95_pct": [
+              -29.826479067306437,
+              35.13483523005945
+            ],
+            "alpha_t_hac": 0.1601626782267518,
+            "hac_lags": 4,
+            "strategy_return_pct": -3.0634473696545372,
+            "benchmark_return_pct": -25.617973149903296
+          },
+          {
+            "year": 2023,
+            "complete": true,
+            "status": "available",
+            "observations": 250,
+            "alpha_pct": 5.865050009217546,
+            "beta": 0.5972134664621782,
+            "alpha_ci95_pct": [
+              -15.85186162823125,
+              27.581961646666343
+            ],
+            "alpha_t_hac": 0.5293339223355991,
+            "hac_lags": 4,
+            "strategy_return_pct": 31.55383281037878,
+            "benchmark_return_pct": 39.89112062139877
+          },
+          {
+            "year": 2024,
+            "complete": true,
+            "status": "available",
+            "observations": 252,
+            "alpha_pct": 8.35731923722083,
+            "beta": 0.7398263749573256,
+            "alpha_ci95_pct": [
+              -12.968830738724462,
+              29.68346921316612
+            ],
+            "alpha_t_hac": 0.7680873351931287,
+            "hac_lags": 4,
+            "strategy_return_pct": 29.62639757814054,
+            "benchmark_return_pct": 25.317590627856745
+          },
+          {
+            "year": 2025,
+            "complete": true,
+            "status": "available",
+            "observations": 250,
+            "alpha_pct": 6.816271160142723,
+            "beta": 0.38977957508555994,
+            "alpha_ci95_pct": [
+              -17.608439524928336,
+              31.24098184521378
+            ],
+            "alpha_t_hac": 0.5469825884998346,
+            "hac_lags": 4,
+            "strategy_return_pct": 17.8784900070174,
+            "benchmark_return_pct": 19.298722351853282
+          }
+        ],
+        "pooled": {
+          "status": "available",
+          "observations": 2514,
+          "alpha_pct": 5.00026456142111,
+          "beta": 0.44866128868609945,
+          "alpha_ci95_pct": [
+            -2.502435148651939,
+            12.50296427149416
+          ],
+          "alpha_t_hac": 1.306265600264835,
+          "hac_lags": 8,
+          "strategy_return_pct": 268.4667250049547,
+          "benchmark_return_pct": 387.1236367863168
+        },
+        "mean_annual_alpha_pct": 1.0126888557434874,
+        "complete_years": 10,
+        "negative_years": 4,
+        "years_below_1_pct": 4,
+        "criteria": {
+          "exactly_ten_complete_years": true,
+          "mean_alpha_at_least_5_pct": false,
+          "at_most_one_negative": false,
+          "at_most_two_total_below_1_pct": false,
+          "remaining_years_at_least_2_5_pct": false,
+          "win_rate_at_least_55_pct": false
+        },
+        "passes": false,
+        "win_rate_pct": 30.93525179856115
+      },
+      "validation": {
+        "status": "fixed_rule_evaluation",
+        "note": "Calendar results are descriptive; unseen data and a frozen selection protocol are required for confirmation."
+      },
+      "execution": {
+        "model": "cash_and_shares_next_open",
+        "fill_count": 1811,
+        "cost_pct_sum": 13.534184585308864,
+        "unfilled_notional": 0,
+        "maximum_participation_pct": 0.2033876996491948,
+        "note": "Unfilled quantity expires at that rebalance; volume capacity uses prior 20-session median dollar volume. No order-book model."
+      },
+      "trade_outcomes": {
+        "definition": "Cash-flow P&L of flat-to-flat position episodes, including partial fills and costs; open episodes excluded",
+        "open_count": 8,
+        "win_rate_pct": 30.93525179856115
+      },
+      "portfolio_risk": {
+        "latest_positions": [
+          {
+            "symbol": "AMAT",
+            "weight_pct": 9.82242569270129
+          },
+          {
+            "symbol": "BAC",
+            "weight_pct": 17.61189300916419
+          },
+          {
+            "symbol": "GE",
+            "weight_pct": 13.60022075869774
+          },
+          {
+            "symbol": "INTC",
+            "weight_pct": 5.869096103508976
+          },
+          {
+            "symbol": "LRCX",
+            "weight_pct": 7.858206377272967
+          },
+          {
+            "symbol": "MU",
+            "weight_pct": 6.175136049548673
+          },
+          {
+            "symbol": "SLB",
+            "weight_pct": 6.61399656481821
+          },
+          {
+            "symbol": "WMT",
+            "weight_pct": 14.975594059511252
+          }
+        ]
+      },
+      "corporate_data": {
+        "status": "not_used",
+        "signal_coverage_pct": 0
+      },
+      "macro_data": {
+        "status": "not_used",
+        "signal_coverage_pct": 0
+      },
+      "methodology": {
+        "execution_timing": "t close signal -> t+1 open transaction -> mark at close",
+        "cash_rate": "explicit daily risk-free series",
+        "warnings": [
+          "Long-only research candidate; no validated alpha claim.",
+          "Adjusted OHLC must use consistent corporate-action adjustments; complete data required.",
+          "Current-survivor baskets are exploratory and may contain selection bias."
+        ]
+      }
+    },
+    "qualification": "exploratory_cross_sectional_confirmation; current-survivor universe and shared market regimes prevent a claim of independent ten-year prospective evidence",
+    "promotion": "research_only"
+  },
+  "cost_aware_development": {
+    "manifest": {
+      "hypothesis": "Reducing target churn improves net development alpha without adding a new signal or leverage.",
+      "selection_interval": [
+        "2016-01-01",
+        "2020-12-31"
+      ],
+      "candidates": [
+        {
+          "trend_weight": 0.6,
+          "momentum_weight": 0.2,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.18,
+          "name_cap": 0.15,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "weekly",
+          "trade_buffer": 0.015,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        {
+          "trend_weight": 0.6,
+          "momentum_weight": 0.2,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.18,
+          "name_cap": 0.25,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "weekly",
+          "trade_buffer": 0.015,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        {
+          "trend_weight": 0.6,
+          "momentum_weight": 0.2,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.18,
+          "name_cap": 0.15,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "weekly",
+          "trade_buffer": 0.04,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        {
+          "trend_weight": 0.6,
+          "momentum_weight": 0.2,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.18,
+          "name_cap": 0.25,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "weekly",
+          "trade_buffer": 0.04,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        {
+          "trend_weight": 0.6,
+          "momentum_weight": 0.2,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.18,
+          "name_cap": 0.15,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "weekly",
+          "trade_buffer": 0.08,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        {
+          "trend_weight": 0.6,
+          "momentum_weight": 0.2,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.18,
+          "name_cap": 0.25,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "weekly",
+          "trade_buffer": 0.08,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        {
+          "trend_weight": 0.6,
+          "momentum_weight": 0.2,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.18,
+          "name_cap": 0.15,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "monthly",
+          "trade_buffer": 0.015,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        {
+          "trend_weight": 0.6,
+          "momentum_weight": 0.2,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.18,
+          "name_cap": 0.25,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "monthly",
+          "trade_buffer": 0.015,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        {
+          "trend_weight": 0.6,
+          "momentum_weight": 0.2,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.18,
+          "name_cap": 0.15,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "monthly",
+          "trade_buffer": 0.04,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        {
+          "trend_weight": 0.6,
+          "momentum_weight": 0.2,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.18,
+          "name_cap": 0.25,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "monthly",
+          "trade_buffer": 0.04,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        {
+          "trend_weight": 0.6,
+          "momentum_weight": 0.2,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.18,
+          "name_cap": 0.15,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "monthly",
+          "trade_buffer": 0.08,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        {
+          "trend_weight": 0.6,
+          "momentum_weight": 0.2,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.18,
+          "name_cap": 0.25,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "monthly",
+          "trade_buffer": 0.08,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        }
+      ],
+      "prior_candidates": 12,
+      "confirmation_reused": false
+    },
+    "selected_configuration": {
+      "trend_weight": 0.6,
+      "momentum_weight": 0.2,
+      "breakout_weight": 0.1,
+      "pullback_weight": 0.1,
+      "entry_threshold": 0.25,
+      "vol_target": 0.18,
+      "name_cap": 0.25,
+      "gross_cap": 1,
+      "covariance_shrinkage": 0.5,
+      "correlation_stress": 0.25,
+      "risk_window": 63,
+      "rebalance": "weekly",
+      "trade_buffer": 0.08,
+      "cost_bps": 12,
+      "impact_bps": 18,
+      "participation": 0.02,
+      "initial_equity": 1000000
+    },
+    "development": [
+      {
+        "configuration": {
+          "trend_weight": 0.6,
+          "momentum_weight": 0.2,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.18,
+          "name_cap": 0.15,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "weekly",
+          "trade_buffer": 0.015,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        "config_fingerprint": "de33b729a7216ddd836ba3426c4fd9c00f550539bac8e0e907800ca17e4d8c00",
+        "dataset_fingerprint": "e83813cad35cccd5597504143bf2f20da2e543bb9809e745831bd5dbd5438ac1",
+        "objective": -3.437288463907191,
+        "mean_alpha_pct": 1.78868016430078,
+        "annual": [
+          {
+            "year": 2016,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 0.5606494910154775,
+            "beta": 0.3611732661478175
+          },
+          {
+            "year": 2017,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 13.08437634938957,
+            "beta": 0.7088803771707779
+          },
+          {
+            "year": 2018,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -9.552146718065574,
+            "beta": 0.5915647061226019
+          },
+          {
+            "year": 2019,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -9.63834591398976,
+            "beta": 0.4963616000450835
+          },
+          {
+            "year": 2020,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 14.488867613154186,
+            "beta": 0.2590648271315702
+          }
+        ],
+        "negative_years": 2,
+        "performance": {
+          "id": "strategy_ensemble",
+          "label": "Universal V2 research engine",
+          "status": "research_only",
+          "observations": 1259,
+          "total_return_pct": 70.22,
+          "annualized_return_pct": 11.23,
+          "annualized_volatility_pct": 11.89,
+          "sharpe_zero_cash_rate": 0.96,
+          "max_drawdown_pct": -20.99,
+          "annualized_turnover": 9.35,
+          "average_gross_exposure": 0.787,
+          "worst_day_pct": -4.37,
+          "historical_var_95_pct": -1.13,
+          "historical_expected_shortfall_95_pct": -1.87,
+          "calmar_ratio": 0.54,
+          "longest_drawdown_sessions": 482
+        }
+      },
+      {
+        "configuration": {
+          "trend_weight": 0.6,
+          "momentum_weight": 0.2,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.18,
+          "name_cap": 0.25,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "weekly",
+          "trade_buffer": 0.015,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        "config_fingerprint": "3b2a54aa1d521021f6839cc302839103799920facbda1b89db62c330d75a829d",
+        "dataset_fingerprint": "e83813cad35cccd5597504143bf2f20da2e543bb9809e745831bd5dbd5438ac1",
+        "objective": -0.02368706139466159,
+        "mean_alpha_pct": 3.557419541600459,
+        "annual": [
+          {
+            "year": 2016,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -0.4901571255192705,
+            "beta": 0.5005209035836216
+          },
+          {
+            "year": 2017,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 14.872171725263012,
+            "beta": 0.7233220536810436
+          },
+          {
+            "year": 2018,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -5.848875414468728,
+            "beta": 0.6429724513502482
+          },
+          {
+            "year": 2019,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -4.066500474987604,
+            "beta": 0.5409181183150465
+          },
+          {
+            "year": 2020,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 13.320458997714887,
+            "beta": 0.2945214232036747
+          }
+        ],
+        "negative_years": 3,
+        "performance": {
+          "id": "strategy_ensemble",
+          "label": "Universal V2 research engine",
+          "status": "research_only",
+          "observations": 1259,
+          "total_return_pct": 92.02,
+          "annualized_return_pct": 13.95,
+          "annualized_volatility_pct": 13.25,
+          "sharpe_zero_cash_rate": 1.05,
+          "max_drawdown_pct": -20.13,
+          "annualized_turnover": 12.07,
+          "average_gross_exposure": 0.873,
+          "worst_day_pct": -4.56,
+          "historical_var_95_pct": -1.25,
+          "historical_expected_shortfall_95_pct": -2.04,
+          "calmar_ratio": 0.69,
+          "longest_drawdown_sessions": 485
+        }
+      },
+      {
+        "configuration": {
+          "trend_weight": 0.6,
+          "momentum_weight": 0.2,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.18,
+          "name_cap": 0.15,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "weekly",
+          "trade_buffer": 0.04,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        "config_fingerprint": "71bb1ee323a72433c8cf792181889c72d426d91219936955588d3c94ee227a83",
+        "dataset_fingerprint": "e83813cad35cccd5597504143bf2f20da2e543bb9809e745831bd5dbd5438ac1",
+        "objective": -2.036568528747019,
+        "mean_alpha_pct": 2.3553600073361474,
+        "annual": [
+          {
+            "year": 2016,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 0.8836881124787519,
+            "beta": 0.36214966981295726
+          },
+          {
+            "year": 2017,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 11.779726999300175,
+            "beta": 0.6592706966595546
+          },
+          {
+            "year": 2018,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -7.205296172507331,
+            "beta": 0.5849944131706405
+          },
+          {
+            "year": 2019,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -8.138034620387252,
+            "beta": 0.496457944931366
+          },
+          {
+            "year": 2020,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 14.456715717796392,
+            "beta": 0.25573194109332703
+          }
+        ],
+        "negative_years": 2,
+        "performance": {
+          "id": "strategy_ensemble",
+          "label": "Universal V2 research engine",
+          "status": "research_only",
+          "observations": 1259,
+          "total_return_pct": 73.01,
+          "annualized_return_pct": 11.6,
+          "annualized_volatility_pct": 11.75,
+          "sharpe_zero_cash_rate": 0.99,
+          "max_drawdown_pct": -19.55,
+          "annualized_turnover": 8.24,
+          "average_gross_exposure": 0.773,
+          "worst_day_pct": -4.1,
+          "historical_var_95_pct": -1.08,
+          "historical_expected_shortfall_95_pct": -1.84,
+          "calmar_ratio": 0.59,
+          "longest_drawdown_sessions": 490
+        }
+      },
+      {
+        "configuration": {
+          "trend_weight": 0.6,
+          "momentum_weight": 0.2,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.18,
+          "name_cap": 0.25,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "weekly",
+          "trade_buffer": 0.04,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        "config_fingerprint": "04ef7dc5002bec0200f95a59d6a7ac572c28d33961642eb670aa5c2a72c14bd4",
+        "dataset_fingerprint": "e83813cad35cccd5597504143bf2f20da2e543bb9809e745831bd5dbd5438ac1",
+        "objective": 0.5445038365514705,
+        "mean_alpha_pct": 3.747482875713434,
+        "annual": [
+          {
+            "year": 2016,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 0.24304576740385858,
+            "beta": 0.4941019447113309
+          },
+          {
+            "year": 2017,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 14.57081764008672,
+            "beta": 0.710195718730688
+          },
+          {
+            "year": 2018,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -5.8627097476484,
+            "beta": 0.641041103914167
+          },
+          {
+            "year": 2019,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -2.895231215565277,
+            "beta": 0.5244566534929599
+          },
+          {
+            "year": 2020,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 12.681491934290268,
+            "beta": 0.287583785186275
+          }
+        ],
+        "negative_years": 2,
+        "performance": {
+          "id": "strategy_ensemble",
+          "label": "Universal V2 research engine",
+          "status": "research_only",
+          "observations": 1259,
+          "total_return_pct": 92.01,
+          "annualized_return_pct": 13.95,
+          "annualized_volatility_pct": 13.05,
+          "sharpe_zero_cash_rate": 1.07,
+          "max_drawdown_pct": -20.28,
+          "annualized_turnover": 10.34,
+          "average_gross_exposure": 0.861,
+          "worst_day_pct": -4.85,
+          "historical_var_95_pct": -1.22,
+          "historical_expected_shortfall_95_pct": -2,
+          "calmar_ratio": 0.69,
+          "longest_drawdown_sessions": 485
+        }
+      },
+      {
+        "configuration": {
+          "trend_weight": 0.6,
+          "momentum_weight": 0.2,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.18,
+          "name_cap": 0.15,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "weekly",
+          "trade_buffer": 0.08,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        "config_fingerprint": "da113a9c0cb77d6fb1d69b974bc0f207d2b34a83c427a3b98c127f048e30350e",
+        "dataset_fingerprint": "e83813cad35cccd5597504143bf2f20da2e543bb9809e745831bd5dbd5438ac1",
+        "objective": -0.9039464520244009,
+        "mean_alpha_pct": 3.0062653894036004,
+        "annual": [
+          {
+            "year": 2016,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 2.3004208377980335,
+            "beta": 0.369066432553662
+          },
+          {
+            "year": 2017,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 12.685658156583942,
+            "beta": 0.6334287665440926
+          },
+          {
+            "year": 2018,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -6.513374524865478,
+            "beta": 0.5773011617567888
+          },
+          {
+            "year": 2019,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -7.838105520072563,
+            "beta": 0.4934577826410939
+          },
+          {
+            "year": 2020,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 14.396727997574066,
+            "beta": 0.25516937838355913
+          }
+        ],
+        "negative_years": 2,
+        "performance": {
+          "id": "strategy_ensemble",
+          "label": "Universal V2 research engine",
+          "status": "research_only",
+          "observations": 1259,
+          "total_return_pct": 77.63,
+          "annualized_return_pct": 12.19,
+          "annualized_volatility_pct": 11.7,
+          "sharpe_zero_cash_rate": 1.04,
+          "max_drawdown_pct": -19.24,
+          "annualized_turnover": 6.96,
+          "average_gross_exposure": 0.765,
+          "worst_day_pct": -3.91,
+          "historical_var_95_pct": -1.14,
+          "historical_expected_shortfall_95_pct": -1.81,
+          "calmar_ratio": 0.63,
+          "longest_drawdown_sessions": 478
+        }
+      },
+      {
+        "configuration": {
+          "trend_weight": 0.6,
+          "momentum_weight": 0.2,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.18,
+          "name_cap": 0.25,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "weekly",
+          "trade_buffer": 0.08,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        "config_fingerprint": "eff44dbf742ab49fcfd67b8f4b4788cd7ff027b448c86e5ceb773383a5735f63",
+        "dataset_fingerprint": "e83813cad35cccd5597504143bf2f20da2e543bb9809e745831bd5dbd5438ac1",
+        "objective": 1.7438727995979662,
+        "mean_alpha_pct": 3.9717008963102245,
+        "annual": [
+          {
+            "year": 2016,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 1.236806079993245,
+            "beta": 0.4783939635856042
+          },
+          {
+            "year": 2017,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 11.971619390765866,
+            "beta": 0.6966148339510513
+          },
+          {
+            "year": 2018,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -4.041531171920424,
+            "beta": 0.6116076608071553
+          },
+          {
+            "year": 2019,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -0.8344153916341133,
+            "beta": 0.4780980255939697
+          },
+          {
+            "year": 2020,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 11.52602557434655,
+            "beta": 0.27255273815813275
+          }
+        ],
+        "negative_years": 2,
+        "performance": {
+          "id": "strategy_ensemble",
+          "label": "Universal V2 research engine",
+          "status": "research_only",
+          "observations": 1259,
+          "total_return_pct": 90.42,
+          "annualized_return_pct": 13.76,
+          "annualized_volatility_pct": 12.61,
+          "sharpe_zero_cash_rate": 1.09,
+          "max_drawdown_pct": -18.78,
+          "annualized_turnover": 8.58,
+          "average_gross_exposure": 0.82,
+          "worst_day_pct": -4.17,
+          "historical_var_95_pct": -1.18,
+          "historical_expected_shortfall_95_pct": -1.92,
+          "calmar_ratio": 0.73,
+          "longest_drawdown_sessions": 485
+        }
+      },
+      {
+        "configuration": {
+          "trend_weight": 0.6,
+          "momentum_weight": 0.2,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.18,
+          "name_cap": 0.15,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "monthly",
+          "trade_buffer": 0.015,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        "config_fingerprint": "f9df7b9d82522be9238fb4c36fdac32b37656b7915a9ad89955abb811feb7ad3",
+        "dataset_fingerprint": "e83813cad35cccd5597504143bf2f20da2e543bb9809e745831bd5dbd5438ac1",
+        "objective": -2.160483534084772,
+        "mean_alpha_pct": 2.1941506380802727,
+        "annual": [
+          {
+            "year": 2016,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 3.5596851627823134,
+            "beta": 0.4367210722128988
+          },
+          {
+            "year": 2017,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 10.927537758099453,
+            "beta": 0.7465687078031198
+          },
+          {
+            "year": 2018,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -5.510375890479922,
+            "beta": 0.7681509957778233
+          },
+          {
+            "year": 2019,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -11.262794970345304,
+            "beta": 0.5199136277919648
+          },
+          {
+            "year": 2020,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 13.256701130344823,
+            "beta": 0.34297251436632376
+          }
+        ],
+        "negative_years": 2,
+        "performance": {
+          "id": "strategy_ensemble",
+          "label": "Universal V2 research engine",
+          "status": "research_only",
+          "observations": 1259,
+          "total_return_pct": 80.7,
+          "annualized_return_pct": 12.57,
+          "annualized_volatility_pct": 13.03,
+          "sharpe_zero_cash_rate": 0.97,
+          "max_drawdown_pct": -19.61,
+          "annualized_turnover": 4.8,
+          "average_gross_exposure": 0.784,
+          "worst_day_pct": -4.54,
+          "historical_var_95_pct": -1.19,
+          "historical_expected_shortfall_95_pct": -2.03,
+          "calmar_ratio": 0.64,
+          "longest_drawdown_sessions": 478
+        }
+      },
+      {
+        "configuration": {
+          "trend_weight": 0.6,
+          "momentum_weight": 0.2,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.18,
+          "name_cap": 0.25,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "monthly",
+          "trade_buffer": 0.015,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        "config_fingerprint": "fe8b132185a8d2dc42547896bcf18e9eb6b0edcfaada42f97f3d92ceeb7ff59a",
+        "dataset_fingerprint": "e83813cad35cccd5597504143bf2f20da2e543bb9809e745831bd5dbd5438ac1",
+        "objective": -2.742586896194231,
+        "mean_alpha_pct": 1.5128745441812796,
+        "annual": [
+          {
+            "year": 2016,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 0.530036460534677,
+            "beta": 0.6319652942493675
+          },
+          {
+            "year": 2017,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 11.575062417182492,
+            "beta": 0.7503357981364815
+          },
+          {
+            "year": 2018,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -2.3193753533942174,
+            "beta": 0.7895408363781785
+          },
+          {
+            "year": 2019,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -11.987968309018015,
+            "beta": 0.5453413827541419
+          },
+          {
+            "year": 2020,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 9.766617505601461,
+            "beta": 0.43038604097289335
+          }
+        ],
+        "negative_years": 2,
+        "performance": {
+          "id": "strategy_ensemble",
+          "label": "Universal V2 research engine",
+          "status": "research_only",
+          "observations": 1259,
+          "total_return_pct": 82.93,
+          "annualized_return_pct": 12.85,
+          "annualized_volatility_pct": 14.5,
+          "sharpe_zero_cash_rate": 0.91,
+          "max_drawdown_pct": -20.49,
+          "annualized_turnover": 6.26,
+          "average_gross_exposure": 0.876,
+          "worst_day_pct": -5.38,
+          "historical_var_95_pct": -1.31,
+          "historical_expected_shortfall_95_pct": -2.26,
+          "calmar_ratio": 0.63,
+          "longest_drawdown_sessions": 494
+        }
+      },
+      {
+        "configuration": {
+          "trend_weight": 0.6,
+          "momentum_weight": 0.2,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.18,
+          "name_cap": 0.15,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "monthly",
+          "trade_buffer": 0.04,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        "config_fingerprint": "d63df352d752c55ef96aa355960d98d309e3432ea365e92b6996ca24c1cf0064",
+        "dataset_fingerprint": "e83813cad35cccd5597504143bf2f20da2e543bb9809e745831bd5dbd5438ac1",
+        "objective": -2.061385024908072,
+        "mean_alpha_pct": 2.0493318704709176,
+        "annual": [
+          {
+            "year": 2016,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 3.4648955317096073,
+            "beta": 0.44442744165797693
+          },
+          {
+            "year": 2017,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 9.279958388685849,
+            "beta": 0.7239603586473089
+          },
+          {
+            "year": 2018,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -4.730651648192282,
+            "beta": 0.7565976970066702
+          },
+          {
+            "year": 2019,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -10.822932828702665,
+            "beta": 0.5189214685847933
+          },
+          {
+            "year": 2020,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 13.055389908854078,
+            "beta": 0.329219429100565
+          }
+        ],
+        "negative_years": 2,
+        "performance": {
+          "id": "strategy_ensemble",
+          "label": "Universal V2 research engine",
+          "status": "research_only",
+          "observations": 1259,
+          "total_return_pct": 77.95,
+          "annualized_return_pct": 12.23,
+          "annualized_volatility_pct": 12.85,
+          "sharpe_zero_cash_rate": 0.96,
+          "max_drawdown_pct": -19.09,
+          "annualized_turnover": 4.52,
+          "average_gross_exposure": 0.777,
+          "worst_day_pct": -4.28,
+          "historical_var_95_pct": -1.2,
+          "historical_expected_shortfall_95_pct": -1.99,
+          "calmar_ratio": 0.64,
+          "longest_drawdown_sessions": 478
+        }
+      },
+      {
+        "configuration": {
+          "trend_weight": 0.6,
+          "momentum_weight": 0.2,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.18,
+          "name_cap": 0.25,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "monthly",
+          "trade_buffer": 0.04,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        "config_fingerprint": "bafb2999530838482f2c9ec49a1f662684eefd37c44d22e1df3154a1269023e9",
+        "dataset_fingerprint": "e83813cad35cccd5597504143bf2f20da2e543bb9809e745831bd5dbd5438ac1",
+        "objective": -2.1441778271728924,
+        "mean_alpha_pct": 1.8667171288752233,
+        "annual": [
+          {
+            "year": 2016,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 0.805096124789693,
+            "beta": 0.6316016182088805
+          },
+          {
+            "year": 2017,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 12.992565759164993,
+            "beta": 0.7195430058827263
+          },
+          {
+            "year": 2018,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -2.4255060821190972,
+            "beta": 0.7911632777153892
+          },
+          {
+            "year": 2019,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -10.934064822911175,
+            "beta": 0.5426914373570922
+          },
+          {
+            "year": 2020,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 8.895494665451702,
+            "beta": 0.42912454317477244
+          }
+        ],
+        "negative_years": 2,
+        "performance": {
+          "id": "strategy_ensemble",
+          "label": "Universal V2 research engine",
+          "status": "research_only",
+          "observations": 1259,
+          "total_return_pct": 84.62,
+          "annualized_return_pct": 13.06,
+          "annualized_volatility_pct": 14.45,
+          "sharpe_zero_cash_rate": 0.92,
+          "max_drawdown_pct": -20.58,
+          "annualized_turnover": 5.79,
+          "average_gross_exposure": 0.871,
+          "worst_day_pct": -5.5,
+          "historical_var_95_pct": -1.31,
+          "historical_expected_shortfall_95_pct": -2.26,
+          "calmar_ratio": 0.63,
+          "longest_drawdown_sessions": 490
+        }
+      },
+      {
+        "configuration": {
+          "trend_weight": 0.6,
+          "momentum_weight": 0.2,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.18,
+          "name_cap": 0.15,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "monthly",
+          "trade_buffer": 0.08,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        "config_fingerprint": "7bde2600bb3d3262bab462c34ada199777c38f72f6494ec0808fbab761da5164",
+        "dataset_fingerprint": "e83813cad35cccd5597504143bf2f20da2e543bb9809e745831bd5dbd5438ac1",
+        "objective": -1.515661809282205,
+        "mean_alpha_pct": 2.320346248542969,
+        "annual": [
+          {
+            "year": 2016,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 3.5418952866867652,
+            "beta": 0.445629584212354
+          },
+          {
+            "year": 2017,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 12.205541497484882,
+            "beta": 0.7335524000847345
+          },
+          {
+            "year": 2018,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -5.7201081525991375,
+            "beta": 0.7092435204615936
+          },
+          {
+            "year": 2019,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -8.459932136526731,
+            "beta": 0.47577066104002136
+          },
+          {
+            "year": 2020,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 10.034334747669067,
+            "beta": 0.3212307005152436
+          }
+        ],
+        "negative_years": 2,
+        "performance": {
+          "id": "strategy_ensemble",
+          "label": "Universal V2 research engine",
+          "status": "research_only",
+          "observations": 1259,
+          "total_return_pct": 78.56,
+          "annualized_return_pct": 12.3,
+          "annualized_volatility_pct": 12.65,
+          "sharpe_zero_cash_rate": 0.98,
+          "max_drawdown_pct": -19.3,
+          "annualized_turnover": 3.86,
+          "average_gross_exposure": 0.761,
+          "worst_day_pct": -4.72,
+          "historical_var_95_pct": -1.17,
+          "historical_expected_shortfall_95_pct": -1.96,
+          "calmar_ratio": 0.64,
+          "longest_drawdown_sessions": 477
+        }
+      },
+      {
+        "configuration": {
+          "trend_weight": 0.6,
+          "momentum_weight": 0.2,
+          "breakout_weight": 0.1,
+          "pullback_weight": 0.1,
+          "entry_threshold": 0.25,
+          "vol_target": 0.18,
+          "name_cap": 0.25,
+          "gross_cap": 1,
+          "covariance_shrinkage": 0.5,
+          "correlation_stress": 0.25,
+          "risk_window": 63,
+          "rebalance": "monthly",
+          "trade_buffer": 0.08,
+          "cost_bps": 12,
+          "impact_bps": 18,
+          "participation": 0.02,
+          "initial_equity": 1000000
+        },
+        "config_fingerprint": "416706043a53ed4b82e931bd0313d0577bc4158d99d5f324e62cad0c10cb5bf1",
+        "dataset_fingerprint": "e83813cad35cccd5597504143bf2f20da2e543bb9809e745831bd5dbd5438ac1",
+        "objective": -1.5464660285747063,
+        "mean_alpha_pct": 1.553644961076817,
+        "annual": [
+          {
+            "year": 2016,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -0.634104691062785,
+            "beta": 0.5949831205198702
+          },
+          {
+            "year": 2017,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 12.97432862085005,
+            "beta": 0.6696168933097278
+          },
+          {
+            "year": 2018,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 1.185054830210094,
+            "beta": 0.7105062095679834
+          },
+          {
+            "year": 2019,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": -8.551505087404927,
+            "beta": 0.5158264579396141
+          },
+          {
+            "year": 2020,
+            "complete": true,
+            "status": "available",
+            "alpha_pct": 2.794451132791653,
+            "beta": 0.43200624500126333
+          }
+        ],
+        "negative_years": 2,
+        "performance": {
+          "id": "strategy_ensemble",
+          "label": "Universal V2 research engine",
+          "status": "research_only",
+          "observations": 1259,
+          "total_return_pct": 78.73,
+          "annualized_return_pct": 12.33,
+          "annualized_volatility_pct": 13.91,
+          "sharpe_zero_cash_rate": 0.91,
+          "max_drawdown_pct": -19.66,
+          "annualized_turnover": 5.03,
+          "average_gross_exposure": 0.845,
+          "worst_day_pct": -5.08,
+          "historical_var_95_pct": -1.32,
+          "historical_expected_shortfall_95_pct": -2.19,
+          "calmar_ratio": 0.63,
+          "longest_drawdown_sessions": 482
+        }
+      }
+    ],
+    "base_zero_cost_alpha": {
+      "status": "available",
+      "benchmark": "daily 50/50 SPY/QQQ total-return proxy",
+      "definition": "252 times daily excess-return regression intercept; percentage points per year",
+      "uncertainty": "Newey-West HAC with Bartlett weights; confidence intervals do not adjust for model search",
+      "annual": [
+        {
+          "year": 2016,
+          "complete": true,
+          "status": "available",
+          "observations": 252,
+          "alpha_pct": 1.128028486923205,
+          "beta": 0.5008711387476205,
+          "alpha_ci95_pct": [
+            -14.276029154158348,
+            16.532086128004757
+          ],
+          "alpha_t_hac": 0.14352944437659523,
+          "hac_lags": 4,
+          "strategy_return_pct": 5.809546142771582,
+          "benchmark_return_pct": 9.585088897864026
+        },
+        {
+          "year": 2017,
+          "complete": true,
+          "status": "available",
+          "observations": 251,
+          "alpha_pct": 15.945524320523377,
+          "beta": 0.7234135140560346,
+          "alpha_ci95_pct": [
+            2.9359783122212804,
+            28.955070328825474
+          ],
+          "alpha_t_hac": 2.4023303848021627,
+          "hac_lags": 4,
+          "strategy_return_pct": 39.21340841067562,
+          "benchmark_return_pct": 27.132326873868195
+        },
+        {
+          "year": 2018,
+          "complete": true,
+          "status": "available",
+          "observations": 251,
+          "alpha_pct": -4.095612479927978,
+          "beta": 0.6448328740814354,
+          "alpha_ci95_pct": [
+            -23.917757822626438,
+            15.72653286277048
+          ],
+          "alpha_t_hac": -0.40497132484278514,
+          "hac_lags": 4,
+          "strategy_return_pct": -4.720925508980467,
+          "benchmark_return_pct": -2.2791333615323928
+        },
+        {
+          "year": 2019,
+          "complete": true,
+          "status": "available",
+          "observations": 252,
+          "alpha_pct": -2.4557566803353112,
+          "beta": 0.5405584289773043,
+          "alpha_ci95_pct": [
+            -19.58972338573201,
+            14.678210025061388
+          ],
+          "alpha_t_hac": -0.28092053499445446,
+          "hac_lags": 4,
+          "strategy_return_pct": 15.924694485335023,
+          "benchmark_return_pct": 35.096791413011964
+        },
+        {
+          "year": 2020,
+          "complete": true,
+          "status": "available",
+          "observations": 253,
+          "alpha_pct": 14.569654537074713,
+          "beta": 0.29449482249805575,
+          "alpha_ci95_pct": [
+            -9.402323949917095,
+            38.54163302406652
+          ],
+          "alpha_t_hac": 1.1912459753024722,
+          "hac_lags": 4,
+          "strategy_return_pct": 26.93548562233201,
+          "benchmark_return_pct": 32.790108433540375
+        }
+      ],
+      "pooled": {
+        "status": "available",
+        "observations": 1259,
+        "alpha_pct": 6.349654121476813,
+        "beta": 0.42182968469856874,
+        "alpha_ci95_pct": [
+          -2.737539090956264,
+          15.436847333909888
+        ],
+        "alpha_t_hac": 1.369545225589227,
+        "hac_lags": 7,
+        "strategy_return_pct": 106.52016192196565,
+        "benchmark_return_pct": 144.23366695430727
+      },
+      "mean_annual_alpha_pct": 5.018367636851601,
+      "complete_years": 5,
+      "negative_years": 2,
+      "years_below_1_pct": 2,
+      "criteria": {
+        "exactly_ten_complete_years": false,
+        "mean_alpha_at_least_5_pct": true,
+        "at_most_one_negative": false,
+        "at_most_two_total_below_1_pct": true,
+        "remaining_years_at_least_2_5_pct": false,
+        "win_rate_at_least_55_pct": false
+      },
+      "passes": false,
+      "win_rate_pct": 27.77777777777778
+    },
+    "status": "development_only_not_confirmed",
+    "promotion": "research_only"
+  },
+  "second_confirmation": {
+    "manifest": {
+      "hypothesis": "A wider no-trade band retains the selected signal while reducing implementation drag.",
+      "symbols": [
+        "KO",
+        "PEP",
+        "PG",
+        "UNP",
+        "UPS",
+        "CAT",
+        "HON",
+        "AXP",
+        "MET",
+        "AMGN",
+        "GILD",
+        "TXN"
+      ],
+      "selection": "Predeclared large-cap sector-spanning survivor basket; not performance-ranked and not point-in-time membership",
+      "configuration": {
+        "trend_weight": 0.6,
+        "momentum_weight": 0.2,
+        "breakout_weight": 0.1,
+        "pullback_weight": 0.1,
+        "entry_threshold": 0.25,
+        "vol_target": 0.18,
+        "name_cap": 0.25,
+        "gross_cap": 1,
+        "covariance_shrinkage": 0.5,
+        "correlation_stress": 0.25,
+        "risk_window": 63,
+        "rebalance": "weekly",
+        "trade_buffer": 0.08,
+        "cost_bps": 12,
+        "impact_bps": 18,
+        "participation": 0.02,
+        "initial_equity": 1000000
+      },
+      "start": "2016-01-01",
+      "end": "2025-12-31",
+      "earlier_candidate_evaluations": 24,
+      "prior_test_seen": true
+    },
+    "report": {
+      "engine": "universal_v2",
+      "engine_version": "2.0.0-research",
+      "configuration": {
+        "trend_weight": 0.6,
+        "momentum_weight": 0.2,
+        "breakout_weight": 0.1,
+        "pullback_weight": 0.1,
+        "entry_threshold": 0.25,
+        "vol_target": 0.18,
+        "name_cap": 0.25,
+        "gross_cap": 1,
+        "covariance_shrinkage": 0.5,
+        "correlation_stress": 0.25,
+        "risk_window": 63,
+        "rebalance": "weekly",
+        "trade_buffer": 0.08,
+        "cost_bps": 12,
+        "impact_bps": 18,
+        "participation": 0.02,
+        "initial_equity": 1000000
+      },
+      "config_fingerprint": "eff44dbf742ab49fcfd67b8f4b4788cd7ff027b448c86e5ceb773383a5735f63",
+      "dataset_fingerprint": "a6ade022c0f6cd2b9b0049db6805d2b7ed5818515fb94de3c57ca342fdbff0a8",
+      "universe": {
+        "symbols": [
+          "AMGN",
+          "AXP",
+          "CAT",
+          "GILD",
+          "HON",
+          "KO",
+          "MET",
+          "PEP",
+          "PG",
+          "TXN",
+          "UNP",
+          "UPS"
+        ],
+        "start": "2016-01-04",
+        "end": "2025-12-31",
+        "sessions": 2514
+      },
+      "results": [
+        {
+          "id": "strategy_ensemble",
+          "label": "Universal V2 research engine",
+          "status": "research_only",
+          "observations": 2514,
+          "total_return_pct": 35.21,
+          "annualized_return_pct": 3.07,
+          "annualized_volatility_pct": 12.45,
+          "sharpe_zero_cash_rate": 0.31,
+          "max_drawdown_pct": -31.93,
+          "annualized_turnover": 9.73,
+          "average_gross_exposure": 0.828,
+          "worst_day_pct": -4.81,
+          "historical_var_95_pct": -1.28,
+          "historical_expected_shortfall_95_pct": -1.89,
+          "calmar_ratio": 0.1,
+          "longest_drawdown_sessions": 1000
+        }
+      ],
+      "alpha": {
+        "status": "available",
+        "benchmark": "daily 50/50 SPY/QQQ total-return proxy",
+        "definition": "252 times daily excess-return regression intercept; percentage points per year",
+        "uncertainty": "Newey-West HAC with Bartlett weights; confidence intervals do not adjust for model search",
+        "annual": [
+          {
+            "year": 2016,
+            "complete": true,
+            "status": "available",
+            "observations": 252,
+            "alpha_pct": 4.141045615381662,
+            "beta": 0.3941875395945057,
+            "alpha_ci95_pct": [
+              -10.409290106052689,
+              18.691381336816015
+            ],
+            "alpha_t_hac": 0.557818703398821,
+            "hac_lags": 4,
+            "strategy_return_pct": 7.993296662962823,
+            "benchmark_return_pct": 9.585088897864026
+          },
+          {
+            "year": 2017,
+            "complete": true,
+            "status": "available",
+            "observations": 251,
+            "alpha_pct": 2.223693813225179,
+            "beta": 0.6017044377887396,
+            "alpha_ci95_pct": [
+              -10.101853649655013,
+              14.54924127610537
+            ],
+            "alpha_t_hac": 0.35361024628295784,
+            "hac_lags": 4,
+            "strategy_return_pct": 18.035789408277104,
+            "benchmark_return_pct": 27.132326873868195
+          },
+          {
+            "year": 2018,
+            "complete": true,
+            "status": "available",
+            "observations": 251,
+            "alpha_pct": -15.82867034814139,
+            "beta": 0.5287299672933707,
+            "alpha_ci95_pct": [
+              -33.806171425422804,
+              2.148830729140027
+            ],
+            "alpha_t_hac": -1.7257233777370267,
+            "hac_lags": 4,
+            "strategy_return_pct": -14.657758669598342,
+            "benchmark_return_pct": -2.2791333615323928
+          },
+          {
+            "year": 2019,
+            "complete": true,
+            "status": "available",
+            "observations": 252,
+            "alpha_pct": -3.22953228239838,
+            "beta": 0.493848451801321,
+            "alpha_ci95_pct": [
+              -16.718088872364948,
+              10.259024307568186
+            ],
+            "alpha_t_hac": -0.46927803069820634,
+            "hac_lags": 4,
+            "strategy_return_pct": 13.68751979769307,
+            "benchmark_return_pct": 35.096791413011964
+          },
+          {
+            "year": 2020,
+            "complete": true,
+            "status": "available",
+            "observations": 253,
+            "alpha_pct": 1.5900037370766154,
+            "beta": 0.2625193920127848,
+            "alpha_ci95_pct": [
+              -21.293147594462265,
+              24.473155068615494
+            ],
+            "alpha_t_hac": 0.13618785627550142,
+            "hac_lags": 4,
+            "strategy_return_pct": 10.321096902386184,
+            "benchmark_return_pct": 32.790108433540375
+          },
+          {
+            "year": 2021,
+            "complete": true,
+            "status": "available",
+            "observations": 252,
+            "alpha_pct": 2.4684178830329824,
+            "beta": 0.4468062563629829,
+            "alpha_ci95_pct": [
+              -18.838121486922255,
+              23.774957252988216
+            ],
+            "alpha_t_hac": 0.2270710868029063,
+            "hac_lags": 4,
+            "strategy_return_pct": 14.204375459645036,
+            "benchmark_return_pct": 28.211708301640993
+          },
+          {
+            "year": 2022,
+            "complete": true,
+            "status": "available",
+            "observations": 251,
+            "alpha_pct": -10.29533114955324,
+            "beta": 0.29246666098639795,
+            "alpha_ci95_pct": [
+              -34.3666826723593,
+              13.776020373252825
+            ],
+            "alpha_t_hac": -0.8382931483513163,
+            "hac_lags": 4,
+            "strategy_return_pct": -16.396097243163478,
+            "benchmark_return_pct": -25.617973149903296
+          },
+          {
+            "year": 2023,
+            "complete": true,
+            "status": "available",
+            "observations": 250,
+            "alpha_pct": -25.828357522175605,
+            "beta": 0.38121325239498544,
+            "alpha_ci95_pct": [
+              -47.58475034235634,
+              -4.071964701994872
+            ],
+            "alpha_t_hac": -2.3268370433405168,
+            "hac_lags": 4,
+            "strategy_return_pct": -9.520035245602099,
+            "benchmark_return_pct": 39.89112062139877
+          },
+          {
+            "year": 2024,
+            "complete": true,
+            "status": "available",
+            "observations": 252,
+            "alpha_pct": -5.216987717644839,
+            "beta": 0.4235203049214787,
+            "alpha_ci95_pct": [
+              -27.18755064118408,
+              16.753575205894407
+            ],
+            "alpha_t_hac": -0.46540891838636095,
+            "hac_lags": 4,
+            "strategy_return_pct": 7.28147368345462,
+            "benchmark_return_pct": 25.317590627856745
+          },
+          {
+            "year": 2025,
+            "complete": true,
+            "status": "available",
+            "observations": 250,
+            "alpha_pct": -1.2532398617193539,
+            "beta": 0.2568170311622179,
+            "alpha_ci95_pct": [
+              -21.35000792883027,
+              18.84352820539156
+            ],
+            "alpha_t_hac": -0.12222612714478398,
+            "hac_lags": 4,
+            "strategy_return_pct": 6.922433180583343,
+            "benchmark_return_pct": 19.298722351853282
+          }
+        ],
+        "pooled": {
+          "status": "available",
+          "observations": 2514,
+          "alpha_pct": -3.809530178626778,
+          "beta": 0.3455782665343969,
+          "alpha_ci95_pct": [
+            -9.874411010023733,
+            2.2553506527701774
+          ],
+          "alpha_t_hac": -1.231133695398372,
+          "hac_lags": 8,
+          "strategy_return_pct": 35.207628902169084,
+          "benchmark_return_pct": 387.1236367863168
+        },
+        "mean_annual_alpha_pct": -5.122895783291637,
+        "complete_years": 10,
+        "negative_years": 6,
+        "years_below_1_pct": 6,
+        "criteria": {
+          "exactly_ten_complete_years": true,
+          "mean_alpha_at_least_5_pct": false,
+          "at_most_one_negative": false,
+          "at_most_two_total_below_1_pct": false,
+          "remaining_years_at_least_2_5_pct": false,
+          "win_rate_at_least_55_pct": false
+        },
+        "passes": false,
+        "win_rate_pct": 30.93525179856115
+      },
+      "validation": {
+        "status": "fixed_rule_evaluation",
+        "note": "Calendar results are descriptive; unseen data and a frozen selection protocol are required for confirmation."
+      },
+      "execution": {
+        "model": "cash_and_shares_next_open",
+        "fill_count": 755,
+        "cost_pct_sum": 12.002066808201532,
+        "unfilled_notional": 0,
+        "maximum_participation_pct": 0.1748060051701198,
+        "note": "Unfilled quantity expires at that rebalance; volume capacity uses prior 20-session median dollar volume. No order-book model."
+      },
+      "trade_outcomes": {
+        "definition": "Cash-flow P&L of flat-to-flat position episodes, including partial fills and costs; open episodes excluded",
+        "open_count": 5,
+        "win_rate_pct": 30.93525179856115
+      },
+      "portfolio_risk": {
+        "latest_positions": [
+          {
+            "symbol": "AMGN",
+            "weight_pct": 12.679952407979622
+          },
+          {
+            "symbol": "AXP",
+            "weight_pct": 16.776452377509887
+          },
+          {
+            "symbol": "CAT",
+            "weight_pct": 19.297362381435928
+          },
+          {
+            "symbol": "GILD",
+            "weight_pct": 18.839945563556334
+          },
+          {
+            "symbol": "KO",
+            "weight_pct": 22.88369827730677
+          }
+        ]
+      },
+      "corporate_data": {
+        "status": "not_used",
+        "signal_coverage_pct": 0
+      },
+      "macro_data": {
+        "status": "not_used",
+        "signal_coverage_pct": 0
+      },
+      "methodology": {
+        "execution_timing": "t close signal -> t+1 open transaction -> mark at close",
+        "cash_rate": "explicit daily risk-free series",
+        "warnings": [
+          "Long-only research candidate; no validated alpha claim.",
+          "Adjusted OHLC must use consistent corporate-action adjustments; complete data required.",
+          "Current-survivor baskets are exploratory and may contain selection bias."
+        ]
+      }
+    },
+    "promotion": "research_only"
+  }
+}

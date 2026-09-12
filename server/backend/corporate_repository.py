@@ -18,7 +18,7 @@ import pandas as pd
 from .database import get_connection
 
 CORPORATE_METRICS = {
-    "revenue_growth_yoy", "operating_margin", "free_cash_flow_margin",
+    "revenue_growth_yoy", "gross_margin", "operating_margin", "net_income_margin", "free_cash_flow_margin",
     "earnings_surprise_pct", "guidance_revision_pct", "estimate_revision_pct",
     "insider_net_buy_pct", "share_count_growth_yoy", "net_debt_to_ebitda",
 }
@@ -269,7 +269,7 @@ class CorporateRepository:
                 item["available_at"] = item["available_at"].tz_convert(None)
             by_symbol[item["ticker"]].append(item)
         raw = pd.DataFrame(np.nan, index=index, columns=symbols, dtype=float)
-        positive = {"revenue_growth_yoy", "operating_margin", "free_cash_flow_margin", "earnings_surprise_pct", "guidance_revision_pct", "estimate_revision_pct", "insider_net_buy_pct"}
+        positive = {"revenue_growth_yoy", "gross_margin", "operating_margin", "net_income_margin", "free_cash_flow_margin", "earnings_surprise_pct", "guidance_revision_pct", "estimate_revision_pct", "insider_net_buy_pct"}
         negative = {"share_count_growth_yoy", "net_debt_to_ebitda"}
         for ticker in symbols:
             current: dict[str, float] = {}

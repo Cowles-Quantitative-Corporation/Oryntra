@@ -30,11 +30,19 @@ __pycache__/
 htmlcov/
 
 data/
+!server/data/
+server/data/*
+!server/data/universal_taxonomy/
+!server/data/universal_taxonomy/family_catalog.json
+!server/data/universal_taxonomy/financedatabase_seed_25000.json
 *.db
 *.db-*
 *.sqlite
 *.sqlite3
 *.log
+
+# Private formation, family, and counsel-facing preparation records.
+docs/private/
 
 .dart_tool/
 .flutter-plugins

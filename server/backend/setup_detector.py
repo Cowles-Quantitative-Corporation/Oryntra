@@ -15,6 +15,9 @@ SETUP_TYPES = [
 
 def detect_setup(ind: Dict[str, Any], hist: pd.DataFrame = None, pattern_mode: str = "new", patterns_override: Dict[str, Any] | None = None) -> Dict[str, Any]:
     engine_mode = normalize_pattern_engine_mode(pattern_mode)
+    if engine_mode == "universal_v2":
+        from .universal_engine import scanner_setup
+        return scanner_setup(hist)
     patterns = patterns_override if isinstance(patterns_override, dict) else {}
     if patterns_override is None and hist is not None:
         try:
@@ -75,7 +78,7 @@ def detect_setup(ind: Dict[str, Any], hist: pd.DataFrame = None, pattern_mode: s
             "official": "V7 official",
             "v8": "V8 analytics evidence",
             "vai": "VAI 1.0",
-            "vai2": "VAI 2.1",
+            "vai2": "VAI 2.2",
         }
         best_setup = "NO_TRADE"
         best = {
@@ -1253,46 +1256,46 @@ def _apply_vai_2_0_engine_adjustments(results: dict, ind: dict, patterns: dict) 
         item["vai2_prediction"] = pred
 
         if not pred.get("trained"):
-            rules.append("VAI 2.1: no promoted model found; using V7 Official fallback until headless training promotes one.")
+            rules.append("VAI 2.2: no promoted model found; using V7 Official fallback until headless training promotes one.")
             item["rules"] = rules
             continue
 
         model_seen = True
         if direction != "LONG":
             item["score"] = 0
-            rules.append("VAI 2.1: non-long setup rejected by confidence-weighted model policy.")
+            rules.append("VAI 2.2: non-long setup rejected by experimental model policy.")
         elif pred.get("decision") != "TRADE":
             item["score"] = min(float(item.get("score") or 0), 54)
             rules.append(
-                "VAI 2.1 rejected setup: "
+                "VAI 2.2 rejected setup: "
                 f"probability {pred.get('probability')}% / threshold {pred.get('threshold')}%, "
                 f"expected return {pred.get('expected_return_pct')}%, "
                 f"stop probability {pred.get('stop_probability_pct')}%, "
-                f"confidence edge {pred.get('confidence_edge')} / minimum {pred.get('min_confidence_edge')}."
+                f"decision edge {pred.get('decision_edge')} / minimum {pred.get('min_decision_edge')}."
             )
         else:
             p = float(pred.get("probability") or 0)
             er = float(pred.get("expected_return_pct") or 0)
             stop_p = float(pred.get("stop_probability_pct") or 0)
-            edge = float(pred.get("confidence_edge") or 0)
+            edge = float(pred.get("decision_edge") or 0)
             size = float(pred.get("suggested_position_size_pct") or 0)
 
             blended = (float(item.get("score") or 0) * 0.22) + (p * 0.58) + (er * 6.5) + (edge * 18.0) + (size * 3.0) - (stop_p * 0.12)
             if pred.get("grade") in {"A+", "A"}:
                 blended += 6
-                rules.append("VAI 2.1 premium grade boost.")
+                rules.append("VAI 2.2 premium grade boost.")
             if size >= 2.0:
                 blended += 3
-                rules.append("VAI 2.1 confidence sizing boost: model says this is one of the stronger bets.")
+                rules.append("VAI 2.2 confidence sizing boost: model says this is one of the stronger bets.")
             elif size <= 0.6:
                 blended -= 3
-                rules.append("VAI 2.1 low-size caution: accepted, but only as a small-confidence bet.")
+                rules.append("VAI 2.2 low-size caution: accepted, but only as a small-confidence bet.")
             item["score"] = max(0, min(100, round(blended, 1)))
             rules.append(
-                f"VAI 2.1 accepted: probability {p:.2f}% / expected return {er:.2f}% / "
+                f"VAI 2.2 accepted: probability {p:.2f}% / expected return {er:.2f}% / "
                 f"stop risk {stop_p:.2f}% / edge {edge:.3f} / grade {pred.get('grade')}."
             )
-            rules.append(f"VAI 2.1 suggested position size: {size:.2f}% educational sizing hint.")
+            rules.append(f"VAI 2.2 suggested position size: {size:.2f}% educational sizing hint.")
         item["rules"] = rules
 
     directional = [(k, v) for k, v in adjusted.items() if k != "NO_TRADE"]
@@ -1302,11 +1305,10 @@ def _apply_vai_2_0_engine_adjustments(results: dict, ind: dict, patterns: dict) 
         size = float(pred.get("suggested_position_size_pct") or 0)
         if str(best_val.get("direction") or "NEUTRAL").upper() != "LONG" or pred.get("decision") != "TRADE" or best_val.get("score", 0) < 72 or size <= 0:
             adjusted["NO_TRADE"]["score"] = max(adjusted["NO_TRADE"].get("score", 0), 96)
-            adjusted["NO_TRADE"].setdefault("rules", []).append("VAI 2.1 gate: trained model did not approve a high-confidence long setup.")
+            adjusted["NO_TRADE"].setdefault("rules", []).append("VAI 2.2 gate: trained model did not approve a high-confidence long setup.")
         else:
             adjusted["NO_TRADE"]["score"] = min(adjusted["NO_TRADE"].get("score", 0), 36)
-            adjusted["NO_TRADE"].setdefault("rules", []).append("VAI 2.1 gate passed; confidence-weighted long candidate approved.")
+            adjusted["NO_TRADE"].setdefault("rules", []).append("VAI 2.2 gate passed; promoted long candidate approved.")
     else:
-        adjusted["NO_TRADE"].setdefault("rules", []).append("VAI 2.1 untrained: V7 fallback active. Train VAI2.1 headless for real model filtering.")
+        adjusted["NO_TRADE"].setdefault("rules", []).append("VAI 2.2 untrained: V7 fallback active. Train VAI2.2 headless for experimental model filtering.")
     return adjusted
-

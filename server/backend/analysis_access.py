@@ -30,8 +30,40 @@ def license_mode() -> str:
     return value if value in {"personal_research", "business_approved"} else "personal_research"
 
 
-def daily_limit() -> int:
-    return max(1, min(int(os.getenv("ORYNTRA_DAILY_ANALYSIS_LIMIT", "100")), 10000))
+def _bounded_limit(name: str, default: int) -> int:
+    return max(1, min(int(os.getenv(name, str(default))), 10000))
+
+
+def daily_limit(user: dict[str, Any] | None = None) -> int | None:
+    """Resolve scanner allowance from an active entitlement, never from the UI.
+
+    ``None`` represents Max Bundle's intentionally unlimited scanner allowance.
+    A legacy global override remains available for deployment and test setups.
+    """
+    subscription = (user or {}).get("subscription") or {}
+    plan = str(subscription.get("plan_code", "")).lower()
+    if plan in {"max", "max_bundle", "max-bundle"}:
+        return None
+    if plan in {"pro", "plus"}:
+        return _bounded_limit("ORYNTRA_PRO_DAILY_ANALYSIS_LIMIT", 200)
+    if "ORYNTRA_DAILY_ANALYSIS_LIMIT" in os.environ:
+        return _bounded_limit("ORYNTRA_DAILY_ANALYSIS_LIMIT", 100)
+    return _bounded_limit("ORYNTRA_BASE_DAILY_ANALYSIS_LIMIT", 10)
+
+
+def _user_subscription(user_id: int) -> dict[str, Any] | None:
+    conn = get_connection()
+    try:
+        # Keep quota accounting consistent with the authenticated session's
+        # owner-only diagnostic entitlement without touching billing records.
+        from .routes.auth import _active_subscription_for
+        return _active_subscription_for(conn, user_id)
+    finally:
+        conn.close()
+
+
+def _daily_limit_for_user_id(user_id: int) -> int | None:
+    return daily_limit({"subscription": _user_subscription(user_id)})
 
 
 def _today_utc() -> str:
@@ -58,7 +90,7 @@ def policy_status(user: dict[str, Any] | None = None) -> dict[str, Any]:
         "user_provider_keys_required": False,
         "subscriptions_enforced": subscriptions_enforced,
         "analysis_permitted": permitted,
-        "daily_limit": daily_limit(),
+        "daily_limit": daily_limit(user),
         "plan": {
             "code": "pro",
             "name": "Oryntra AI Pro",
@@ -121,12 +153,12 @@ def usage_status(user_id: int) -> dict[str, Any]:
         used = int(row["request_count"] if row else 0)
     finally:
         conn.close()
-    limit = daily_limit()
+    limit = _daily_limit_for_user_id(user_id)
     return {
         "date_utc": today,
         "used": used,
         "limit": limit,
-        "remaining": max(0, limit - used),
+        "remaining": None if limit is None else max(0, limit - used),
         "resets_at": f"{today}T23:59:59Z",
     }
 
@@ -134,7 +166,7 @@ def usage_status(user_id: int) -> dict[str, Any]:
 def reserve_quota(user_id: int, cost: int = 1) -> dict[str, Any]:
     clean_cost = max(1, int(cost))
     today = _today_utc()
-    limit = daily_limit()
+    limit = _daily_limit_for_user_id(user_id)
     conn = get_connection()
     try:
         conn.execute("BEGIN IMMEDIATE")
@@ -143,7 +175,7 @@ def reserve_quota(user_id: int, cost: int = 1) -> dict[str, Any]:
             (user_id, today),
         ).fetchone()
         used = int(row["request_count"] if row else 0)
-        if used + clean_cost > limit:
+        if limit is not None and used + clean_cost > limit:
             conn.rollback()
             raise HTTPException(
                 status_code=429,

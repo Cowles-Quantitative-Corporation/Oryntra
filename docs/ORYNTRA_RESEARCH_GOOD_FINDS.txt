@@ -111,3 +111,423 @@ BlackRock’s framing is that owning many assets is not enough; diversification 
 **Classification:** Portfolio-governance reference; not a recommended allocation.
 
 Vanguard’s framework treats objectives, risk capacity, diversification, implementation cost, and behavioural discipline as connected portfolio-construction choices rather than outputs of a single optimizer. Its useful implication for Oryntra is that a research result should preserve the stated objective, risk measure, constraints, benchmark, rebalance rule, and cost assumptions together, so a later reader can tell which decision generated the outcome. That supports the current assumption-ledger direction, but it does not establish the appropriateness of any allocation or justify an automated portfolio-construction feature.
+
+## 2026-09-04, America/New_York — AQR Capital Management
+
+**Source:** *A Century of Evidence on Trend-Following Investing* (2017)
+**Direct URL:** https://www.aqr.com/Insights/Research/White-Papers/A-Century-of-Evidence-on-Trend-Following-Investing
+**Classification:** Research-method reference only.
+
+AQR’s long-history trend-following study is useful as a validation discipline rather than as a prescription to use trend: it examines a simple, explicitly specified rule across a long sample and reports material crisis-period behaviour instead of presenting one short backtest as conclusive. For Oryntra, any future sleeve evaluation should retain a fixed hypothesis, exact holding/timing convention, multiple historical environments, and a separately disclosed comparison reference. The work does not validate any selected Oryntra threshold, its data coverage, or a claim of live robustness.
+
+## 2026-09-04, America/New_York — Jane Street
+
+**Source:** *Global Capital Markets* (accessed September 2026)
+**Direct URL:** https://www.janestreet.com/what-we-do/global-capital-markets/
+**Classification:** Candidate for discussion and research-governance design.
+
+Jane Street describes large and complex transaction pricing as multidisciplinary work informed by risk management, capital stability, and fundamental-research valuation views. The Oryntra-relevant lesson is a scope boundary: a price-history model, corporate-fact panel, and liquidity proxy are different evidence layers and should be named separately in a report, rather than collapsed into a claim that the system can price complex transactions. This supports provenance and limitations language, not a new valuation, market-making, or execution feature.
+
+## 2026-09-04, America/New_York — U.S. Securities and Exchange Commission
+
+**Source:** *Staff Report on Equity and Options Market Structure Conditions in Early 2021* (October 2021)
+**Direct URL:** https://www.sec.gov/files/staff-report-equity-options-market-struction-conditions-early-2021.pdf
+**Classification:** Market-structure context and future data-contract reference.
+
+The SEC’s market-structure study separates price volatility, order-flow imbalance, broker routing, market-maker activity, and clearing/settlement mechanics rather than treating trading volume as a complete picture of liquidity or execution. For Oryntra, the direct lesson is to preserve the existing distinction between a daily ADV participation proxy and actual execution evidence; any future microstructure study would need separate, timestamped inputs and a declared venue/coverage scope. This report does not supply the historical order-level data needed to add those features today.
+
+## 2026-09-04, America/New_York — Bank for International Settlements
+
+**Source:** *What are the effects of macroprudential policies on macroeconomic performance?* (September 2017)
+**Direct URL:** https://www.bis.org/publications/what-are-effects-macroprudential-policies-macroeconomic-performance
+**Classification:** Research-method reference only.
+
+The BIS study is valuable for its identification cautions: it distinguishes policies reacting to growth or volatility from policy effects, uses country and time controls, and warns that imperfectly captured reaction functions can weaken causal interpretation. For Oryntra, any eventual macro-conditioned research must preserve observation availability, use a predeclared policy/regime mapping, and make reverse-causality limitations visible rather than treating a macro series as a causal trading feature. This supports rigorous scenario and regime research, not a macro forecast or dashboard claim.
+
+## 2026-09-04, America/New_York — BlackRock
+
+**Source:** *Global Execution and Order Placement Disclosure* (accessed September 2026)
+**Direct URL:** https://www.blackrock.com/corporate/compliance/best-execution-and-order-placement-policy
+**Classification:** Execution-governance reference; not implementation evidence.
+
+BlackRock’s disclosure shows that execution is a conditional trade-off among price, cost, speed, likelihood of completion, size, market conditions, venue, and information-leakage risk; it also distinguishes a portfolio manager’s investment instruction from an independent execution function. The useful Oryntra lesson is to keep its research configuration separate from execution diagnostics and to label any fixed cost model as only one explicitly selected proxy, not “best execution.” The current daily-bar data cannot support the venue, order-routing, timing, or completion analysis described in this policy.
+
+## 2026-09-05, America/New_York — BlackRock Investment Institute
+
+**Source:** *Gauging Geopolitics: A framework to assess and price geopolitical risks* (accessed September 2026)
+**Direct URL:** https://www.blackrock.com/corporate/insights/blackrock-investment-institute/publications/geopolitical-risk-framework
+**Classification:** Candidate for discussion and scenario-research design.
+
+BlackRock’s framework examines many historical geopolitical events and emphasizes that market responses differ materially when the starting economic environment is weak, rather than implying that an event label determines a uniform return. The Oryntra-relevant lesson is to treat an external-shock scenario as a dated, source-defined event plus an explicit starting-state condition, then report the observed sample and uncertainty. It does not justify an automated geopolitical signal, news-based allocation, or a macro dashboard.
+
+## 2026-09-05, America/New_York — Two Sigma
+
+**Source:** *How Design Choices Impact Low Risk Factor Performance* (2020)
+**Direct URL:** https://www.twosigma.com/articles/how-design-choices-impact-low-risk-factor-performance/
+**Classification:** Research-method reference only.
+
+Two Sigma shows that apparently small low-risk-factor construction choices can materially alter performance, including through a persistent relationship with another risk factor. The practical Oryntra lesson is to version each sleeve’s exact eligibility rule, ranking convention, lookback, weighting, and any neutralization choice, then compare the resulting exposure rather than treating a label such as “low volatility” as a fully specified strategy. This motivates experiment manifests and factor-exposure diagnostics; it does not validate the current low-volatility sleeve or add a new optimizer.
+
+## 2026-09-05, America/New_York — Two Sigma
+
+**Source:** *Thematic Research: Risk Factors Are Not Generic* (2019)
+**Direct URL:** https://www.twosigma.com/articles/thematic-research-risk-factors-are-not-generic/
+**Classification:** Research-governance reference only.
+
+Two Sigma distinguishes factor definition from factor construction and argues that no formulation is universally dominant across periods or dimensions. For Oryntra, this is a stronger version-control requirement: an experiment should store the exact input definition and construction choices, plus the evaluation periods and comparison dimensions, rather than preserve only a friendly sleeve name and performance summary. This supports the manifest/experiment-record design; it is not evidence for a new factor or a parameter sweep.
+
+## 2026-09-05, America/New_York — Two Sigma
+
+**Source:** *CTA Market and Portfolio Diversification* (2017)
+**Direct URL:** https://www.twosigma.com/articles/cta-market-and-portfolio-diversification/
+**Classification:** Candidate for discussion and risk-report design.
+
+Two Sigma’s CTA analysis shows why long-run average correlations can hide contemporaneous common-factor exposure: a rolling factor decomposition found that a small set of market drivers explained much of a diversified-manager index’s recent performance. For Oryntra, correlation and name count should remain separate from rolling exposure diagnostics, and any factor regression must disclose its window, factors, frequency, benchmark, and unexplained residual. This is a reporting and research-design lesson, not support for claiming that the current factor attribution is a complete risk model.
+
+## 2026-09-05, America/New_York — Financial Stability Board
+
+**Source:** *Holistic Review of the March Market Turmoil* (November 2020)
+**Direct URL:** https://www.fsb.org/2020/11/holistic-review-of-the-march-market-turmoil/
+**Classification:** Systemic-liquidity context; candidate for discussion before any model expansion.
+
+The FSB describes liquidity stress as an interacting system of demand for cash, dealer balance-sheet capacity, margin calls, redemption incentives, funding markets, and large asset sales—not simply a high participation rate in one security. Oryntra’s current 1×/2×/5× ADV sensitivity is therefore appropriately limited to a capacity proxy; it must not be presented as a fire-sale, systemic-liquidity, or crisis-propagation model. A genuine expansion would require a separate multi-asset and funding/liability design decision plus data the current product does not have.
+
+## 2026-09-05, America/New_York — Two Sigma
+
+**Source:** *Credit-Implied Volatility: A Method for Summarizing Risk Exposure in Credit Portfolios* (2017)
+**Direct URL:** https://www.twosigma.com/articles/credit-implied-volatility-a-method-for-summarizing-risk-exposure-in-credit-portfolios/
+**Classification:** Future data-model reference; not current implementation evidence.
+
+Two Sigma describes reducing a credit-risk surface to a small number of observable common drivers, then using shifts in those drivers for transparent portfolio stress tests. The Oryntra lesson is architectural: if it ever adds credit-market inputs, it should store the raw source, maturity/issuer coordinates, construction convention, and factor decomposition separately from a single “credit risk” score. Current Oryntra has only one macro credit-spread observation and no CDS panel, so this is not a basis for adding a credit model or stress result now.
+
+## 2026-09-05, America/New_York — Two Sigma
+
+**Source:** *The Market Impact of Monetary Policy Shocks in Europe* (2017)
+**Direct URL:** https://www.twosigma.com/articles/the-market-impact-of-monetary-policy-shocks-in-europe/
+**Classification:** Research-method reference only.
+
+Two Sigma emphasizes that policy-shock effects are not directly observable and illustrates a covariance-based identification approach that compares event-day behavior with prior periods rather than mistaking a price move for a known causal effect. The Oryntra-relevant lesson is to require an event definition, event window, comparison window, instruments, normalization, and identification limitation before showing any policy-shock research. This is not evidence that Oryntra can infer central-bank surprises or turn a macro observation into a trading signal.
+
+## 2026-09-05, America/New_York — Two Sigma
+
+**Source:** *What to Make of a Low-Volatility, Low-Correlation Market* (2017)
+**Direct URL:** https://www.twosigma.com/articles/what-to-make-of-a-low-volatility-low-correlation-market/
+**Classification:** Correlation-stress context; not a forecasting rule.
+
+Two Sigma notes that low volatility and low cross-sectional correlation can reverse abruptly, and that neither measure gives the timing or cause of a systemic shock. This supports Oryntra’s correlation-convergence output as a clearly labeled sensitivity test: its scenario should show the historical window, baseline, convergence assumption, horizon, and what it omits, rather than predict a correlation shock. The source does not validate the chosen 50%/85% convergence values or turn them into an allocation rule.
+
+## 2026-09-05, America/New_York — Financial Stability Board
+
+**Source:** *Liquidity Preparedness for Margin and Collateral Calls: Final Report* (December 2024)
+**Direct URL:** https://www.fsb.org/2024/12/liquidity-preparedness-for-margin-and-collateral-calls-final-report/
+**Classification:** Institutional-liquidity governance reference; not current implementation evidence.
+
+The FSB treats liquidity resilience as a stated tolerance plus contingency funding, collateral arrangements, operational readiness, and stress tests covering extreme-but-plausible margin calls—not a single asset-level volume statistic. This gives Oryntra a precise boundary for future research: a portfolio-level liquidity-cushion study would first need liabilities, collateral, financing, cash, and margin-call inputs that are absent from the current daily-bar engine. The existing capacity-sensitivity report should remain labeled as an asset-trading-cost proxy, not a liquidity-preparedness assessment.
+
+## 2026-09-05, America/New_York — Financial Stability Board
+
+**Source:** *Liquidity in Core Government Bond Markets* (October 2022)
+**Direct URL:** https://www.fsb.org/2022/10/liquidity-in-core-government-bond-markets/
+**Classification:** Market-structure context and data-provenance reference.
+
+The FSB notes that even normally deep government-bond markets can suffer severe liquidity deterioration under stress, and analyzes cash, repo, and futures-market structure together with dealer behavior. The Oryntra-relevant lesson is to make the instrument class, venue/market layer, and normal-versus-stress sample explicit whenever discussing liquidity; daily equity-style OHLCV should never be generalized into a cross-market liquidity measure. This source supports stricter labels and future data contracts, not a government-bond liquidity feature today.
+
+## 2026-09-05, America/New_York — Financial Stability Board
+
+**Source:** *Leverage in Nonbank Financial Intermediation: Final Report* (July 2025)
+**Direct URL:** https://www.fsb.org/2025/07/leverage-in-nonbank-financial-intermediation-final-report/
+**Classification:** Risk-governance context; not a portfolio-leverage recommendation.
+
+The FSB frames leverage as a possible amplifier of stress that must be identified and managed in the context of the surrounding financial system, not inferred from one return series. For Oryntra, the useful boundary is to distinguish its gross-exposure cap and one-way volatility scaler from financing, margin, derivatives, and counterparty leverage—none of which the present engine models. This supports conservative report language and an explicit omission list, not a new leverage feature or a claim that the app measures systemic leverage.
+
+## 2026-09-05, America/New_York — Financial Stability Board
+
+**Source:** *Revised Policy Recommendations to Address Structural Vulnerabilities from Liquidity Mismatch in Open-Ended Funds* (December 2023)
+**Direct URL:** https://www.fsb.org/2023/12/revised-policy-recommendations-to-address-structural-vulnerabilities-from-liquidity-mismatch-in-open-ended-funds/
+**Classification:** Liquidity-governance context; not current implementation evidence.
+
+The FSB identifies the mismatch between portfolio-asset liquidity and daily redemption terms as a structural fund vulnerability, calling for disclosure, ongoing liquidity management, liquidity-management tools, and fund/system stress testing. For Oryntra, this makes clear that a fund-style fire-sale or liquidity-cushion feature cannot be derived from trade participation alone: it would need an investor-liability/redemption model and a specified intervention policy. The existing daily ADV capacity proxy should remain separate and modestly described.
+
+## 2026-09-05, America/New_York — IOSCO / Financial Stability Board
+
+**Source:** *Anti-dilution Liquidity Management Tools – Guidance for Effective Implementation* (December 2023)
+**Direct URL:** https://www.fsb.org/2023/12/anti-dilution-liquidity-management-tools-guidance-for-effective-implementation-of-the-recommendations-for-liquidity-risk-management-for-collective-investment-schemes/
+**Classification:** Fund-structure context; not applicable to current Quant Lab execution.
+
+The IOSCO guidance concerns anti-dilution tools intended to reduce investor dilution and first-mover incentives in open-ended funds facing structural liquidity mismatch. Its useful Oryntra lesson is negative but important: execution impact, investor-flow fairness, and fund NAV mechanics are distinct systems and should not be blended into a daily-bar backtest. Any future fund-liquidity research would need a defined fund structure, flow model, NAV policy, and governance layer before these tools could even be studied.
+
+## 2026-09-05, America/New_York — Two Sigma
+
+**Source:** *Quantifying Political Risk on Financial Markets—Italian Case Study* (2017)
+**Direct URL:** https://www.twosigma.com/articles/quantifying-political-risk-on-financial-markets-italian-case-study/
+**Classification:** Scenario-method reference only.
+
+Two Sigma treats political risk as largely unobservable, uses a predefined political-event set and comparison periods, and focuses on estimated cross-market spillovers rather than a narrative prediction. Oryntra could only study an analogous event scenario after defining the event taxonomy, observation windows, instruments, normalization, and identification method in advance. This is not support for a news feature, a political-risk score, or automated trade logic.
+
+## 2026-09-05, America/New_York — AQR Capital Management
+
+**Source:** *Key Design Choices in Long-Short Equity* (2024)
+**Direct URL:** https://www.aqr.com/insights/research/alternative-thinking/key-design-choices-in-long-short-equity
+**Classification:** Candidate for discussion and sleeve-governance design.
+
+AQR frames a long/short portfolio as an explicit conversion of stock-selection views into a return and diversification profile, highlighting choices such as systematic versus discretionary process, single-name shorts versus index hedges, and signal combination. Oryntra’s useful takeaway is to record the intended role of every long/short sleeve and whether negative exposure is a security-level signal or a broad hedge; those are materially different constructs even when both lower net exposure. The source does not validate Oryntra’s current short assumptions, borrow-cost proxy, or sleeve mix.
+
+## 2026-09-05, America/New_York — AQR Capital Management
+
+**Source:** *Securities Lending, Shorting, and Pricing* (Journal of Financial Economics)
+**Direct URL:** https://www.aqr.com/insights/research/journal-article/securities-lending-shorting-and-pricing
+**Classification:** Shorting-model limitation reference; not current implementation evidence.
+
+AQR’s framework highlights that shorting depends on lendable float, heterogeneous beliefs, lender bargaining power, and lending fees, and that these can affect price formation rather than acting as a fixed generic charge. The Oryntra implication is that its annual borrow-bps input is a disclosed simplification, not evidence of borrow availability or a valid stock-specific short cost. Any richer short simulation would need historical borrow availability, fee, recall, float, and utilization data.
+
+## 2026-09-05, America/New_York — AQR Capital Management
+
+**Source:** *Modeling Corporate Bond Returns* (working paper)
+**Direct URL:** https://www.aqr.com/insights/research/working-paper/modeling-corporate-bond-returns
+**Classification:** Future fixed-income data-model reference only.
+
+AQR’s paper models corporate-bond returns with multiple factors whose loadings evolve with observable bond characteristics, illustrating that a credit model needs instrument-level features and time-varying exposures rather than a single spread label. For Oryntra, any future credit sleeve would require dated bond identifiers, maturity, issuer characteristics, pricing/return history, and availability-aware feature panels. The present macro credit-spread observation is not a corporate-bond factor model and should remain reported only as limited macro context.
+
+## 2026-09-05, America/New_York — AQR Capital Management
+
+**Source:** *On the Distribution of Financial Futures Price Changes* (Financial Analysts Journal)
+**Direct URL:** https://www.aqr.com/insights/research/journal-article/on-the-distribution-of-financial-futures-price-changes
+**Classification:** Tail-risk and validation reference only.
+
+AQR’s analysis rejects normal-price-change assumptions for the futures studied and finds more extreme moves than a normal model would imply. Oryntra’s useful lesson is to retain empirical drawdown, historical VaR, and expected-shortfall reporting instead of treating volatility or Sharpe as a complete risk description. It does not validate the current sample, its estimates, or any tail-risk forecast.
+
+## 2026-09-05, America/New_York — AQR Capital Management
+
+**Source:** *A Historical Perspective on Time-Varying Expected Returns* (CFA Institute Research Foundation)
+**Direct URL:** https://www.aqr.com/insights/research/journal-article/a-historical-perspective-on-time-varying-expected-returns
+**Classification:** Research-governance reference only.
+
+AQR distinguishes evidence that expected returns may vary over time from the much harder problem of capturing that variation with real-time indicators and market timing. The Oryntra lesson is to keep regime labels, retrospective diagnostics, and allocation experiments separate from a claim to forecast returns. Any attempt to test timing needs timestamped inputs and untouched chronological evaluation; the present regime report is not a timing model.
+
+## 2026-09-05, America/New_York — AQR Capital Management
+
+**Source:** *International Diversification Still Not Crazy After All These Years* (Journal Article)
+**Direct URL:** https://www.aqr.com/insights/research/journal-article/international-diversification-still-not-crazy-after-all-these-years
+**Classification:** Universe-design and validation reference only.
+
+AQR cautions against extrapolating a long stretch of one market’s outperformance and argues that diversification should be considered over long horizons and stated in the context of the available universe. For Oryntra, a research result must describe its actual eligible symbols and coverage rather than implying a diversified portfolio from a narrow US-centric sample. This does not authorize a new international-data product; it identifies a universe-coverage limitation to retain in any comparison.
+
+## 2026-09-05, America/New_York — AQR Capital Management
+
+**Source:** *Risk Parity Derangement Syndrome* (Journal of Portfolio Management)
+**Direct URL:** https://www.aqr.com/insights/perspectives/risk-parity-derangement-syndrome
+**Classification:** Research-communication and attribution reference only.
+
+AQR’s perspective warns against reflexively attributing market turbulence to broad strategy labels such as risk parity, trend following, or “machines” without evidence. The Oryntra-relevant lesson is to keep its factor attribution, correlation stress, and sleeve-health outputs descriptive and bounded, avoiding causal explanations for market moves or claims that one strategy class caused an outcome. This is a reporting standard, not support for a risk-parity feature.
+
+## 2026-09-05, America/New_York — AQR Capital Management
+
+**Source:** *How Do Investors Form Long-Run Return Expectations?* (white paper)
+**Direct URL:** https://www.aqr.com/insights/research/white-papers/how-do-investors-form-long-run-return-expectations
+**Classification:** Research-communication reference only.
+
+AQR contrasts yield/valuation-based expected-return evidence with rearview-mirror extrapolation of past performance, while stressing that even more objective estimates can fail for long periods. For Oryntra, any user-facing historical result must distinguish realized backtest return from an expected-return estimate and avoid framing recent performance as a forecast. This supports careful language and comparison design, not a predictive returns feature.
+
+## 2026-09-05, America/New_York — AQR Capital Management
+
+**Source:** *Dynamic Trading With Predictable Returns and Transaction Costs* (Journal Article)
+**Direct URL:** https://www.aqr.com/Insights/Research/Journal-Article/Dynamic-Trading-With-Predictable-Returns-and-Transactions-Costs
+**Novelty check:** Quant Lab reports configured costs, turnover, and ADV-capacity scenarios, but has no fixed-input cost/turnover robustness frontier that shows when a result disappears as implementation assumptions tighten.
+**Concrete candidate:** Add an opt-in Quant Lab experiment/report diagnostic that reruns the identical fixed universe, dates, strategy weights, and rebalancing schedule across a declared grid of one-way cost and turnover caps. It should report net return, drawdown, turnover, skipped/reduced rebalances, and the exact grid—not choose an “optimal” setting or alter the live report.
+**Prerequisites/data:** Existing daily-bar histories and configured cost model are sufficient for an initial sensitivity-only version; a true dynamic no-trade optimizer would additionally require calibrated expected-return persistence, trade-level cost curves, and independent holdout evaluation.
+**Validation:** Lock the grid before evaluation; use identical observations and chronological walk-forward folds for every cell; label the output a sensitivity analysis, not a calibrated trading rule.
+**Classification:** Bounded Quant Lab research/reporting candidate; discussion required before implementation.
+
+## 2026-09-05, America/New_York — Federal Reserve / OCC
+
+**Source:** *Supervisory Guidance on Model Risk Management (SR 11-7)*
+**Direct URL:** https://www.federalreserve.gov/boarddocs/srletters/2011/sr1107a1.pdf
+**Novelty check:** VAI 2.2 predictions already expose a promoted run ID and the trainer records split/test results, but the promoted model artifact does not carry an immutable fingerprint of its training observations and feature schema for a scan-time provenance lookup.
+**Concrete candidate:** Add a read-only VAI2 model-lineage block to promoted-model metadata and each prediction: training-row fingerprint, feature-schema fingerprint, chronological split/purge parameters, code revision, and the exact validation/test summary used at promotion. It must identify the artifact behind a result without exposing raw training rows or changing any decision.
+**Prerequisites/data:** The trainer already has structured rows, feature names, split settings, test summary, and run ID; compute stable fingerprints at training time and retain them with the promoted JSON artifact.
+**Validation:** Retrain twice on identical fixtures and assert equal lineage fingerprints; assert that a scan returns the promoted artifact’s identifiers; verify raw rows and ticker identity remain absent from scan payloads; compare old/new scores to confirm metadata-only behavior.
+**Classification:** Bounded VAI2 governance/provenance candidate; discussion required before implementation.
+
+## 2026-09-05, America/New_York — Basel Committee on Banking Supervision
+
+**Source:** *Messages from the academic literature on risk measurement for the trading book* (January 2011)
+**Direct URL:** https://www.bis.org/publ/bcbs_wp19.pdf
+**Novelty check:** Quant Lab reports one-day ADV participation, a square-root cost proxy, and 1×/2×/5× capacity scenarios, but it does not show the implied time required to unwind a stated simulated position or target change at a declared daily participation assumption.
+**Concrete candidate:** Add an opt-in, report-only liquidation-horizon scenario beside the existing capacity table. For each displayed target change or current holding, calculate estimated trading days as notional divided by trailing daily dollar volume times an explicitly user-declared participation ceiling; show the maximum, weighted median, missing-volume count, and normal-versus-stressed participation scenarios. Do not call the result a fire-sale model, alter weights, infer order-book depth, or select a participation ceiling automatically.
+**Prerequisites/data:** Existing target weights, portfolio-value assumption, and trailing daily dollar volume support an initial scenario. A credible execution model would additionally require bid/ask, venue/depth, execution schedule, other-participant flow, and stress-liquidity data.
+**Validation:** Use synthetic constant-volume fixtures to assert inverse monotonicity with the declared participation ceiling and direct monotonicity with notional; assert missing volume is reported rather than imputed; compare strategy net returns before/after to prove the diagnostic does not alter a simulation.
+**Classification:** Bounded Quant Lab liquidity-horizon reporting candidate; discussion required before implementation.
+
+## 2026-09-05 — Implementation follow-up: shared engine and cost-aware evidence
+
+This is an application/update to the earlier cost and liquidity research, not a duplicate "new find." The user subsequently authorized a universal backend implementation and research/testing. Universal V2 now has an actual cash/shares ledger, prior-volume hard fill ceilings, no-trade bands, a shared scanner/portfolio signal contract, configuration/data/code provenance and annual alpha tests. The older proposed report-only liquidation-horizon panel was not silently implemented or relabeled as a fire-sale model.
+
+Primary implementation-cost reference: https://www.aqr.com/Insights/Research/Working-Paper/Trading-Costs-of-Asset-Pricing-Anomalies
+The applicable lesson is to evaluate net implementation and signal quality together; institutional cost coefficients and profitability do not transfer automatically to Oryntra.
+
+Testing retained 24 bounded development candidates. A wider no-trade band improved development mean alpha from 3.56% to 3.97%, but the frozen retune returned -5.12% mean annual alpha on the next predeclared stock basket. It was not promoted. The initial candidate also failed its temporal and ten-year separate-stock gates. Exact manifests, annual results, limitations and next research requirements are in docs/UNIVERSAL_V2_VALIDATION.json and docs/UNIVERSAL_V2_BACKEND.md. No consistent-alpha claim is warranted.
+
+## 2026-09-11, America/New_York — AQR Capital Management
+
+**Source:** *Unhedged Friday Interview: Cliff Asness* (AQR-hosted Financial Times interview transcript)
+**Direct URL:** https://www.aqr.com/Our-Firm/News/2024/~/media/AQR/Documents/News/2024/FT%20Unhedged%20Friday%20Interview%20Cliff%20Asness%20AQR
+**Evidence category:** Public description of signal-family design and text processing.
+
+**What the source says:** AQR describes fundamental momentum as a standalone company-level factor rather than a minor adjustment to price momentum. It says it uses NLP to interpret corporate-statement text more accurately than a keyword-count approach, and describes fundamental and price momentum as useful partly because they are not perfectly correlated. The interview also notes that not all news appears to be incorporated into prices immediately.
+
+**Oryntra research lead:** After Minerva's price/volume baseline has a separately confirmed result, test a distinct, availability-dated filing-text or earnings-text score as its own sleeve before combining it with price momentum. The experiment should measure incremental predictive contribution and correlation with the technical sleeve; it should not blend a generic positive/negative headline score directly into Minerva.
+
+**Data and provenance requirements:** Original document text, immutable retrieval/publication timestamps, issuer mapping, amendment/correction handling, a declared vocabulary/model version, and a point-in-time feature store. A licensed news feed would be required for a broader news-event version; the current daily OHLCV panel cannot reconstruct historical text availability.
+
+**Inference boundary:** The proposed Oryntra design is an inference from AQR's public description, not a claim that AQR's methods, inputs, weights, or results are reproducible in Oryntra.
+**Status:** Research lead only — not implemented or validated.
+
+## 2026-09-11, America/New_York — Man Group
+
+**Source:** *Man Funds VI plc — Supplement: Man MSL Portfolios*
+**Direct URL:** https://www.man.com/document?doc-type=PPP&instrument=le30336&locale=en-de
+**Evidence category:** Publicly disclosed systematic risk-overlay architecture.
+
+**What the source says:** The prospectus describes three distinct overlays used alongside a global-equity portfolio: a momentum overlay for downtrends, a volatility-switching overlay intended to respond quickly to volatility spikes, and a correlation overlay intended to reduce exposure when correlations rise across equities and other asset classes. It says the overlays can use liquid regional equity-index futures and need not always be active or match the portfolio's regional split.
+
+**Oryntra research lead:** Oryntra's existing correlation-convergence scenario is a sensitivity report, not an enforced overlay. A future research-only overlay study should keep the three triggers separate, specify their inputs and availability dates, and compare a transparent exposure-reduction rule against a no-overlay control under the same next-open, cost, and benchmark contract. It should record when the overlay was inactive and distinguish protective risk reduction from claimed alpha.
+
+**Data and provenance requirements:** Point-in-time index and constituent histories, regional benchmark/futures proxy prices, a predeclared correlation estimator and cross-asset set, volatility and trend conventions, a defined hedge/exposure mapping, financing/cost assumptions, and an independent holdout period. Daily stock OHLCV alone does not support a faithful regional-futures implementation.
+
+**Inference boundary:** The prospectus does not disclose the overlay thresholds, precise instruments, hedge ratios, risk model, or realized results. This supports a separately testable architecture only; it does not validate Oryntra's current correlation settings or an automatic sell rule.
+**Status:** Research lead only — not implemented or validated.
+
+## 2026-09-11, America/New_York — AQR Capital Management
+
+**Source:** *An Academic-Quality Data Library for Practitioners*
+**Direct URL:** https://www.aqr.com/Insights/Datasets/An-Academic-Quality-Data-Library-for-Practitioners
+**Evidence category:** Public factor-return datasets tied to published research.
+
+**What the source says:** AQR publicly provides historical and updated return series associated with published papers, including value/momentum, low- versus high-beta, and time-series-momentum factor series. It explicitly distinguishes these paper-portfolio returns from live returns or backtests of AQR-specific portfolios, funds, or products, and links each dataset to documented construction/source material.
+
+**Oryntra research lead:** Use such public factor series only as external diagnostic benchmarks: for example, compare a frozen candidate's residual exposures to a documented momentum, value, or low-beta factor return. Retain the linked paper, dataset version, market coverage, and calculation notes with the experiment. Do not label a correlation as proof that Oryntra replicates an AQR strategy or use factor data as a substitute for individual-security point-in-time inputs.
+
+**Data and provenance requirements:** Download date/version, series definitions, markets covered, frequency, terms of use, and the associated research paper must be stored. Any live integration requires a separate license/availability review; the current Oryntra panel is a daily US-equity research dataset, not a multi-asset factor-data replica.
+
+**Inference boundary:** The publicly available datasets are research artifacts, not AQR production strategies or evidence of current Oryntra performance.
+**Status:** Research lead only — not implemented or validated.
+
+## 2026-09-11, America/New_York — WorldQuant researchers
+
+**Source:** *101 Formulaic Alphas* (Kakushadze, 2016)
+**Direct URL:** https://arxiv.org/abs/1601.00991
+**Evidence category:** Public release of historical formulaic alpha examples.
+
+**What the source says:** The paper publishes explicit computer-code-style formulas for 101 formulaic equity signals and analyzes their pairwise properties, including the finding that turnover by itself explained little of alpha correlation in its studied set. It is a rare public artifact from a WorldQuant researcher, but it is a historical research paper—not a disclosure of a current production portfolio.
+
+**Oryntra research lead:** Build a future *external-baseline library* only after the data/universe contract is upgraded. Select a small, predeclared subset of transparent formulas as non-tuned comparators, then measure signal correlation, net performance under the same execution model, concentration, and stability beside Minerva. Do not mine all 101 formulas against the same basket, copy external performance, or promote a formula based solely on the best backtest.
+
+**Data and provenance requirements:** The source's exact data definitions, delays, universes, neutralization/normalization rules, and price-adjustment treatment are required for a faithful reproduction; these are not supplied by the current Oryntra OHLCV panel. Each implemented comparator would need a separate source citation, formula version, data-coverage declaration, and frozen test manifest.
+
+**Inference boundary:** These published formulas are historical examples. They do not establish that a formula remains predictive, tradable after costs, available in Oryntra's data, or related to WorldQuant's current production models.
+**Status:** Research lead only — not implemented or validated.
+
+## 2026-09-11, America/New_York — Citadel Securities
+
+**Source:** *Market Internals* (Global Market Intelligence)
+**Direct URL:** https://www.citadelsecurities.com/news-and-insights/global-market-intelligence/market-internals/
+**Evidence category:** Public breadth-stress and conditional-distribution observation.
+
+**What the source says:** Citadel Securities describes a breadth-stress measure based on the count of S&P 500 constituents with five-day downside moves of at least three standard deviations relative to each stock's one-year volatility. Its reported historical comparison emphasizes that extreme breadth stress coincided with a wider 30-day forward-return distribution, including worse downside and larger upside tails, rather than a clean directional outcome.
+
+**Oryntra research lead:** A future market-context diagnostic could test a *distribution-risk label* for predeclared breadth-stress events. The output should widen uncertainty/risk reporting or flag that a continuation/reversal signal is unreliable; it must not automatically become a buy or sell rule merely because average forward returns were positive in a source chart.
+
+**Data and provenance requirements:** Point-in-time broad-index membership, split-adjusted daily price history, a declared rolling-volatility estimator, exact stress threshold, observation window, and a fixed forward-horizon protocol. The current current-survivor 250-stock panel is not a valid substitute for historical S&P 500 membership.
+
+**Inference boundary:** Citadel's stated comparisons are descriptive market commentary with proprietary inputs. Oryntra would need an independent, frozen replication before displaying or relying on any such label.
+**Status:** Research lead only — not implemented or validated.
+
+## 2026-09-11, America/New_York — Vanguard Quantitative Equity Group
+
+**Source:** *Vanguard Global Momentum Factor ETF (VMO) — Product Brief*
+**Direct URL:** https://fund-docs.vanguard.com/product-brief-vmo-en.pdf
+**Evidence category:** Publicly disclosed quantitative factor-construction recipe.
+
+**What the source says:** Vanguard discloses a momentum-factor process that segments its universe by region and market-cap group, ranks three stated measures (11-month price momentum excluding the most recent month, 6-month price momentum excluding the most recent month, and a one-year regional-benchmark regression intercept), averages the ranks equally, standardizes the composite, and rebalances to maintain target factor exposure. This is an actual public framework, though not a complete executable strategy disclosure.
+
+**Oryntra research lead:** Use this as a transparent external benchmark specification for a future *comparison-only* momentum sleeve. Compare Minerva's learned score against the frozen, simple composite under identical universe, dates, next-open execution, costs, and beta benchmark. The purpose is to learn whether complexity adds value over a stated baseline, not to copy a fund or select the better result after seeing a confirmation basket.
+
+**Data and provenance requirements:** Point-in-time regional and market-cap classifications, regional benchmark histories, stated price-adjustment treatment, as-of eligibility screens, and a predeclared rebalance calendar. The current broad current-survivor panel cannot establish a historical point-in-time replication.
+
+**Inference boundary:** The product brief provides factor definitions and process steps, not the full Vanguard implementation, holdings logic, risk model, cost model, or performance attribution. Oryntra must not represent a comparison as a replication.
+**Status:** Research lead only — not implemented or validated.
+
+## 2026-09-11, America/New_York — Man Numeric / Man Group
+
+**Source:** *Why We Rewrote our USD30 billion Asset Management Platform in Python*
+**Direct URL:** https://www.man.com/technology/why-we-rewrote-our-platform-in-python
+**Evidence category:** Public model-platform replacement and validation framework.
+
+**What the source says:** Man Numeric describes a platform migration where exact legacy-output parity was not the acceptance criterion. It first used output/correlation/coverage comparisons, then emphasized that the actual acceptance condition was historical simulated return and risk characteristics within declared bounds. Each replacement signal underwent the same due diligence as a new product and was reviewed incrementally.
+
+**Oryntra research lead:** When Minerva is materially reworked or a future data sleeve is connected, create a replacement manifest rather than treating a changed backtest as an upgrade. The manifest should name the frozen control, changed inputs/logic, permitted score/coverage divergence, execution-cost parity, predeclared risk/return diagnostics, and the independent confirmation period. Report both parity diagnostics and economic outcome; neither alone is adequate.
+
+**Data and provenance requirements:** Immutable control/candidate configurations, source and code fingerprints, identical test universe and execution assumptions, archived output panels, and a separately dated confirmation dataset. This can use current Oryntra research artifacts, but it would need a formal stored-manifest workflow before it is reliable.
+
+**Inference boundary:** Man Numeric's public account concerns a large internal platform migration. Oryntra can adopt the validation discipline without claiming comparable infrastructure, review process, or model performance.
+**Status:** Research lead only — not implemented or validated.
+
+## 2026-09-11, America/New_York — BlackRock Systematic
+
+**Source:** *Alternative Data for Systematic Investing*
+**Direct URL:** https://www.blackrock.com/uk/professionals/solutions/alt-data-for-systematic-investing
+**Evidence category:** Public data-onboarding and signal-additivity framework.
+
+**What the source says:** BlackRock Systematic describes evaluating a prospective dataset for originality, coverage, timeliness/latency, and transparent lineage before modeling it. Its stated signal evaluation includes statistical-power measures (Information Coefficient, predictive R-squared, and horizon-decayed information ratio), economic-intuition tests, and additivity/redundancy checks against existing signals. The source notes that data selection became more selective even as available datasets grew.
+
+**Oryntra research lead:** Before adding any future fundamental, analyst-revision, or text/news sleeve, create a fixed evidence card and rejection gate. A candidate must document availability timing and coverage; declare one target horizon; measure predictive contribution on development data; and show its incremental contribution after controlling for the frozen Minerva score. This is a research-governance layer, not a new trading feature or a method for optimizing on the test period.
+
+**Data and provenance requirements:** Versioned raw-source identifiers, collection/publication timestamps, entity mapping, revision handling, coverage diagnostics by date/industry, a frozen feature definition, and stored out-of-sample scorecards. A post-hoc exported sentiment number without its source timing cannot pass the gate.
+
+**Inference boundary:** BlackRock's process description does not disclose its thresholds, data vendors, model specification, or results. Oryntra would need independent evidence before adopting any metric or gate.
+**Status:** Research lead only — not implemented or validated.
+
+## 2026-09-11, America/New_York — AQR Capital Management
+
+**Source:** *A New Paradigm in Active Equity*
+**Direct URL:** https://www.aqr.com/-/media/AQR/Documents/Insights/White-Papers/AQR-A-New-Paradigm-in-Active-Equity.pdf
+**Evidence category:** Public signal-family and peer-linkage framework.
+
+**What the source says:** AQR describes the momentum family as broader than trailing price returns: it includes earnings momentum, changes in analyst forecasts, indirect signals from economically linked companies, NLP-derived unstructured-data patterns, and factor momentum. It also argues that the expanding family contains signals with lower correlation than classic momentum measures, so a single momentum label can hide materially different inputs.
+
+**Oryntra research lead:** The existing family taxonomy should not be treated as a direct trading control. A future research version could define a small, auditable economic-link graph with independently sourced edge types (industry, supplier/customer, ETF co-ownership, or shared macro exposure) and test a lagged peer-information score as a separate sleeve. It should report edge provenance, coverage, and overlap with own-stock signals before it can affect any target.
+
+**Data and provenance requirements:** Point-in-time entity identifiers, dated and source-labeled relationship edges, a rule for multiple relationship types/weights, as-of memberships, and a frozen missing-edge policy. A name-only category list cannot establish economic linkage, direction, or causal relevance.
+
+**Inference boundary:** AQR's public paper motivates a distinct testable peer-information hypothesis; it does not disclose a usable AQR graph, feature formula, weights, or evidence that the idea will work for Oryntra.
+**Status:** Research lead only — not implemented or validated.
+
+## 2026-09-11, America/New_York — Man Numeric / Man Group
+
+**Source:** *Whispers of Now: How 'Nowcasting' Outperforms Traditional Analyst Estimates in Japan*
+**Direct URL:** https://www.man.com/insights/whispers-of-now-how
+**Evidence category:** Public signal-construction example; analyst-revision data.
+
+**What the source says:** Man Numeric describes a cross-sectional `Sales Trend` score built from the recency-weighted count of upward less downward analyst sales-estimate revisions, scaled by the total number of estimates, then standardized within each researched universe. The source frames analysts' public revisions as a way to measure business momentum, not as a substitute for price momentum.
+
+**Oryntra research lead:** If Minerva first achieves independent price/volume robustness, a future fundamental-information sleeve could test a separately disclosed estimate-revision diffusion score. Treat it as a cross-sectional input with a stated reporting timestamp, estimate-count threshold, and missing-data policy. Evaluate it alone before testing whether it adds information beyond Minerva; do not approximate analyst revisions from later financial statements or news summaries.
+
+**Data and provenance requirements:** A licensed point-in-time analyst-estimate/revision history with the original release timestamp, firm/issuer mapping, fiscal-period labels, estimate count, revision direction, universe membership as of date, and correction history. Current Oryntra public filing data and OHLCV histories do not provide this evidence layer.
+
+**Inference boundary:** The Oryntra experiment design is an inference from Man Numeric's public methodology description. It does not reproduce Man Numeric's inputs, weighting, market coverage, or results.
+**Status:** Research lead only — not implemented or validated.
+
+## 2026-09-11, America/New_York — AQR Capital Management
+
+**Source:** *Can Machines “Learn” Finance?*
+**Direct URL:** https://images.aqr.com/-/media/Japan/Documents/Files/AQR-Alternative-Thinking-2Q19-Can-Machines-Learn-Finance.pdf
+**Evidence category:** Public ML-scope and implementation-modeling framework.
+
+**What the source says:** AQR argues that return prediction is unusually noisy and non-stationary, while risk and price-impact prediction can have comparatively more predictable structure. It identifies portfolio implementation—risk management, transaction-cost management, and factor construction—as a potentially more appropriate ML application than treating ML solely as a return-forecasting tool.
+
+**Oryntra research lead:** Keep any future ML work split into two explicitly labeled tracks: a return-signal hypothesis and an implementation hypothesis. The first implementation candidate should be a frozen, report-only comparison of the existing cost/participation proxy against a separately trained fill-or-cost proxy; it must not alter a model’s weights or execution until the candidate improves an untouched economic evaluation under the same strategy signal.
+
+**Data and provenance requirements:** Timestamped order or trade observations, bid/ask or spread proxy, order size relative to available liquidity, venue/market-state fields, unfilled-order outcomes, consistent corporate-action treatment, and a causal train/validation/holdout split. Current daily OHLCV and the existing volume cap are insufficient to train or validate a real impact model.
+
+**Inference boundary:** AQR’s discussion is a research-direction argument, not a recipe, a claim that impact is easy to predict for Oryntra, or evidence that an ML cost model would improve returns. The proposed two-track evaluation is Oryntra-specific inference.
+**Status:** Research lead only — not implemented or validated.

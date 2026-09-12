@@ -34,7 +34,7 @@ V7_PRESET_TICKERS = {
     "JPM", "V", "XOM", "CVX", "UNH", "LLY", "JNJ", "WMT", "COST", "HD",
     "MCD", "NKE", "CAT", "BA", "RTX", "NEE", "PLTR", "CRWD", "SPY", "QQQ", "SMH",
 }
-ENGINE_ORDER = ["official", "v8", "vai2"]
+ENGINE_ORDER = ["official", "v8", "vai2", "universal_v2"]
 
 
 def _get(request: Any, name: str, default: Any = None) -> Any:
@@ -128,6 +128,7 @@ def _clean_modes(values: Iterable[str] | None) -> list[str]:
     aliases = {
         "v7": "official",
         "vai2.1": "vai2",
+        "vai2.2": "vai2",
     }
     selected: list[str] = []
     for raw in values or []:
@@ -861,7 +862,8 @@ async def run_pattern_lab(
                 observation, indicators, signal_history = built
                 future = history.iloc[index + 1 : index + 1 + horizon]
                 pattern_history = signal_history.tail(pattern_lookback_bars)
-                patterns_by_mode = analyze_patterns_multi(pattern_history, indicators, modes)
+                legacy_modes = [mode for mode in modes if mode != "universal_v2"]
+                patterns_by_mode = analyze_patterns_multi(pattern_history, indicators, legacy_modes) if legacy_modes else {}
                 all_observations.append(observation)
                 baselines["always_long"].append(_baseline_row(observation, "LONG", cost_pct))
                 baselines["random_direction"].append(
@@ -872,7 +874,7 @@ async def run_pattern_lab(
                         mode,
                         observation,
                         indicators,
-                        pattern_history,
+                        signal_history if mode == "universal_v2" else pattern_history,
                         future,
                         cost_pct=cost_pct,
                         minimum_confidence=minimum_confidence,
@@ -1095,4 +1097,3 @@ async def run_pattern_lab(
             }
         )
     return result_payload
-

@@ -10,7 +10,7 @@ def run(cmd):
     if p.returncode!=0: raise SystemExit(p.returncode)
 
 def main():
-    ap=argparse.ArgumentParser(description='Overnight VAI2.1 training pipeline.')
+    ap=argparse.ArgumentParser(description='Overnight VAI2.2 training pipeline.')
     ap.add_argument('--ticker-file', default='')
     ap.add_argument('--tickers', default='')
     ap.add_argument('--training150', action='store_true')
@@ -34,7 +34,6 @@ def main():
     for h in [x.strip() for x in args.horizons.split(',') if x.strip()]:
         cmd=[PY,'tools/train_vai2_cli.py','--period',args.period,'--horizon',h,'--step',str(args.step),'--max-tests-per-ticker',str(args.max_tests_per_ticker),'--data-source',args.data_source,'--label',f'h{h}_step{args.step}']+common
         run(cmd)
-    print('\nVAI2.1 OVERNIGHT PIPELINE COMPLETE')
+    print('\nVAI2.2 OVERNIGHT PIPELINE COMPLETE')
     return 0
 if __name__=='__main__': raise SystemExit(main())
-

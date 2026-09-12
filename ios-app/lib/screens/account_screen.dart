@@ -626,6 +626,11 @@ class AccountScreenState extends State<AccountScreen>
                 onTap: () => _open(AppConfig.riskUrl),
               ),
               ListTile(
+                leading: const Icon(Icons.receipt_long_outlined),
+                title: const Text('Billing and subscription policy'),
+                onTap: () => _open(AppConfig.billingUrl),
+              ),
+              ListTile(
                 leading: const Icon(Icons.science_outlined),
                 title: const Text('Methodology'),
                 onTap: () => _open(AppConfig.methodologyUrl),

@@ -42,6 +42,7 @@ def init_db():
             password_hash   TEXT NOT NULL,
             created_at      TEXT DEFAULT (datetime('now')),
             last_login_at   TEXT,
+            last_subscription_prompt_est_date TEXT,
             legal_version   TEXT,
             legal_accepted_at TEXT
         )
@@ -54,6 +55,39 @@ def init_db():
         cursor.execute("ALTER TABLE users ADD COLUMN legal_version TEXT")
     if "legal_accepted_at" not in user_columns:
         cursor.execute("ALTER TABLE users ADD COLUMN legal_accepted_at TEXT")
+    if "last_subscription_prompt_est_date" not in user_columns:
+        cursor.execute("ALTER TABLE users ADD COLUMN last_subscription_prompt_est_date TEXT")
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS user_identities (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id         INTEGER NOT NULL,
+            provider        TEXT NOT NULL CHECK(provider IN ('google', 'apple')),
+            subject         TEXT NOT NULL,
+            verified_email  TEXT,
+            created_at      TEXT DEFAULT (datetime('now')),
+            last_login_at   TEXT,
+            UNIQUE(provider, subject),
+            UNIQUE(user_id, provider),
+            FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    """)
+
+    # Server-side, short-lived OAuth state prevents callback forgery.  It is
+    # deliberately separate from browser sessions: an unauthenticated visitor
+    # must complete the provider round trip before a local session is created.
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS oauth_login_states (
+            state_hash      TEXT PRIMARY KEY,
+            provider        TEXT NOT NULL CHECK(provider IN ('google', 'apple')),
+            nonce           TEXT NOT NULL,
+            code_verifier   TEXT,
+            intent          TEXT NOT NULL CHECK(intent IN ('login', 'signup')),
+            accept_legal    INTEGER NOT NULL DEFAULT 0,
+            expires_at      TEXT NOT NULL,
+            created_at      TEXT DEFAULT (datetime('now'))
+        )
+    """)
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS user_sessions (
@@ -61,9 +95,14 @@ def init_db():
             user_id     INTEGER NOT NULL,
             created_at  TEXT DEFAULT (datetime('now')),
             expires_at  TEXT NOT NULL,
+            show_subscription_offer INTEGER NOT NULL DEFAULT 0,
             FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
         )
     """)
+
+    session_columns = {row[1] for row in cursor.execute("PRAGMA table_info(user_sessions)").fetchall()}
+    if "show_subscription_offer" not in session_columns:
+        cursor.execute("ALTER TABLE user_sessions ADD COLUMN show_subscription_offer INTEGER NOT NULL DEFAULT 0")
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS subscriptions (
@@ -80,6 +119,29 @@ def init_db():
         )
     """)
 
+    # Owner-only local test overrides. These intentionally live outside billing
+    # records so diagnostic plan changes cannot cancel or rewrite a purchase.
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS debug_subscription_overrides (
+            user_id         INTEGER PRIMARY KEY,
+            plan_code       TEXT NOT NULL,
+            plan_name       TEXT NOT NULL,
+            updated_at      TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    """)
+
+    # Provisioned directly by an operator. Public subscriptions, emails, and
+    # browser state never grant access to CQC's internal research surfaces.
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS internal_operator_access (
+            user_id         INTEGER PRIMARY KEY,
+            status          TEXT NOT NULL DEFAULT 'ACTIVE',
+            granted_at      TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    """)
+
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS analysis_usage (
             user_id         INTEGER NOT NULL,
@@ -88,6 +150,38 @@ def init_db():
             updated_at      TEXT DEFAULT (datetime('now')),
             PRIMARY KEY(user_id, usage_date),
             FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    """)
+
+    # Stores only a user-approved research decision ledger.  Browser-supplied
+    # bars remain transient and are never written here.
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS research_portfolio_runs (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id         INTEGER NOT NULL,
+            label           TEXT NOT NULL,
+            engine_id       TEXT NOT NULL,
+            engine_version  TEXT NOT NULL,
+            configuration_json TEXT NOT NULL,
+            dataset_fingerprint TEXT NOT NULL,
+            as_of_date      TEXT NOT NULL,
+            created_at      TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS research_portfolio_directives (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            run_id          INTEGER NOT NULL,
+            symbol          TEXT NOT NULL COLLATE NOCASE,
+            action          TEXT NOT NULL CHECK(action IN ('BUY','SELL','TRIM','HOLD')),
+            target_weight   REAL NOT NULL,
+            prior_weight    REAL NOT NULL,
+            reference_price REAL NOT NULL,
+            estimated_shares REAL NOT NULL,
+            rationale       TEXT NOT NULL,
+            lifecycle_json  TEXT NOT NULL DEFAULT '{}',
+            FOREIGN KEY(run_id) REFERENCES research_portfolio_runs(id) ON DELETE CASCADE
         )
     """)
 
@@ -1325,4 +1419,3 @@ def get_recent_vai_training_runs(limit: int = 10) -> list[dict[str, Any]]:
         return out
     finally:
         conn.close()
-

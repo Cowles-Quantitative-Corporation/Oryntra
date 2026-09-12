@@ -6,6 +6,8 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from .research_governance import quant_research_governance
+
 from .quant_system import (
     factor_and_relative_value_attribution,
     liquidity_execution_costs,
@@ -25,12 +27,14 @@ STRATEGIES = {
 }
 
 MODEL_PROFILES = {
+    "universal_v2": {"label": "Universal V2 research engine", "description": "Shared scanner signals, covariance risk control and a cash-funded next-open simulation.", "allocations": {}, "long_short_default": False},
     "v8_regime_diversified": {"label": "V1.0 diversified price baseline", "description": "A transparent mix of trend, relative strength, reversal, and a defensive low-volatility comparator.", "allocations": {"time_series_trend": 35, "cross_sectional_momentum": 30, "mean_reversion": 15, "defensive_low_volatility": 20}},
     "v8_balanced": {"label": "V1.0 balanced price baseline", "description": "A neutral research profile diversifying across trend, relative momentum, and a contrarian sleeve.", "allocations": {"time_series_trend": 45, "cross_sectional_momentum": 40, "mean_reversion": 15}},
     "v8_trend_first": {"label": "V1.0 trend-first price baseline", "description": "A profile emphasizing persistent-trend evidence while retaining diversification checks.", "allocations": {"time_series_trend": 65, "cross_sectional_momentum": 25, "mean_reversion": 10}},
     "v8_relative_strength": {"label": "V1.0 relative-strength price baseline", "description": "A profile emphasizing cross-sectional momentum in a broad liquid universe.", "allocations": {"time_series_trend": 25, "cross_sectional_momentum": 65, "mean_reversion": 10}},
     "equal_weight_baseline": {"label": "V1.0 equal-weight baseline", "description": "A price-only baseline that gives selected strategies equal influence for comparison.", "allocations": {"time_series_trend": 34, "cross_sectional_momentum": 33, "mean_reversion": 33}},
     "v1_corporate_quant_system": {"label": "Oryntra V1.0 corporate quant system", "description": "A research-only portfolio stack combining price evidence with point-in-time public corporate evidence, portfolio risk controls, and liquidity-aware simulated execution.", "allocations": {"time_series_trend": 25, "cross_sectional_momentum": 20, "mean_reversion": 10, "defensive_low_volatility": 10, "corporate_quality": 35}},
+    "v1_long_only_trend_momentum_research": {"label": "Oryntra V1.1 long-only trend/momentum research", "description": "A validation-gated, long-only price-research candidate using trend and relative strength while retaining the shared timing, risk, liquidity, correlation, and governance controls.", "allocations": {"time_series_trend": 60, "cross_sectional_momentum": 40}, "long_short_default": False},
 }
 
 
@@ -42,7 +46,7 @@ class QuantConfig:
     reversal_lookback: int = 5
     cost_bps: float = 12.0
     borrow_bps_annual: float = 50.0
-    long_short: bool = True
+    long_short: bool | None = None
     model: str = "v1_corporate_quant_system"
     strategy_weights: dict[str, float] | None = None
     target_annual_volatility: float = 12.0
@@ -66,8 +70,14 @@ class QuantConfig:
             raw, total = {item: 1.0 for item in selected}, float(len(selected))
         return {item: round(value / total * 100.0, 3) for item, value in raw.items()} if total else {}
 
+    def effective_long_short(self) -> bool:
+        if self.long_short is not None:
+            return bool(self.long_short)
+        profile = MODEL_PROFILES.get(self.model, MODEL_PROFILES["v8_regime_diversified"])
+        return bool(profile.get("long_short_default", True))
+
     def as_dict(self) -> dict[str, Any]:
-        return {"strategies": list(self.strategies), "trend_lookback": self.trend_lookback, "momentum_lookback": self.momentum_lookback, "reversal_lookback": self.reversal_lookback, "cost_bps": self.cost_bps, "borrow_bps_annual": self.borrow_bps_annual, "long_short": self.long_short, "model": self.model, "strategy_weights": self.strategy_allocations_pct(), "target_annual_volatility": self.target_annual_volatility, "max_gross_exposure": self.max_gross_exposure, "max_single_name_weight": self.max_single_name_weight, "rebalance_frequency": self.rebalance_frequency, "walk_forward_folds": self.walk_forward_folds, "regime_conditioned_weights": self.regime_conditioned_weights, "liquidity_aware_costs": self.liquidity_aware_costs, "portfolio_value_assumption": self.portfolio_value_assumption, "impact_coefficient_bps": self.impact_coefficient_bps, "max_adv_participation_pct": self.max_adv_participation_pct}
+        return {"strategies": list(self.strategies), "trend_lookback": self.trend_lookback, "momentum_lookback": self.momentum_lookback, "reversal_lookback": self.reversal_lookback, "cost_bps": self.cost_bps, "borrow_bps_annual": self.borrow_bps_annual, "long_short": self.effective_long_short(), "model": self.model, "strategy_weights": self.strategy_allocations_pct(), "target_annual_volatility": self.target_annual_volatility, "max_gross_exposure": self.max_gross_exposure, "max_single_name_weight": self.max_single_name_weight, "rebalance_frequency": self.rebalance_frequency, "walk_forward_folds": self.walk_forward_folds, "regime_conditioned_weights": self.regime_conditioned_weights, "liquidity_aware_costs": self.liquidity_aware_costs, "portfolio_value_assumption": self.portfolio_value_assumption, "impact_coefficient_bps": self.impact_coefficient_bps, "max_adv_participation_pct": self.max_adv_participation_pct}
 
 
 def _normalise_gross(signal: pd.DataFrame) -> pd.DataFrame:
@@ -76,13 +86,13 @@ def _normalise_gross(signal: pd.DataFrame) -> pd.DataFrame:
 
 def _trend(prices: pd.DataFrame, config: QuantConfig) -> pd.DataFrame:
     signal = np.sign(prices.pct_change(config.trend_lookback, fill_method=None)).replace([np.inf, -np.inf], np.nan).fillna(0.0)
-    return _normalise_gross(signal if config.long_short else signal.clip(lower=0.0))
+    return _normalise_gross(signal if config.effective_long_short() else signal.clip(lower=0.0))
 
 
 def _momentum(prices: pd.DataFrame, config: QuantConfig) -> pd.DataFrame:
     trailing = prices.pct_change(config.momentum_lookback, fill_method=None)
     ranks, available = trailing.rank(axis=1, pct=True, method="first"), trailing.notna().sum(axis=1)
-    signal = (ranks >= .70).astype(float) + (-(ranks <= .30).astype(float) if config.long_short else 0.0)
+    signal = (ranks >= .70).astype(float) + (-(ranks <= .30).astype(float) if config.effective_long_short() else 0.0)
     signal.loc[available < 4, :] = 0.0
     return _normalise_gross(signal)
 
@@ -91,13 +101,13 @@ def _reversion(prices: pd.DataFrame, config: QuantConfig) -> pd.DataFrame:
     move = prices.pct_change(config.reversal_lookback, fill_method=None)
     z_score = move.div(move.rolling(63, min_periods=20).std().replace(0, np.nan))
     signal = pd.DataFrame(0.0, index=prices.index, columns=prices.columns).mask(z_score >= 1.5, -1.0).mask(z_score <= -1.5, 1.0)
-    return _normalise_gross(signal if config.long_short else signal.clip(lower=0.0))
+    return _normalise_gross(signal if config.effective_long_short() else signal.clip(lower=0.0))
 
 
 def _low_volatility(prices: pd.DataFrame, config: QuantConfig) -> pd.DataFrame:
     volatility = prices.pct_change(fill_method=None).rolling(63, min_periods=20).std()
     ranks, available = volatility.rank(axis=1, pct=True, method="first"), volatility.notna().sum(axis=1)
-    signal = (ranks <= .35).astype(float) + (-(ranks >= .65).astype(float) if config.long_short else 0.0)
+    signal = (ranks <= .35).astype(float) + (-(ranks >= .65).astype(float) if config.effective_long_short() else 0.0)
     signal.loc[available < 4, :] = 0.0
     return _normalise_gross(signal)
 
@@ -108,7 +118,7 @@ def _corporate_quality(corporate_scores: pd.DataFrame | None, prices: pd.DataFra
     scores = corporate_scores.reindex(index=prices.index, columns=prices.columns).fillna(0.0)
     ranks = scores.rank(axis=1, pct=True, method="first")
     available = scores.ne(0).sum(axis=1)
-    signal = (ranks >= .70).astype(float) + (-(ranks <= .30).astype(float) if config.long_short else 0.0)
+    signal = (ranks >= .70).astype(float) + (-(ranks <= .30).astype(float) if config.effective_long_short() else 0.0)
     signal.loc[available < 4, :] = 0.0
     return _normalise_gross(signal)
 
@@ -134,7 +144,8 @@ def _controls(target: pd.DataFrame, returns: pd.DataFrame, config: QuantConfig) 
 def _summary(net: pd.Series, turnover: pd.Series, weights: pd.DataFrame) -> dict[str, Any]:
     clean = net.replace([np.inf, -np.inf], np.nan).dropna()
     if clean.empty: return {"status": "insufficient_data"}
-    equity = (1 + clean).cumprod(); drawdown = equity.div(equity.cummax()).sub(1)
+    equity = (1 + clean).cumprod(); drawdown = equity.div(equity.cummax().clip(lower=1.0)).sub(1)
+    curve = equity.iloc[np.unique(np.linspace(0, len(equity) - 1, min(260, len(equity)), dtype=int))]
     ann = (float(equity.iloc[-1]) ** (252 / len(clean)) - 1) if len(clean) > 1 and float(equity.iloc[-1]) > 0 else None
     vol = float(clean.std(ddof=0) * np.sqrt(252)) if len(clean) > 1 else 0.0
     sharpe = float(clean.mean() / clean.std(ddof=0) * np.sqrt(252)) if clean.std(ddof=0) > 0 else None
@@ -142,7 +153,7 @@ def _summary(net: pd.Series, turnover: pd.Series, weights: pd.DataFrame) -> dict
     shortfall = float(clean[clean <= var].mean()) if var is not None and not clean[clean <= var].empty else None
     runs = drawdown.lt(0).astype(int).groupby(drawdown.eq(0).cumsum()).sum()
     calmar = ann / abs(float(drawdown.min())) if ann is not None and float(drawdown.min()) < 0 else None
-    return {"status": "research_only", "observations": int(len(clean)), "total_return_pct": round((float(equity.iloc[-1]) - 1) * 100, 2), "annualized_return_pct": round(ann * 100, 2) if ann is not None else None, "annualized_volatility_pct": round(vol * 100, 2), "sharpe_zero_cash_rate": round(sharpe, 2) if sharpe is not None and np.isfinite(sharpe) else None, "max_drawdown_pct": round(float(drawdown.min()) * 100, 2), "annualized_turnover": round(float(turnover.reindex(clean.index).mean()) * 252, 2), "average_gross_exposure": round(float(weights.abs().sum(axis=1).reindex(clean.index).mean()), 3), "worst_day_pct": round(float(clean.min()) * 100, 2), "historical_var_95_pct": round(var * 100, 2) if var is not None else None, "historical_expected_shortfall_95_pct": round(shortfall * 100, 2) if shortfall is not None else None, "calmar_ratio": round(calmar, 2) if calmar is not None and np.isfinite(calmar) else None, "longest_drawdown_sessions": int(runs.max()) if not runs.empty else 0, "equity_curve": [{"date": str(index.date()), "value": round(float(value), 4)} for index, value in equity.iloc[::max(1, len(equity) // 260)].items()][-260:]}
+    return {"status": "research_only", "observations": int(len(clean)), "total_return_pct": round((float(equity.iloc[-1]) - 1) * 100, 2), "annualized_return_pct": round(ann * 100, 2) if ann is not None else None, "annualized_volatility_pct": round(vol * 100, 2), "sharpe_zero_cash_rate": round(sharpe, 2) if sharpe is not None and np.isfinite(sharpe) else None, "max_drawdown_pct": round(float(drawdown.min()) * 100, 2), "annualized_turnover": round(float(turnover.reindex(clean.index).mean()) * 252, 2), "average_gross_exposure": round(float(weights.abs().sum(axis=1).reindex(clean.index).mean()), 3), "worst_day_pct": round(float(clean.min()) * 100, 2), "historical_var_95_pct": round(var * 100, 2) if var is not None else None, "historical_expected_shortfall_95_pct": round(shortfall * 100, 2) if shortfall is not None else None, "calmar_ratio": round(calmar, 2) if calmar is not None and np.isfinite(calmar) else None, "longest_drawdown_sessions": int(runs.max()) if not runs.empty else 0, "equity_curve": [{"date": str(index.date()), "value": round(float(value), 4)} for index, value in curve.items()]}
 
 
 def _simulate(target: pd.DataFrame, returns: pd.DataFrame, config: QuantConfig, prices: pd.DataFrame | None = None, volumes: pd.DataFrame | None = None) -> tuple[pd.Series, pd.Series, pd.DataFrame]:
@@ -170,13 +181,13 @@ def _regime_breakdown(net: pd.Series, benchmark: pd.Series) -> list[dict[str, An
     return sorted(rows, key=lambda item: item["regime"])
 
 
-def _validation(net: pd.Series, folds: int) -> dict[str, Any]:
+def _validation(net: pd.Series, turnover: pd.Series, held: pd.DataFrame, folds: int) -> dict[str, Any]:
     clean = net.replace([np.inf, -np.inf], np.nan).dropna()
     if len(clean) < 126: return {"status": "insufficient_history", "message": "At least 126 completed sessions are needed for the chronological holdout report."}
     holdout_sessions = max(63, len(clean) // 5); development, holdout = clean.iloc[:-holdout_sessions], clean.iloc[-holdout_sessions:]
     split_count = max(1, min(folds, len(development) // 42))
     windows = [development.iloc[indexes] for indexes in np.array_split(np.arange(len(development)), split_count)]
-    return {"status": "chronological_holdout", "note": "Rules are fixed rather than fitted here; this split is a chronological robustness check, not model training.", "development": _summary(development, pd.Series(0., index=development.index), pd.DataFrame(index=development.index)), "holdout": _summary(holdout, pd.Series(0., index=holdout.index), pd.DataFrame(index=holdout.index)), "walk_forward": [{"fold": number, "start": str(window.index.min().date()), "end": str(window.index.max().date()), "sessions": int(len(window)), "total_return_pct": round(((1 + window).prod() - 1) * 100, 2)} for number, window in enumerate(windows, 1) if len(window) >= 21]}
+    return {"status": "chronological_holdout", "note": "Rules are fixed rather than fitted here; this split is a chronological robustness check, not model training.", "development": _summary(development, turnover, held), "holdout": _summary(holdout, turnover, held), "walk_forward": [{"fold": number, "start": str(window.index.min().date()), "end": str(window.index.max().date()), "sessions": int(len(window)), "total_return_pct": round(((1 + window).prod() - 1) * 100, 2)} for number, window in enumerate(windows, 1) if len(window) >= 21]}
 
 
 def _risk_report(held: pd.DataFrame, returns: pd.DataFrame) -> dict[str, Any]:
@@ -200,7 +211,7 @@ def _assumption_ledger(config: QuantConfig, corporate_coverage_pct: float, macro
         "portfolio": [
             {"label": "Gross exposure cap", "value": f"{config.max_gross_exposure:g}×"},
             {"label": "Single-name cap", "value": f"{config.max_single_name_weight * 100:g}%"},
-            {"label": "Short exposure", "value": "Enabled" if config.long_short else "Disabled"},
+            {"label": "Short exposure", "value": "Enabled" if config.effective_long_short() else "Disabled"},
             {"label": "Annual short-borrow assumption", "value": f"{config.borrow_bps_annual:g} bps"},
         ],
         "execution": [
@@ -330,11 +341,12 @@ def _performance_diagnostics(net: pd.Series) -> dict[str, Any]:
     if clean.empty:
         return {"equity_curve": [], "drawdown_curve": [], "rolling_volatility_63_pct": []}
     equity = (1 + clean).cumprod()
-    drawdown = equity.div(equity.cummax()).sub(1)
+    drawdown = equity.div(equity.cummax().clip(lower=1.0)).sub(1)
     rolling_volatility = clean.rolling(63, min_periods=21).std(ddof=0).mul(np.sqrt(252) * 100)
-    step = max(1, len(clean) // 260)
     def points(series: pd.Series) -> list[dict[str, Any]]:
-        return [{"date": str(index.date()), "value": round(float(value), 4)} for index, value in series.iloc[::step].items() if pd.notna(value)][-260:]
+        available = series.dropna()
+        indexes = np.unique(np.linspace(0, len(available) - 1, min(260, len(available)), dtype=int))
+        return [{"date": str(index.date()), "value": round(float(value), 4)} for index, value in available.iloc[indexes].items()]
     return {
         "equity_curve": points(equity),
         "drawdown_curve": points(drawdown.mul(100)),
@@ -344,6 +356,16 @@ def _performance_diagnostics(net: pd.Series) -> dict[str, Any]:
 
 
 def evaluate_strategies(histories: dict[str, pd.DataFrame], config: QuantConfig, corporate_scores: pd.DataFrame | None = None, macro_features: pd.DataFrame | None = None) -> dict[str, Any]:
+    if config.model == "universal_v2":
+        from .universal_engine import UniversalConfig
+        from .universal_research import run_universal
+        if config.effective_long_short() or config.max_gross_exposure > 1:
+            raise ValueError("Universal V2 currently supports cash-funded long-only portfolios")
+        return run_universal(histories, UniversalConfig(vol_target=config.target_annual_volatility / 100,
+            name_cap=config.max_single_name_weight, gross_cap=config.max_gross_exposure,
+            rebalance=config.rebalance_frequency, cost_bps=config.cost_bps,
+            impact_bps=config.impact_coefficient_bps if config.liquidity_aware_costs else 0,
+            participation=config.max_adv_participation_pct / 100, initial_equity=config.portfolio_value_assumption))
     closes = {ticker: frame["Close"].astype(float).rename(ticker) for ticker, frame in histories.items() if frame is not None and "Close" in frame and len(frame) >= 2}
     if len(closes) < 2: raise ValueError("Quant Lab needs at least two symbols with usable daily closes.")
     prices = pd.concat(closes.values(), axis=1).sort_index().loc[lambda frame: ~frame.index.duplicated(keep="last")]
@@ -390,4 +412,7 @@ def evaluate_strategies(histories: dict[str, pd.DataFrame], config: QuantConfig,
         "definition": "Daily equal-weight return across the selected symbols; no rebalancing cost, borrow, or liquidity adjustment.",
         **_summary(benchmark, pd.Series(0.0, index=benchmark.index), equal_weight),
     }
-    return {"methodology": {"execution_timing": "signal at session close, held for the next session", "portfolio_construction": "weights are capped, rebalanced on the selected schedule, and may only scale down to the requested volatility target", "cash_rate": "0% for displayed Sharpe", "warnings": ["Research simulation only. It does not place orders or identify a best trade.", "Signals use the close of day t and returns begin on day t+1; costs are deducted from every weight change.", "Corporate facts and macro observations are only eligible after their recorded public availability timestamp; zero coverage is treated as no structured signal.", "Correlation-convergence scenarios estimate diversification-breakdown risk only; they do not forecast losses or change simulated allocations.", "This package does not include point-in-time delisted-security history, so results are not production-grade evidence."], "model_profile": MODEL_PROFILES.get(config.model, MODEL_PROFILES["v8_regime_diversified"])}, "universe": {"symbols": list(prices.columns), "start": str(prices.index.min().date()), "end": str(prices.index.max().date()), "sessions": int(len(prices))}, "results": results, "benchmark": benchmark_report, "validation": _validation(net, config.walk_forward_folds), "regime_breakdown": _regime_breakdown(net, benchmark), "regime_probabilities": [{"date": str(day.date()), **{key: round(float(value), 4) for key, value in row.items()}} for day, row in regime_probabilities.iloc[::max(1, len(regime_probabilities) // 120)].iterrows()][-120:], "portfolio_risk": _risk_report(held, returns), "execution": execution_report, "factor_attribution": factor_and_relative_value_attribution(held, returns, benchmark, component_returns), "strategy_health": strategy_health(component_returns), "corporate_data": {"signal_coverage_pct": round(corporate_coverage, 2), "status": "available" if corporate_coverage > 0 else "not_yet_loaded"}, "macro_data": {"signal_coverage_pct": round(macro_coverage, 2), "status": "available" if macro_coverage > 0 else "not_yet_loaded", "features": ["policy_rate", "yield_2y", "yield_10y", "credit_spread_bps", "inflation_yoy"]}, "assumption_ledger": _assumption_ledger(config, corporate_coverage, macro_coverage), "data_quality": _quality(prices), "visual_diagnostics": {"correlation": _correlation_heatmap(returns), "correlation_stress": _correlation_stress_report(held, returns), "monthly_returns": _monthly_return_heatmap(net), "performance": _performance_diagnostics(net)}}
+    universe = {"symbols": list(prices.columns), "start": str(prices.index.min().date()), "end": str(prices.index.max().date()), "sessions": int(len(prices))}
+    report = {"methodology": {"execution_timing": "signal at session close, held for the next session", "portfolio_construction": "weights are capped, rebalanced on the selected schedule, and may only scale down to the requested volatility target", "cash_rate": "0% for displayed Sharpe", "warnings": ["Research simulation only. It does not place orders or identify a best trade.", "Signals use the close of day t and returns begin on day t+1; costs are deducted from every weight change.", "Corporate facts and macro observations are only eligible after their recorded public availability timestamp; zero coverage is treated as no structured signal.", "Correlation-convergence scenarios estimate diversification-breakdown risk only; they do not forecast losses or change simulated allocations.", "This package does not include point-in-time delisted-security history, so results are not production-grade evidence."], "model_profile": MODEL_PROFILES.get(config.model, MODEL_PROFILES["v8_regime_diversified"])}, "universe": universe, "results": results, "benchmark": benchmark_report, "validation": _validation(net, turnover, held, config.walk_forward_folds), "regime_breakdown": _regime_breakdown(net, benchmark), "regime_probabilities": [{"date": str(day.date()), **{key: round(float(value), 4) for key, value in row.items()}} for day, row in regime_probabilities.iloc[::max(1, len(regime_probabilities) // 120)].iterrows()][-120:], "portfolio_risk": _risk_report(held, returns), "execution": execution_report, "factor_attribution": factor_and_relative_value_attribution(held, returns, benchmark, component_returns), "strategy_health": strategy_health(component_returns), "corporate_data": {"signal_coverage_pct": round(corporate_coverage, 2), "status": "available" if corporate_coverage > 0 else "not_yet_loaded"}, "macro_data": {"signal_coverage_pct": round(macro_coverage, 2), "status": "available" if macro_coverage > 0 else "not_yet_loaded", "features": ["policy_rate", "yield_2y", "yield_10y", "credit_spread_bps", "inflation_yoy"]}, "assumption_ledger": _assumption_ledger(config, corporate_coverage, macro_coverage), "data_quality": _quality(prices), "visual_diagnostics": {"correlation": _correlation_heatmap(returns), "correlation_stress": _correlation_stress_report(held, returns), "monthly_returns": _monthly_return_heatmap(net), "performance": _performance_diagnostics(net)}}
+    report["research_governance"] = quant_research_governance(config.as_dict(), universe)
+    return report

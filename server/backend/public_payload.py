@@ -23,6 +23,7 @@ def _public_release_label(value: str) -> str:
         .replace("V8", "V1.0")
         .replace("VAI 2.2", "V1.0 Quant")
         .replace("VAI 2.1", "V1.0 Quant")
+        .replace("VAI 2.2", "V1.0 Quant")
     )
 
 
