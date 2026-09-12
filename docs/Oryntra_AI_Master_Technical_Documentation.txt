@@ -1,7 +1,7 @@
 ORYNTRA AI — MASTER TECHNICAL MANUAL
 NARRATIVE ARCHITECTURE, OPERATIONS, AND FILE REFERENCE
-Generated: 2026-09-09 02:44 UTC
-Git base revision at generation: c72e204c347341533c2a579c6da8ad780992343f
+Generated: 2026-09-12 21:17 UTC
+Git base revision at generation: c280e0244f038b636d2254fdcd237ccf8dc16beb
 Git branch: main
 
 This manual is written for a reader who wants to understand how the checked-out Oryntra AI
@@ -235,26 +235,26 @@ automatically healthy; check the real health response and the intended user flow
 ========================================================================================
 8. REPOSITORY COVERAGE AND READING MAP
 ========================================================================================
-Included files: 261
-  - Automated regression test: 24
-  - Backend service or research engine: 42
+Included files: 302
+  - Automated regression test: 34
+  - Backend service or research engine: 52
   - Brand asset: 1
   - Browser application structure: 1
   - Browser presentation or client behaviour: 18
   - Deterministic pattern analysis: 8
   - Flutter mobile application: 29
   - Generated documentation: 1
-  - HTTP API route: 14
-  - Legal and policy surface: 11
+  - HTTP API route: 16
+  - Legal and policy surface: 17
   - Maintenance-mode application: 11
   - Mobile application configuration or operator asset: 13
   - Mobile or web application asset: 3
   - Native iOS integration or build configuration: 43
-  - Operator or research utility: 15
+  - Operator or research utility: 25
   - Product and operating model: 1
-  - Product or technical documentation: 8
+  - Product or technical documentation: 10
   - Repository asset: 3
-  - Server configuration or operator asset: 15
+  - Server configuration or operator asset: 16
 
 The catalogue that follows is intentionally file-by-file, but it is not a reproduction of the
 code. Each entry identifies the file's real role in the system, explains the boundaries it
@@ -271,13 +271,15 @@ INCLUDED FILES
   - V1_RELEASE_READINESS.md (79 lines; Repository asset)
   - brand-assets/oryntra-ai-master-logo.png (167,124 bytes; Brand asset)
   - docs/ASTRA_UNIVERSAL_TUNING_PLAYBOOK.md (102 lines; Product or technical documentation)
+  - docs/DEFERRED_RESEARCH_IDEAS.md (49 lines; Product or technical documentation)
   - docs/FEATURES_MODELS_AND_ARCHITECTURE.md (361 lines; Product or technical documentation)
   - docs/IOS_RELEASE_AND_INTELLIGENCE_ROADMAP.md (28 lines; Product or technical documentation)
-  - docs/LEGAL_AND_REGULATORY_CHANGELOG.md (126 lines; Product or technical documentation)
-  - docs/ORYNTRA_RESEARCH_GOOD_FINDS.txt (369 lines; Product or technical documentation)
+  - docs/LEGAL_AND_REGULATORY_CHANGELOG.md (135 lines; Product or technical documentation)
+  - docs/MINERVA_V1_RESEARCH_RECORD.md (62 lines; Product or technical documentation)
+  - docs/ORYNTRA_RESEARCH_GOOD_FINDS.txt (534 lines; Product or technical documentation)
   - docs/Oryntra_AI_Master_Technical_Documentation.txt (generated output; Generated documentation)
-  - docs/QUANT_MODEL_VALIDATION_LOG.md (141 lines; Product or technical documentation)
-  - docs/UNIVERSAL_V2_BACKEND.md (185 lines; Product or technical documentation)
+  - docs/QUANT_MODEL_VALIDATION_LOG.md (187 lines; Product or technical documentation)
+  - docs/UNIVERSAL_V2_BACKEND.md (197 lines; Product or technical documentation)
   - docs/UNIVERSAL_V2_VALIDATION.json (3436 lines; Product or technical documentation)
   - ios-app/analysis_options.yaml (11 lines; Mobile application configuration or operator asset)
   - ios-app/assets/oryntra-icon.png (167,124 bytes; Mobile or web application asset)
@@ -375,6 +377,7 @@ INCLUDED FILES
   - server/START_MAINTENANCE_MODE.sh (5 lines; Server configuration or operator asset)
   - server/START_ORYNTRA_MAC.command (28 lines; Server configuration or operator asset)
   - server/backend/__init__.py (2 lines; Backend service or research engine)
+  - server/backend/alpha_consistency.py (103 lines; Backend service or research engine)
   - server/backend/alpha_evaluation.py (70 lines; Backend service or research engine)
   - server/backend/analysis_access.py (226 lines; Backend service or research engine)
   - server/backend/backtest.py (608 lines; Backend service or research engine)
@@ -389,6 +392,9 @@ INCLUDED FILES
   - server/backend/main.py (348 lines; Backend service or research engine)
   - server/backend/market_cache.py (559 lines; Backend service or research engine)
   - server/backend/market_repository.py (850 lines; Backend service or research engine)
+  - server/backend/minerva.py (102 lines; Backend service or research engine)
+  - server/backend/minerva_corporate.py (59 lines; Backend service or research engine)
+  - server/backend/model_access.py (18 lines; Backend service or research engine)
   - server/backend/pattern_analyzer.py (1175 lines; Backend service or research engine)
   - server/backend/pattern_lab.py (1100 lines; Backend service or research engine)
   - server/backend/pattern_lab_jobs.py (312 lines; Backend service or research engine)
@@ -417,43 +423,58 @@ INCLUDED FILES
   - server/backend/routes/analysis.py (487 lines; HTTP API route)
   - server/backend/routes/auth.py (744 lines; HTTP API route)
   - server/backend/routes/backtest.py (68 lines; HTTP API route)
+  - server/backend/routes/debug_access.py (148 lines; HTTP API route)
   - server/backend/routes/dev_tools.py (420 lines; HTTP API route)
   - server/backend/routes/intelligence.py (210 lines; HTTP API route)
   - server/backend/routes/paper_trading.py (204 lines; HTTP API route)
   - server/backend/routes/patterns.py (31 lines; HTTP API route)
+  - server/backend/routes/portfolio_lab.py (167 lines; HTTP API route)
   - server/backend/routes/pro.py (1144 lines; HTTP API route)
   - server/backend/routes/pro_live.py (471 lines; HTTP API route)
   - server/backend/routes/quant.py (395 lines; HTTP API route)
   - server/backend/routes/universal.py (159 lines; HTTP API route)
   - server/backend/routes/watchlist.py (50 lines; HTTP API route)
+  - server/backend/sec_companyfacts.py (132 lines; Backend service or research engine)
   - server/backend/setup_detector.py (1315 lines; Backend service or research engine)
   - server/backend/trade_scorer.py (515 lines; Backend service or research engine)
   - server/backend/twelvedata_client.py (156 lines; Backend service or research engine)
-  - server/backend/universal_engine.py (362 lines; Backend service or research engine)
+  - server/backend/universal_engine.py (384 lines; Backend service or research engine)
+  - server/backend/universal_fundamentals.py (113 lines; Backend service or research engine)
+  - server/backend/universal_learning.py (251 lines; Backend service or research engine)
   - server/backend/universal_market_context.py (260 lines; Backend service or research engine)
-  - server/backend/universal_position_policy.py (217 lines; Backend service or research engine)
-  - server/backend/universal_research.py (161 lines; Backend service or research engine)
+  - server/backend/universal_peer_shock.py (50 lines; Backend service or research engine)
+  - server/backend/universal_position_policy.py (221 lines; Backend service or research engine)
+  - server/backend/universal_research.py (163 lines; Backend service or research engine)
   - server/backend/universal_research_blueprint.py (87 lines; Backend service or research engine)
   - server/backend/universal_taxonomy.py (175 lines; Backend service or research engine)
+  - server/backend/universal_yearly_protocol.py (181 lines; Backend service or research engine)
+  - server/backend/universe_selection.py (158 lines; Backend service or research engine)
   - server/backend/v8_engine.py (468 lines; Backend service or research engine)
   - server/backend/vai2_model.py (641 lines; Backend service or research engine)
   - server/backend/vai_model.py (373 lines; Backend service or research engine)
   - server/data/universal_taxonomy/family_catalog.json (62 lines; Server configuration or operator asset)
   - server/data/universal_taxonomy/financedatabase_seed_25000.json (55,291,989 bytes; Server configuration or operator asset)
+  - server/examples/minerva_v1_baseline.json (24 lines; Server configuration or operator asset)
   - server/examples/quant_strategy_manifest.example.json (27 lines; Server configuration or operator asset)
   - server/examples/universal_study_manifest.json (138 lines; Server configuration or operator asset)
   - server/frontend/index.html (194 lines; Browser application structure)
   - server/frontend/legal/contact.html (11 lines; Legal and policy surface)
+  - server/frontend/legal/contact_canonical.html (2 lines; Legal and policy surface)
   - server/frontend/legal/methodology.html (16 lines; Legal and policy surface)
   - server/frontend/legal/methodology_canonical.html (2 lines; Legal and policy surface)
+  - server/frontend/legal/methodology_v1_1.html (2 lines; Legal and policy surface)
   - server/frontend/legal/privacy.html (16 lines; Legal and policy surface)
   - server/frontend/legal/privacy_canonical.html (2 lines; Legal and policy surface)
+  - server/frontend/legal/privacy_v1_1.html (2 lines; Legal and policy surface)
   - server/frontend/legal/refund.html (12 lines; Legal and policy surface)
   - server/frontend/legal/refund_canonical.html (2 lines; Legal and policy surface)
+  - server/frontend/legal/refund_v1_1.html (2 lines; Legal and policy surface)
   - server/frontend/legal/risk-disclaimer.html (15 lines; Legal and policy surface)
   - server/frontend/legal/risk-disclaimer_canonical.html (2 lines; Legal and policy surface)
+  - server/frontend/legal/risk-disclaimer_v1_1.html (2 lines; Legal and policy surface)
   - server/frontend/legal/terms.html (18 lines; Legal and policy surface)
   - server/frontend/legal/terms_canonical.html (2 lines; Legal and policy surface)
+  - server/frontend/legal/terms_v1_1.html (2 lines; Legal and policy surface)
   - server/frontend/static/css/main.css (3720 lines; Browser presentation or client behaviour)
   - server/frontend/static/css/refined.css (721 lines; Browser presentation or client behaviour)
   - server/frontend/static/img/favicon.ico (64,167 bytes; Browser presentation or client behaviour)
@@ -489,16 +510,23 @@ INCLUDED FILES
   - server/shared/ad_slots.json (49 lines; Server configuration or operator asset)
   - server/tests/conftest.py (10 lines; Automated regression test)
   - server/tests/test_ads_configuration.py (26 lines; Automated regression test)
+  - server/tests/test_alpha_context.py (130 lines; Automated regression test)
   - server/tests/test_analysis_access_policy.py (83 lines; Automated regression test)
   - server/tests/test_auth_security.py (124 lines; Automated regression test)
+  - server/tests/test_build_sec_cik_manifest.py (13 lines; Automated regression test)
   - server/tests/test_corporate_quant_system.py (84 lines; Automated regression test)
+  - server/tests/test_debug_access.py (60 lines; Automated regression test)
   - server/tests/test_dev_tools_jobs.py (118 lines; Automated regression test)
+  - server/tests/test_fetch_sec_companyfacts.py (16 lines; Automated regression test)
   - server/tests/test_intelligence_route.py (113 lines; Automated regression test)
   - server/tests/test_legal_operator.py (24 lines; Automated regression test)
   - server/tests/test_market_cache.py (103 lines; Automated regression test)
   - server/tests/test_market_repository.py (176 lines; Automated regression test)
+  - server/tests/test_minerva_corporate.py (18 lines; Automated regression test)
+  - server/tests/test_normalize_sec_companyfacts_batch.py (15 lines; Automated regression test)
   - server/tests/test_paper_trade_routes.py (14 lines; Automated regression test)
   - server/tests/test_pattern_lab_next.py (49 lines; Automated regression test)
+  - server/tests/test_portfolio_lab.py (68 lines; Automated regression test)
   - server/tests/test_provider_credentials.py (76 lines; Automated regression test)
   - server/tests/test_public_backtest_route.py (54 lines; Automated regression test)
   - server/tests/test_public_payload_boundary.py (62 lines; Automated regression test)
@@ -507,22 +535,35 @@ INCLUDED FILES
   - server/tests/test_research_governance.py (44 lines; Automated regression test)
   - server/tests/test_research_pipeline.py (150 lines; Automated regression test)
   - server/tests/test_scanner_result_rendering.py (28 lines; Automated regression test)
-  - server/tests/test_universal_engine.py (695 lines; Automated regression test)
+  - server/tests/test_sec_companyfacts.py (64 lines; Automated regression test)
+  - server/tests/test_universal_engine.py (787 lines; Automated regression test)
+  - server/tests/test_universal_yearly_protocol.py (91 lines; Automated regression test)
+  - server/tests/test_universe_selection.py (49 lines; Automated regression test)
   - server/tests/test_v8_engine.py (100 lines; Automated regression test)
   - server/tests/test_vai2_leakage_controls.py (42 lines; Automated regression test)
   - server/tests/test_vai2_setup_scoring.py (34 lines; Automated regression test)
   - server/tools/__init__.py (2 lines; Operator or research utility)
+  - server/tools/audit_tba2_negative_drivers.py (48 lines; Operator or research utility)
   - server/tools/audit_v7_bias.py (244 lines; Operator or research utility)
+  - server/tools/build_sec_cik_manifest.py (66 lines; Operator or research utility)
   - server/tools/build_universal_taxonomy.py (177 lines; Operator or research utility)
   - server/tools/cache_guard.py (95 lines; Operator or research utility)
   - server/tools/check_cache_status.py (9 lines; Operator or research utility)
+  - server/tools/fetch_sec_companyfacts.py (90 lines; Operator or research utility)
   - server/tools/generate_master_docs.py (848 lines; Operator or research utility)
   - server/tools/market_cache_cli.py (92 lines; Operator or research utility)
+  - server/tools/normalize_sec_companyfacts.py (32 lines; Operator or research utility)
+  - server/tools/normalize_sec_companyfacts_batch.py (50 lines; Operator or research utility)
   - server/tools/run_backtest_cli.py (119 lines; Operator or research utility)
   - server/tools/run_pattern_lab_cli.py (101 lines; Operator or research utility)
   - server/tools/run_quant_experiment_cli.py (54 lines; Operator or research utility)
+  - server/tools/run_seeded_yearly_universal_study.py (80 lines; Operator or research utility)
+  - server/tools/run_tba2_risk_ablation.py (85 lines; Operator or research utility)
+  - server/tools/run_tba2_risk_component_ablation.py (132 lines; Operator or research utility)
   - server/tools/run_universal_study.py (149 lines; Operator or research utility)
   - server/tools/seed_app_review_account.py (56 lines; Operator or research utility)
+  - server/tools/summarize_tba2_component_ablations.py (48 lines; Operator or research utility)
+  - server/tools/summarize_three_way_holdout.py (71 lines; Operator or research utility)
   - server/tools/train_vai2_cli.py (119 lines; Operator or research utility)
   - server/tools/vai_full_train_pipeline.py (40 lines; Operator or research utility)
   - server/tools/warm_cache_cli.py (59 lines; Operator or research utility)
@@ -560,6 +601,9 @@ out of public documentation.
   - ORYNTRA_CQC_INTERNAL_RESEARCH_ENABLED
   - ORYNTRA_DAILY_ANALYSIS_LIMIT
   - ORYNTRA_DB_PATH
+  - ORYNTRA_DEBUG_ALLOWED_IP
+  - ORYNTRA_DEBUG_TOOLS_ENABLED
+  - ORYNTRA_DEBUG_TRUSTED_PROXY_CIDRS
   - ORYNTRA_ENABLE_TWELVEDATA_FALLBACK
   - ORYNTRA_ENABLE_YFINANCE_FALLBACK
   - ORYNTRA_GOOGLE_CLIENT_ID
@@ -691,6 +735,15 @@ of the product's operating contract: revise it when the corresponding user-visib
 operational behaviour changes, not merely to make it sound more complete.
 
 
+[docs/DEFERRED_RESEARCH_IDEAS.md]
+Classification: Product or technical documentation. Source size: 49 lines.
+
+Its substantive sections are Deferred Research Ideas, Fundamental- and event-aware systematic
+equity sleeve, Conditions before any build, Naming. This document is part of the product's
+operating contract: revise it when the corresponding user-visible or operational behaviour
+changes, not merely to make it sound more complete.
+
+
 [docs/FEATURES_MODELS_AND_ARCHITECTURE.md]
 Classification: Product or technical documentation. Source size: 361 lines.
 
@@ -716,18 +769,29 @@ changes, not merely to make it sound more complete.
 
 
 [docs/LEGAL_AND_REGULATORY_CHANGELOG.md]
-Classification: Product or technical documentation. Source size: 126 lines.
+Classification: Product or technical documentation. Source size: 135 lines.
 
-Its substantive sections are Legal and Regulatory Changelog, Scope and status, 2026-09-08 —
-ownership and product-boundary controls, Shipped controls, Required before claiming CQC
-ownership or operation, Regulatory applicability register, Operating prohibitions preserved by
-the current design, Release-gate checklist, Primary sources. This document is part of the
-product's operating contract: revise it when the corresponding user-visible or operational
-behaviour changes, not merely to make it sound more complete.
+Its substantive sections are Legal and Regulatory Changelog, Scope and status, September 12,
+2026 — corporate-context record update, 2026-09-08 — ownership and product-boundary controls,
+Shipped controls, Required before claiming CQC ownership or operation, Regulatory
+applicability register, Operating prohibitions preserved by the current design, Release-gate
+checklist, Primary sources. This document is part of the product's operating contract: revise
+it when the corresponding user-visible or operational behaviour changes, not merely to make it
+sound more complete.
+
+
+[docs/MINERVA_V1_RESEARCH_RECORD.md]
+Classification: Product or technical documentation. Source size: 62 lines.
+
+Its substantive sections are Minerva V1 research record, Frozen price-only baseline, Retained
+breadth tune, Next information sleeves, Retained feature and consistency trials, Corporate-
+data readiness result, Decision. This document is part of the product's operating contract:
+revise it when the corresponding user-visible or operational behaviour changes, not merely to
+make it sound more complete.
 
 
 [docs/ORYNTRA_RESEARCH_GOOD_FINDS.txt]
-Classification: Product or technical documentation. Source size: 369 lines.
+Classification: Product or technical documentation. Source size: 534 lines.
 
 This supporting file belongs to the product or technical documentation layer. Its role is
 bounded by the adjacent source and configuration files; a change should be evaluated in the
@@ -744,28 +808,30 @@ behavior changes.
 
 
 [docs/QUANT_MODEL_VALIDATION_LOG.md]
-Classification: Product or technical documentation. Source size: 141 lines.
+Classification: Product or technical documentation. Source size: 187 lines.
 
-Its substantive sections are Quant Lab model-validation log, 2026-09-05 — V1.1 long-only
-trend/momentum research, Fixed candidate, Selection discipline, Results, Interpretation and
-limits, 2026-09-05 — Existing long/short price-profile comparison, 2026-09-05 — Ten-year ETF
-audit of V1.1 long-only trend/momentum, Frozen audit, Results, Measurement boundaries, Next
-step, 2026-09-05 — V1.2 defensive-sleeve repair: rejected on fresh confirmation basket,
-Predeclared repair, and additional private helpers. This document is part of the product's
-operating contract: revise it when the corresponding user-visible or operational behaviour
-changes, not merely to make it sound more complete.
+Its substantive sections are Quant Lab model-validation log, 2026-09-12 — Universal V2 native
+and open-source learner review: no promotion, 2026-09-05 — V1.1 long-only trend/momentum
+research, Fixed candidate, Selection discipline, Results, Interpretation and limits,
+2026-09-05 — Existing long/short price-profile comparison, 2026-09-05 — Ten-year ETF audit of
+V1.1 long-only trend/momentum, Frozen audit, Results, Measurement boundaries, Next step,
+2026-09-05 — V1.2 defensive-sleeve repair: rejected on fresh confirmation basket, and
+additional private helpers. This document is part of the product's operating contract: revise
+it when the corresponding user-visible or operational behaviour changes, not merely to make it
+sound more complete.
 
 
 [docs/UNIVERSAL_V2_BACKEND.md]
-Classification: Product or technical documentation. Source size: 185 lines.
+Classification: Product or technical documentation. Source size: 197 lines.
 
 Its substantive sections are Universal V2: shared engine and alpha research, What is shared,
 Signal definition, Portfolio construction, Execution ledger, Alpha and promotion criteria,
 Minerva V1 candidate, Interfaces and files, Position-policy foundation, Market context and
-multi-family taxonomy foundation, Reproducible study runner, Actual study outcome — target not
-achieved, Correctness changes and verification, Research basis and next work. This document is
-part of the product's operating contract: revise it when the corresponding user-visible or
-operational behaviour changes, not merely to make it sound more complete.
+multi-family taxonomy foundation, Point-in-time coarse-to-fine universe contract, Optional
+OHLCV-structure candidate, Reproducible study runner, Actual study outcome — target not
+achieved, and additional private helpers. This document is part of the product's operating
+contract: revise it when the corresponding user-visible or operational behaviour changes, not
+merely to make it sound more complete.
 
 
 [docs/UNIVERSAL_V2_VALIDATION.json]
@@ -2025,6 +2091,24 @@ No classes or functions were found at module scope. The file is likely declarati
 configuration, package initialization, or command glue.
 
 
+[server/backend/alpha_consistency.py]
+Classification: Backend service or research engine. Source size: 103 lines.
+
+This supporting file belongs to the backend service or research engine layer. Its role is
+bounded by the adjacent source and configuration files; a change should be evaluated in the
+workflow that actually consumes it rather than judged from the file in isolation.
+
+Module statement: Owner's September 2026 alpha gates; units are percentage points, not
+returns.
+
+Imports: .alpha_evaluation, __future__, numpy, pandas
+
+Public code inventory:
+  - function policy_contract() (line 13)
+  - function _valid_index(series) (line 24)
+  - function consistency_scorecard(strategy, benchmark, risk_free, prior_strategy) (line 30) — Score exactly two or ten years without changing estimators after results. Monthly beta is fitted with an intercept on the last 126 complete prior strategy sessions, frozen for the entire month. Calibration returns must come from the same frozen strategy and end before the evaluat
+
+
 [server/backend/alpha_evaluation.py]
 Classification: Backend service or research engine. Source size: 70 lines.
 
@@ -2441,6 +2525,65 @@ Public code inventory:
   - function MarketDataRepository.dataset_fingerprint(self, frames, configuration) (line 801)
   - function get_market_repository() (line 826)
   - function get_history(ticker, period, minimum_bars, allow_api, force_refresh, provider_preference) (line 833)
+
+
+[server/backend/minerva.py]
+Classification: Backend service or research engine. Source size: 102 lines.
+
+This supporting file belongs to the backend service or research engine layer. Its role is
+bounded by the adjacent source and configuration files; a change should be evaluated in the
+workflow that actually consumes it rather than judged from the file in isolation.
+
+Module statement: Minerva: a research-only Universal V2 candidate profile. The profile names a
+frozen price-only baseline. Fundamental overlays remain zero until they have availability-
+dated records and pass a separate, predeclared evaluation; a name is not a release approval.
+
+Imports: .universal_engine, .universal_position_policy, __future__, dataclasses
+
+Public code inventory:
+  - function minerva_baseline(**overrides) (line 19) — Create the wider-universe price-only candidate from the frozen study.
+  - function minerva_residual_momentum_candidate(**overrides) (line 39) — Return the separate Minerva candidate with two market-residual horizons.
+  - function minerva_score_persistence_candidate(**overrides) (line 44) — Return a separate candidate that smooths successive causal ridge ranks.
+  - function minerva_economic_interactions_candidate(**overrides) (line 49) — Return the separate Minerva candidate with three named causal interactions.
+  - function tba1_ohlcv_structure_candidate(**overrides) (line 54) — TBA 1: Minerva risk construction with a compact OHLCV feature sleeve.
+  - function tba3_market_residual_target_candidate(**overrides) (line 59) — TBA 3: learn a forward return residualized by completed market beta.
+  - function tba4_completed_ic_gate_candidate(**overrides) (line 64) — TBA 4: trade only when completed trailing rank IC is nonnegative.
+  - function tba5_residual_momentum_candidate(**overrides) (line 69) — TBA 5: add completed 21/63-session stock-market residual momentum.
+  - function tba6_residual_lifecycle_candidate(**overrides) (line 74) — TBA 6: TBA 5 with the existing causal lifecycle policy enabled.
+  - function minerva_beta_ceiling_candidate(**overrides) (line 79) — Return a separate candidate that can scale down excess market beta to cash.
+  - function minerva_contract() (line 84)
+
+
+[server/backend/minerva_corporate.py]
+Classification: Backend service or research engine. Source size: 59 lines.
+
+This supporting file belongs to the backend service or research engine layer. Its role is
+bounded by the adjacent source and configuration files; a change should be evaluated in the
+workflow that actually consumes it rather than judged from the file in isolation.
+
+Module statement: Offline, availability-dated corporate panels for Minerva research.
+
+Imports: __future__, collections, numpy, pandas, typing
+
+Public code inventory:
+  - function build_quality_and_observed_panels(facts, sessions, symbols, minimum_metrics) (line 15) — Return cross-sectional quality ranks and an exact observed-data mask. Facts are usable only at their stated ``available_at`` session. An issuer needs ``minimum_metrics`` current public facts before it is observed; zero score is therefore distinguishable from absent data through t
+
+
+[server/backend/model_access.py]
+Classification: Backend service or research engine. Source size: 18 lines.
+
+This supporting file belongs to the backend service or research engine layer. Its role is
+bounded by the adjacent source and configuration files; a change should be evaluated in the
+workflow that actually consumes it rather than judged from the file in isolation.
+
+Module statement: Shared access contract for selectable research models. The UI may show a
+model before it is runnable, but API routes still enforce the same entitlement and release
+state so a browser request cannot bypass it.
+
+Imports: fastapi
+
+Public code inventory:
+  - function require_model_access(user, model) (line 12)
 
 
 [server/backend/pattern_analyzer.py]
@@ -3199,6 +3342,39 @@ Public code inventory:
   - async function browser_backtest_endpoint(req, request) (line 48) [decorators: public_router.post('/run-upload'), router.post('/run-upload')] — Run authenticated research on browser-fetched daily bars only.
 
 
+[server/backend/routes/debug_access.py]
+Classification: HTTP API route. Source size: 148 lines.
+
+This supporting file belongs to the http api route layer. Its role is bounded by the adjacent
+source and configuration files; a change should be evaluated in the workflow that actually
+consumes it rather than judged from the file in isolation.
+
+Its declared HTTP boundary includes GET /access, POST /subscription.
+
+Module statement: Narrow, opt-in owner debug controls. This is intentionally not a frontend-
+only feature: it requires an authenticated session, an explicit deployment switch, and one
+resolved client IP. Forwarded IP headers are accepted only from a deployment-configured
+trusted proxy.
+
+Imports: ..database, .auth, __future__, fastapi, ipaddress, os, pydantic
+
+HTTP route decorators:
+  - line 106: router.get('/access') -> access
+  - line 120: router.post('/subscription') -> change_subscription
+
+Public code inventory:
+  - function _enabled() (line 28)
+  - function _trusted_proxy_networks() (line 32)
+  - function _client_ip(request) (line 45)
+  - function _require_debug_access(request) (line 62)
+  - class DebugPlanRequest (line 71)
+  - function DebugPlanRequest.valid_plan(cls, value) (line 76) [decorators: field_validator('plan'), classmethod]
+  - function _active_subscription(conn, user_id) (line 83)
+  - function _test_override(conn, user_id) (line 97)
+  - async function access(request) (line 106) [decorators: router.get('/access')]
+  - async function change_subscription(payload, request) (line 120) [decorators: router.post('/subscription')]
+
+
 [server/backend/routes/dev_tools.py]
 Classification: HTTP API route. Source size: 420 lines.
 
@@ -3354,6 +3530,39 @@ HTTP route decorators:
 Public code inventory:
   - async function pattern_events(ticker, limit) (line 11) [decorators: router.get('/events')]
   - async function pattern_stats(pattern_name, ticker, timeframe, limit) (line 19) [decorators: router.get('/stats')]
+
+
+[server/backend/routes/portfolio_lab.py]
+Classification: HTTP API route. Source size: 167 lines.
+
+This supporting file belongs to the http api route layer. Its role is bounded by the adjacent
+source and configuration files; a change should be evaluated in the workflow that actually
+consumes it rather than judged from the file in isolation.
+
+Its declared HTTP boundary includes POST /run-upload, GET /runs.
+
+Module statement: Subscriber-only, research-only portfolio decision ledger. The browser
+supplies a completed daily OHLCV window for one run. This route stores the resulting
+hypothetical directives and reproducibility metadata, not the price history and never an
+instruction to a broker.
+
+Imports: ..database, ..internal_access, ..universal_engine, ..universal_position_policy,
+..universal_research, .universal, __future__, asyncio, dataclasses, fastapi, hashlib, json,
+pandas, pydantic
+
+HTTP route decorators:
+  - line 116: router.post('/run-upload') -> run_upload
+  - line 142: router.get('/runs') -> runs
+
+Public code inventory:
+  - function _default_configuration() (line 27)
+  - class PortfolioDecisionRequest (line 33)
+  - function _aligned_histories(items) (line 40)
+  - function _directive_rows(report, targets, prices, configuration) (line 55)
+  - function _record_run(user_id, request, report, directives) (line 83)
+  - function _run_decision(request) (line 108)
+  - async function run_upload(payload, request) (line 116) [decorators: router.post('/run-upload')] — CQC-internal hypothetical research ledger; unavailable to subscribers.
+  - async function runs(request) (line 142) [decorators: router.get('/runs')] — Return CQC-internal research-ledger records, never raw bars.
 
 
 [server/backend/routes/pro.py]
@@ -3584,6 +3793,28 @@ Public code inventory:
   - async function remove_from_watchlist(ticker, request) (line 39) [decorators: router.delete('/{ticker}')]
 
 
+[server/backend/sec_companyfacts.py]
+Classification: Backend service or research engine. Source size: 132 lines.
+
+This supporting file belongs to the backend service or research engine layer. Its role is
+bounded by the adjacent source and configuration files; a change should be evaluated in the
+workflow that actually consumes it rather than judged from the file in isolation.
+
+Module statement: Conservative SEC Company Facts normalization for Minerva research. This
+module is deliberately offline: callers supply an SEC Company Facts JSON file they obtained in
+compliance with SEC fair-access guidance. It emits only public filing-derived facts with a
+conservative availabil
+
+Imports: __future__, datetime, numpy, pandas, typing
+
+Public code inventory:
+  - function conservative_available_at(filed) (line 25) — Make a filing usable no earlier than the next calendar-day session. Company Facts supplies a filing date, not a trade-safe intraday timestamp. Advancing a full calendar day prevents same-day look-ahead; a session panel naturally advances weekend/holiday dates to its next availabl
+  - function normalize_quarterly_companyfacts(payload, ticker) (line 39) — Build availability-dated revenue-growth and operating-margin records. Only 75–110 day 10-Q/10-K duration facts are accepted, excluding annual and year-to-date totals whose use as a quarter would create a false signal. A year-over-year revenue comparison requires a comparable prio
+  - function _cik(value) (line 93)
+  - function _quarterly_observations(gaap, tags) (line 103)
+  - function _prior_year_comparable(current, observations) (line 128)
+
+
 [server/backend/setup_detector.py]
 Classification: Backend service or research engine. Source size: 1315 lines.
 
@@ -3671,7 +3902,7 @@ Public code inventory:
 
 
 [server/backend/universal_engine.py]
-Classification: Backend service or research engine. Source size: 362 lines.
+Classification: Backend service or research engine. Source size: 384 lines.
 
 Universal V2 defines shared causal price features, validated configuration, signal provenance
 and portfolio target construction. Scanner, Pattern Lab and the V2 portfolio adapter use the
@@ -3685,14 +3916,49 @@ Imports: .universal_learning, .universal_market_context, .universal_peer_shock,
 
 Public code inventory:
   - class UniversalConfig (line 22)
-  - function UniversalConfig.__post_init__(self) (line 64)
-  - function UniversalConfig.weights(self) (line 125) [decorators: property]
-  - function UniversalConfig.fingerprint(self) (line 130) [decorators: property]
-  - function UniversalConfig.residual_momentum_horizons(self) (line 134) [decorators: property] — Selected residual horizons; legacy switch maps to the full pair.
-  - function signal_panel(prices, config, benchmark_returns, fundamental_scores, opens, volumes, learning_closes, learning_opens, learning_volumes, fundamental_acceleration_scores) (line 142) — Features at t use only data through t; signals are executed after t.
-  - function scan_snapshot(history, config) (line 234)
-  - function scanner_setup(history) (line 254)
-  - function portfolio_targets(prices, config, benchmark_returns, fundamental_scores, opens, volumes, learning_closes, learning_opens, learning_volumes, fundamental_acceleration_scores, precomputed_panel) (line 263) — Create causal targets, optionally reusing a just-computed causal panel. ``run_universal`` needs the panel for lifecycle scoring as well as targets. Reusing it prevents a second identical walk-forward model fit without changing data availability, signals, or target math.
+  - function UniversalConfig.__post_init__(self) (line 70)
+  - function UniversalConfig.weights(self) (line 137) [decorators: property]
+  - function UniversalConfig.fingerprint(self) (line 142) [decorators: property]
+  - function UniversalConfig.residual_momentum_horizons(self) (line 146) [decorators: property] — Selected residual horizons; legacy switch maps to the full pair.
+  - function signal_panel(prices, config, benchmark_returns, fundamental_scores, opens, volumes, learning_closes, learning_opens, learning_volumes, learning_highs, learning_lows, fundamental_acceleration_scores) (line 154) — Features at t use only data through t; signals are executed after t.
+  - function scan_snapshot(history, config) (line 255)
+  - function scanner_setup(history) (line 275)
+  - function portfolio_targets(prices, config, benchmark_returns, fundamental_scores, opens, volumes, learning_closes, learning_opens, learning_volumes, learning_highs, learning_lows, fundamental_acceleration_scores, precomputed_panel) (line 284) — Create causal targets, optionally reusing a just-computed causal panel. ``run_universal`` needs the panel for lifecycle scoring as well as targets. Reusing it prevents a second identical walk-forward model fit without changing data availability, signals, or target math.
+
+
+[server/backend/universal_fundamentals.py]
+Classification: Backend service or research engine. Source size: 113 lines.
+
+This supporting file belongs to the backend service or research engine layer. Its role is
+bounded by the adjacent source and configuration files; a change should be evaluated in the
+workflow that actually consumes it rather than judged from the file in isolation.
+
+Module statement: Availability-dated fundamental scores for Universal V2 research.
+
+Imports: __future__, math, numpy, pandas, typing
+
+Public code inventory:
+  - function build_fundamental_score_panel(events, sessions, symbols, revenue_scale, income_scale) (line 11) — Convert prevalidated SEC filing events into a session-aligned score panel. An event becomes usable at the session close on its declared filing date, so the V2 ledger can only trade it at the following open. Missing history is represented by a neutral zero, never a backfilled esti
+  - function build_fundamental_acceleration_panel(events, sessions, symbols, decay_sessions, revenue_scale, income_scale) (line 57) — Return a causal, decaying filing-to-filing change signal. This is deliberately *acceleration*, not an earnings surprise: it compares a newly public revenue/income-growth score with the issuer's last public score. An event can affect a session only on or after ``available_date``; 
+
+
+[server/backend/universal_learning.py]
+Classification: Backend service or research engine. Source size: 251 lines.
+
+This supporting file belongs to the backend service or research engine layer. Its role is
+bounded by the adjacent source and configuration files; a change should be evaluated in the
+workflow that actually consumes it rather than judged from the file in isolation.
+
+Module statement: Leakage-safe, walk-forward cross-sectional learning for Universal V2
+research.
+
+Imports: __future__, numpy, pandas
+
+Public code inventory:
+  - function walk_forward_ridge_scores(closes, opens, volumes, training_sessions, retrain_sessions, horizon_sessions, penalty, benchmark_returns, include_residual_momentum, residual_momentum_horizons, target_market_residual, include_economic_interactions, corporate_quality, corporate_observed, highs, lows, include_ohlcv_structure, score_smoothing, ic_gate, ic_lookback_sessions, ic_minimum) (line 18) — Return cross-sectional scores trained only on outcomes completed before each date. At close ``t`` the model sees features through ``t``. Training labels are open(t+1)-to-close(t+horizon) returns, demeaned across the investable universe for that date. A label is eligible only when
+  - function _apply_completed_ic_gate(scores, labels, horizon_sessions, lookback_sessions, minimum_ic) (line 155) — Hold cash when trailing, fully-finished cross-sectional IC is too weak. At decision close ``current``, a label starting at ``observed`` is usable only when its full horizon completed strictly earlier than ``current``. The gate therefore ends its evidence at ``current - horizon - 
+  - function _feature_cube(closes, volumes, benchmark_returns, residual_momentum_horizons, include_economic_interactions, corporate_quality, corporate_observed, opens, highs, lows) (line 183)
+  - function _validate_panel(panel, name, allow_zero) (line 241)
 
 
 [server/backend/universal_market_context.py]
@@ -3723,8 +3989,25 @@ Public code inventory:
   - function build_completed_market_observations(closes, config, source_manifest_id) (line 221) — Derive a completed-close study context from frozen daily OHLCV inputs. SPY and QQQ are averaged for the market leg. Breadth and correlation use the supplied non-benchmark study universe. Each observation is dated at the same session close and is therefore consumed at the followin
 
 
+[server/backend/universal_peer_shock.py]
+Classification: Backend service or research engine. Source size: 50 lines.
+
+This supporting file belongs to the backend service or research engine layer. Its role is
+bounded by the adjacent source and configuration files; a change should be evaluated in the
+workflow that actually consumes it rather than judged from the file in isolation.
+
+Module statement: Causal, data-driven peer-shock controls for Universal V2 research.
+
+Imports: __future__, dataclasses, math, typing
+
+Public code inventory:
+  - class PeerShockConfig (line 10) — Tunable correlated-peer stress overlay; disabled by default.
+  - function PeerShockConfig.__post_init__(self) (line 21)
+  - function peer_shock_contract(config) (line 37)
+
+
 [server/backend/universal_position_policy.py]
-Classification: Backend service or research engine. Source size: 217 lines.
+Classification: Backend service or research engine. Source size: 221 lines.
 
 This disabled-by-default pure state machine defines the future adaptive-exit contract: entry
 risk plan, non-widening long stops, precommitted daily-bar stop/target behavior and close-only
@@ -3747,12 +4030,12 @@ Public code inventory:
   - function evaluate_close(state, bar, prior_close, signal_score, daily_volatility, average_volume, config, calendar_date, calendar_rsi, calendar_extension) (line 132) — Update stops at the close and create a next-open-only dynamic directive.
   - function policy_contract(config) (line 177) — Machine-readable readiness contract for UI, reports and future tuning.
   - function _bar_values(bar, include_close_volume) (line 197)
-  - function _hold(state, reason) (line 211)
-  - function _exit(state, reason, timing) (line 215)
+  - function _hold(state, reason) (line 215)
+  - function _exit(state, reason, timing) (line 219)
 
 
 [server/backend/universal_research.py]
-Classification: Backend service or research engine. Source size: 161 lines.
+Classification: Backend service or research engine. Source size: 163 lines.
 
 This adapter joins shared targets, the cash/shares ledger and alpha statistics into a Quant-
 compatible report. It enforces evaluation warmup, keeps data/config/source fingerprints and
@@ -3812,6 +4095,55 @@ Public code inventory:
   - function _seed_index() (line 140) [decorators: lru_cache(maxsize=1)] — Load the optional large seed only when a signed-in lookup requests it.
   - function seed_symbol_lookup(symbol) (line 154) — Return a bounded, source-attributed family view for a seed symbol.
   - function _ancestor_ids(family_id, catalog) (line 167)
+
+
+[server/backend/universal_yearly_protocol.py]
+Classification: Backend service or research engine. Source size: 181 lines.
+
+This supporting file belongs to the backend service or research engine layer. Its role is
+bounded by the adjacent source and configuration files; a change should be evaluated in the
+workflow that actually consumes it rather than judged from the file in isolation.
+
+Module statement: Seeded, availability-gated nonconsecutive calendar-year research trials.
+This is deliberately a *study protocol*, not a replacement alpha gate. It prevents a year from
+being chosen just because it was favorable: every drawn year must have a complete SPY/QQQ
+benchmark, a complete
+
+Imports: .minerva_corporate, .universal_engine, .universal_market_context,
+.universal_research, __future__, dataclasses, numpy, pandas, typing
+
+Public code inventory:
+  - class SeededYearProtocol (line 27)
+  - function SeededYearProtocol.__post_init__(self) (line 36)
+  - function _complete_calendar(index, year, minimum_sessions) (line 46)
+  - function _complete_symbols(histories, required_dates) (line 51)
+  - function eligible_years(histories, benchmark, risk_free, protocol) (line 65) — Return every objectively usable year, including unfavorable years. The benchmark calendar is the master calendar. This is important: an absent QQQ or cash observation makes a year unavailable rather than being silently filled, while each security must survive the full warmup + ye
+  - function select_seeded_years(rows, protocol) (line 92) — Select a fixed, reproducible, nonconsecutive subset without looking at returns.
+  - function _trial_symbols(symbols, year, protocol) (line 108) — Bound runtime with a seed-derived subset, never a performance-derived one.
+  - function run_seeded_yearly_trials(histories, config, benchmark, risk_free, protocol, market_closes, corporate_facts, declared_years) (line 116) — Run fixed-config cash-reset trials. Results are descriptive and research-only.
+
+
+[server/backend/universe_selection.py]
+Classification: Backend service or research engine. Source size: 158 lines.
+
+This supporting file belongs to the backend service or research engine layer. Its role is
+bounded by the adjacent source and configuration files; a change should be evaluated in the
+workflow that actually consumes it rather than judged from the file in isolation.
+
+Module statement: Point-in-time coarse-to-fine universe selection for research. This is
+deliberately a data-contract layer. It resembles the useful part of LEAN's two-stage universe
+selection, but it does not subscribe to securities, place orders, or silently turn a current
+constituent list into h
+
+Imports: __future__, dataclasses, datetime, hashlib, json, math, typing
+
+Public code inventory:
+  - class UniverseSelectionConfig (line 18) — Explicit, bounded eligibility rules for a single decision date.
+  - function UniverseSelectionConfig.__post_init__(self) (line 31)
+  - function select_universe(records, decision_date, config) (line 47) — Select an auditable universe using only records public by *decision_date*. Required coarse fields are ``symbol``, ``as_of_date``, ``available_at``, ``asset_type``, ``country``, ``price`` and ``dollar_volume``. Fine rules only inspect a market-cap observation when a configured cap
+  - function _coarse_rejection(row, decision, config) (line 107)
+  - function _fine_rejection(row, decision, config) (line 131)
+  - function _as_date(value, name) (line 151)
 
 
 [server/backend/v8_engine.py]
@@ -3936,6 +4268,24 @@ Classification: Server configuration or operator asset. Source size: 55,291,989 
 This 55,291,989-byte binary file provides a version-controlled binary asset. It has no
 executable source to inventory, but its exact path and dimensions are part of the relevant
 HTML, Flutter, iOS asset-catalog, or branding contract.
+
+
+[server/examples/minerva_v1_baseline.json]
+Classification: Server configuration or operator asset. Source size: 24 lines.
+
+Its top-level configuration keys are alpha_model, research_profile, ridge_training_sessions,
+ridge_retrain_sessions, ridge_horizon_sessions, ridge_penalty, ridge_score_smoothing,
+ridge_residual_momentum_21, ridge_residual_momentum_63, fundamental_quality_overlay_weight,
+fundamental_acceleration_overlay_weight, entry_threshold, vol_target, maximum_positions,
+rebalance, cost_bps, impact_bps, participation, and additional private helpers. These values
+are declarative inputs for the associated client, asset catalog, or shared configuration
+surface.
+
+Top-level object keys: alpha_model, research_profile, ridge_training_sessions,
+ridge_retrain_sessions, ridge_horizon_sessions, ridge_penalty, ridge_score_smoothing,
+ridge_residual_momentum_21, ridge_residual_momentum_63, fundamental_quality_overlay_weight,
+fundamental_acceleration_overlay_weight, entry_threshold, vol_target, maximum_positions,
+rebalance, cost_bps, impact_bps, participation, market_context, peer_shock, position_policy.
 
 
 [server/examples/quant_strategy_manifest.example.json]
@@ -4073,6 +4423,16 @@ legal wording should not be changed merely as interface copy.
 HTML identifiers: 0. Forms: 0. Tab hooks: 0.
 
 
+[server/frontend/legal/contact_canonical.html]
+Classification: Legal and policy surface. Source size: 2 lines.
+
+This contact_canonical document is a policy-facing page served by the product. Its statements
+must remain consistent with actual data, account, subscription, advertising, and research
+behavior; legal wording should not be changed merely as interface copy.
+
+HTML identifiers: 0. Forms: 0. Tab hooks: 0.
+
+
 [server/frontend/legal/methodology.html]
 Classification: Legal and policy surface. Source size: 16 lines.
 
@@ -4099,6 +4459,16 @@ Classification: Legal and policy surface. Source size: 2 lines.
 This methodology_canonical document is a policy-facing page served by the product. Its
 statements must remain consistent with actual data, account, subscription, advertising, and
 research behavior; legal wording should not be changed merely as interface copy.
+
+HTML identifiers: 0. Forms: 0. Tab hooks: 0.
+
+
+[server/frontend/legal/methodology_v1_1.html]
+Classification: Legal and policy surface. Source size: 2 lines.
+
+This methodology_v1_1 document is a policy-facing page served by the product. Its statements
+must remain consistent with actual data, account, subscription, advertising, and research
+behavior; legal wording should not be changed merely as interface copy.
 
 HTML identifiers: 0. Forms: 0. Tab hooks: 0.
 
@@ -4133,6 +4503,16 @@ behavior; legal wording should not be changed merely as interface copy.
 HTML identifiers: 0. Forms: 0. Tab hooks: 0.
 
 
+[server/frontend/legal/privacy_v1_1.html]
+Classification: Legal and policy surface. Source size: 2 lines.
+
+This privacy_v1_1 document is a policy-facing page served by the product. Its statements must
+remain consistent with actual data, account, subscription, advertising, and research behavior;
+legal wording should not be changed merely as interface copy.
+
+HTML identifiers: 0. Forms: 0. Tab hooks: 0.
+
+
 [server/frontend/legal/refund.html]
 Classification: Legal and policy surface. Source size: 12 lines.
 
@@ -4149,6 +4529,16 @@ Classification: Legal and policy surface. Source size: 2 lines.
 This refund_canonical document is a policy-facing page served by the product. Its statements
 must remain consistent with actual data, account, subscription, advertising, and research
 behavior; legal wording should not be changed merely as interface copy.
+
+HTML identifiers: 0. Forms: 0. Tab hooks: 0.
+
+
+[server/frontend/legal/refund_v1_1.html]
+Classification: Legal and policy surface. Source size: 2 lines.
+
+This refund_v1_1 document is a policy-facing page served by the product. Its statements must
+remain consistent with actual data, account, subscription, advertising, and research behavior;
+legal wording should not be changed merely as interface copy.
 
 HTML identifiers: 0. Forms: 0. Tab hooks: 0.
 
@@ -4176,6 +4566,16 @@ Representative IDs (first 80):
 Classification: Legal and policy surface. Source size: 2 lines.
 
 This risk disclaimer_canonical document is a policy-facing page served by the product. Its
+statements must remain consistent with actual data, account, subscription, advertising, and
+research behavior; legal wording should not be changed merely as interface copy.
+
+HTML identifiers: 0. Forms: 0. Tab hooks: 0.
+
+
+[server/frontend/legal/risk-disclaimer_v1_1.html]
+Classification: Legal and policy surface. Source size: 2 lines.
+
+This risk disclaimer_v1_1 document is a policy-facing page served by the product. Its
 statements must remain consistent with actual data, account, subscription, advertising, and
 research behavior; legal wording should not be changed merely as interface copy.
 
@@ -4210,6 +4610,16 @@ Classification: Legal and policy surface. Source size: 2 lines.
 This terms_canonical document is a policy-facing page served by the product. Its statements
 must remain consistent with actual data, account, subscription, advertising, and research
 behavior; legal wording should not be changed merely as interface copy.
+
+HTML identifiers: 0. Forms: 0. Tab hooks: 0.
+
+
+[server/frontend/legal/terms_v1_1.html]
+Classification: Legal and policy surface. Source size: 2 lines.
+
+This terms_v1_1 document is a policy-facing page served by the product. Its statements must
+remain consistent with actual data, account, subscription, advertising, and research behavior;
+legal wording should not be changed merely as interface copy.
 
 HTML identifiers: 0. Forms: 0. Tab hooks: 0.
 
@@ -4887,6 +5297,27 @@ Public code inventory:
   - function test_web_ads_require_explicit_enablement(monkeypatch) (line 18)
 
 
+[server/tests/test_alpha_context.py]
+Classification: Automated regression test. Source size: 130 lines.
+
+This supporting file belongs to the automated regression test layer. Its role is bounded by
+the adjacent source and configuration files; a change should be evaluated in the workflow that
+actually consumes it rather than judged from the file in isolation.
+
+Imports: backend.alpha_consistency, backend.portfolio_execution, backend.universal_engine,
+backend.universal_market_context, dataclasses, numpy, pandas, pytest
+
+Public code inventory:
+  - function fixture_returns(start, end) (line 13)
+  - function test_prior_month_beta_and_complete_months_are_required() (line 22)
+  - function test_negative_month_gate_is_residual_alpha_not_raw_return() (line 42)
+  - function test_weak_years_are_double_weighted_without_modifying_regressions() (line 52)
+  - function observations(dates) (line 68)
+  - function test_context_scales_once_uses_only_available_data_and_preserves_baseline() (line 75)
+  - function test_entry_gate_only_affects_next_open_and_release_allows_entries() (line 100)
+  - function test_study_market_observations_average_spy_qqq_and_do_not_use_future_bars() (line 115)
+
+
 [server/tests/test_analysis_access_policy.py]
 Classification: Automated regression test. Source size: 83 lines.
 
@@ -4929,6 +5360,19 @@ Public code inventory:
   - function AuthSecurityTests.test_scanner_accepts_only_the_shared_workspace_model_catalog(self) (line 116)
 
 
+[server/tests/test_build_sec_cik_manifest.py]
+Classification: Automated regression test. Source size: 13 lines.
+
+This supporting file belongs to the automated regression test layer. Its role is bounded by
+the adjacent source and configuration files; a change should be evaluated in the workflow that
+actually consumes it rather than judged from the file in isolation.
+
+Imports: json, pathlib, tools.build_sec_cik_manifest
+
+Public code inventory:
+  - function test_sec_cik_manifest_helpers_preserve_exact_identity_and_reject_duplicates(tmp_path) (line 7)
+
+
 [server/tests/test_corporate_quant_system.py]
 Classification: Automated regression test. Source size: 84 lines.
 
@@ -4944,6 +5388,21 @@ Public code inventory:
   - function CorporateQuantSystemTests.test_point_in_time_corporate_and_macro_records_do_not_arrive_early(self) (line 17)
   - function CorporateQuantSystemTests.test_regime_cost_and_full_system_outputs_are_structured(self) (line 36)
   - function CorporateQuantSystemTests.test_manifest_experiment_is_declarative_reproducible_and_recorded(self) (line 62)
+
+
+[server/tests/test_debug_access.py]
+Classification: Automated regression test. Source size: 60 lines.
+
+This supporting file belongs to the automated regression test layer. Its role is bounded by
+the adjacent source and configuration files; a change should be evaluated in the workflow that
+actually consumes it rather than judged from the file in isolation.
+
+Imports: backend.database, backend.main, fastapi.testclient
+
+Public code inventory:
+  - function _signup(client) (line 7)
+  - function test_owner_debug_requires_exact_peer_ip_and_never_rewrites_billing(monkeypatch, tmp_path) (line 16)
+  - function test_owner_debug_does_not_trust_spoofed_forwarded_ip(monkeypatch, tmp_path) (line 49)
 
 
 [server/tests/test_dev_tools_jobs.py]
@@ -4969,6 +5428,19 @@ Public code inventory:
   - class PatternLabFailureTests (line 95)
   - async function PatternLabFailureTests.test_empty_cache_fails_clearly_without_api(self) (line 96)
   - async function PatternLabFailureTests.test_empty_cache_fails_clearly_without_api.empty_history(_ticker, _period, _data_source) (line 97)
+
+
+[server/tests/test_fetch_sec_companyfacts.py]
+Classification: Automated regression test. Source size: 16 lines.
+
+This supporting file belongs to the automated regression test layer. Its role is bounded by
+the adjacent source and configuration files; a change should be evaluated in the workflow that
+actually consumes it rather than judged from the file in isolation.
+
+Imports: pathlib, pytest, tools.fetch_sec_companyfacts
+
+Public code inventory:
+  - function test_declared_cik_mapping_requires_unique_valid_ticker_cik_rows(tmp_path) (line 8)
 
 
 [server/tests/test_intelligence_route.py]
@@ -5046,6 +5518,32 @@ Public code inventory:
   - function MarketRepositoryTests.test_cache_only_never_calls_provider(self) (line 162)
 
 
+[server/tests/test_minerva_corporate.py]
+Classification: Automated regression test. Source size: 18 lines.
+
+This supporting file belongs to the automated regression test layer. Its role is bounded by
+the adjacent source and configuration files; a change should be evaluated in the workflow that
+actually consumes it rather than judged from the file in isolation.
+
+Imports: backend.minerva_corporate, pandas
+
+Public code inventory:
+  - function test_quality_panel_uses_only_available_facts_and_retains_an_observed_mask() (line 6)
+
+
+[server/tests/test_normalize_sec_companyfacts_batch.py]
+Classification: Automated regression test. Source size: 15 lines.
+
+This supporting file belongs to the automated regression test layer. Its role is bounded by
+the adjacent source and configuration files; a change should be evaluated in the workflow that
+actually consumes it rather than judged from the file in isolation.
+
+Imports: csv, json, pathlib, tools.normalize_sec_companyfacts_batch
+
+Public code inventory:
+  - function test_batch_mapping_reads_declared_unique_ticker_cik_rows(tmp_path) (line 8)
+
+
 [server/tests/test_paper_trade_routes.py]
 Classification: Automated regression test. Source size: 14 lines.
 
@@ -5073,6 +5571,22 @@ Public code inventory:
   - function PatternLabNextTests.test_candidate_indexes_do_not_overlap_holding_windows(self) (line 11)
   - function PatternLabNextTests.test_walk_forward_selects_threshold_on_prior_dates(self) (line 24)
   - function PatternLabNextTests.test_cluster_bootstrap_returns_intervals(self) (line 36)
+
+
+[server/tests/test_portfolio_lab.py]
+Classification: Automated regression test. Source size: 68 lines.
+
+This supporting file belongs to the automated regression test layer. Its role is bounded by
+the adjacent source and configuration files; a change should be evaluated in the workflow that
+actually consumes it rather than judged from the file in isolation.
+
+Imports: __future__, backend.database, backend.main, backend.routes, datetime,
+fastapi.testclient
+
+Public code inventory:
+  - function _bars() (line 12)
+  - function test_portfolio_lab_is_internal_only_and_never_unlocked_by_a_subscription(monkeypatch, tmp_path) (line 22)
+  - function test_portfolio_lab_requires_server_provisioned_internal_operator(monkeypatch, tmp_path) (line 47)
 
 
 [server/tests/test_provider_credentials.py]
@@ -5202,8 +5716,24 @@ Public code inventory:
   - function ScannerResultRenderingTests.test_optional_result_widgets_are_guarded(self) (line 11)
 
 
+[server/tests/test_sec_companyfacts.py]
+Classification: Automated regression test. Source size: 64 lines.
+
+This supporting file belongs to the automated regression test layer. Its role is bounded by
+the adjacent source and configuration files; a change should be evaluated in the workflow that
+actually consumes it rather than judged from the file in isolation.
+
+Imports: backend.sec_companyfacts, pandas, pytest
+
+Public code inventory:
+  - function _fact(start, end, filed, value, tag, form) (line 7)
+  - function test_companyfacts_normalization_uses_first_filing_and_next_session_availability() (line 11)
+  - function test_companyfacts_normalization_refuses_annual_and_incomplete_payloads() (line 44)
+  - function test_companyfacts_normalization_keeps_zero_revenue_growth_but_not_undefined_margin() (line 51)
+
+
 [server/tests/test_universal_engine.py]
-Classification: Automated regression test. Source size: 695 lines.
+Classification: Automated regression test. Source size: 787 lines.
 
 This supporting file belongs to the automated regression test layer. Its role is bounded by
 the adjacent source and configuration files; a change should be evaluated in the workflow that
@@ -5228,46 +5758,88 @@ Public code inventory:
   - function test_minerva_baseline_is_frozen_price_only_and_not_release_approved() (line 134)
   - function test_minerva_residual_momentum_uses_only_completed_benchmark_history() (line 146)
   - function test_minerva_score_persistence_is_causal_and_explicitly_tunable() (line 163)
-  - function test_minerva_beta_ceiling_requires_completed_benchmark_and_only_scales_down() (line 179)
-  - function test_walk_forward_ridge_never_trains_on_future_bars_or_runs_as_a_single_stock_scanner() (line 194)
-  - function test_portfolio_targets_can_reuse_an_exact_causal_panel_without_changing_targets() (line 212)
-  - function test_peer_shock_reduces_only_confirmed_correlated_peer_exposure() (line 227)
-  - function test_scanner_uses_same_engine_and_full_warmup() (line 241)
-  - function test_risk_constraints_and_column_order_invariance() (line 249)
-  - function test_relative_rank_selection_is_causal_and_keeps_an_absolute_weakness_floor() (line 262)
-  - function test_annual_volatility_cap_excludes_high_volatility_names_without_changing_default() (line 282)
-  - function test_book_no_free_daily_rebalancing_and_cash_conservation() (line 297)
-  - function test_participation_and_missing_volume_are_enforced() (line 312)
-  - function test_episodes_charge_both_sides_and_do_not_count_open_positions() (line 326)
-  - function test_alpha_recovers_known_excess_intercept_and_gate_counts_exact_years() (line 340)
-  - function test_alpha_hac_matches_statsmodels_when_available() (line 355)
-  - function test_report_fingerprint_covers_volume_and_benchmark() (line 368)
-  - function test_stops_return_results_and_gap_at_open_is_not_idealized() (line 377)
-  - function test_upload_contract_evaluates_shared_engine() (line 385)
-  - function test_invalid_config_and_missing_price_fail_loudly() (line 396)
-  - function test_entry_does_not_earn_the_pre_entry_overnight_gap() (line 407)
-  - function test_report_rejects_insufficient_history_after_end_cutoff() (line 418)
-  - function test_summary_keeps_both_endpoints_and_initial_loss() (line 423)
-  - function test_eleven_years_cannot_pass_and_missing_win_rate_cannot_pass() (line 435)
-  - function test_http_uploads_require_auth_record_derived_results_and_share_config(monkeypatch, tmp_path) (line 447)
-  - function test_universal_routes_not_mounted_on_default_public_app() (line 477)
-  - function test_pattern_lab_delivers_full_history_to_universal(monkeypatch, tmp_path) (line 482)
-  - async function test_pattern_lab_delivers_full_history_to_universal.load(*args) (line 489)
-  - function test_pattern_lab_delivers_full_history_to_universal.detect(indicators, frame, **kwargs) (line 494)
-  - function test_quant_adapter_keeps_universal_configuration_and_skips_unused_macro(monkeypatch) (line 503)
-  - function test_quant_adapter_keeps_universal_configuration_and_skips_unused_macro.fail() (line 507)
-  - function test_fully_invested_zero_cost_book_tolerates_roundoff() (line 518)
-  - function test_position_policy_is_disabled_by_default_and_never_widens_a_stop() (line 527)
-  - function test_position_policy_respects_daily_bar_timing_and_spike_rules() (line 537)
-  - function test_position_policy_calendar_exit_is_completed_data_only_and_tunable() (line 549)
-  - function test_enabled_position_policy_executes_in_the_v2_cash_ledger() (line 570)
-  - function test_position_policy_rejects_bad_bars_and_blueprint_is_explicit_about_data_needs() (line 590)
-  - function test_blueprint_route_requires_auth_and_does_not_claim_live_activation(monkeypatch, tmp_path) (line 600)
-  - function test_upload_contract_accepts_explicit_disabled_or_research_policy_config() (line 625)
-  - function test_market_context_requires_confirming_stress_and_stays_disabled_by_default() (line 639)
-  - function test_multi_family_taxonomy_is_valid_and_does_not_double_count_parent_child_branches() (line 657)
-  - function test_taxonomy_builder_requires_and_writes_a_complete_dated_snapshot(tmp_path) (line 671)
-  - function test_taxonomy_builder_can_make_an_automatic_financedatabase_seed(tmp_path) (line 683)
+  - function test_minerva_economic_interactions_are_causal_and_opt_in() (line 179)
+  - function test_tba1_ohlcv_structure_candidate_is_causal_and_requires_real_daily_extremes() (line 193)
+  - function test_tba3_market_residual_target_requires_completed_market_history_and_is_causal() (line 212)
+  - function test_tba4_completed_ic_gate_uses_only_finished_labels() (line 229)
+  - function test_tba5_residual_momentum_is_the_existing_completed_market_feature_pair() (line 245)
+  - function test_tba6_enables_the_existing_causal_lifecycle_without_retuning_it() (line 252)
+  - function test_minerva_beta_ceiling_requires_completed_benchmark_and_only_scales_down() (line 259)
+  - function test_walk_forward_ridge_never_trains_on_future_bars_or_runs_as_a_single_stock_scanner() (line 274)
+  - function test_portfolio_targets_can_reuse_an_exact_causal_panel_without_changing_targets() (line 292)
+  - function test_peer_shock_reduces_only_confirmed_correlated_peer_exposure() (line 307)
+  - function test_scanner_uses_same_engine_and_full_warmup() (line 321)
+  - function test_risk_constraints_and_column_order_invariance() (line 329)
+  - function test_relative_rank_selection_is_causal_and_keeps_an_absolute_weakness_floor() (line 342)
+  - function test_annual_volatility_cap_excludes_high_volatility_names_without_changing_default() (line 362)
+  - function test_book_no_free_daily_rebalancing_and_cash_conservation() (line 377)
+  - function test_participation_and_missing_volume_are_enforced() (line 392)
+  - function test_episodes_charge_both_sides_and_do_not_count_open_positions() (line 406)
+  - function test_alpha_recovers_known_excess_intercept_and_gate_counts_exact_years() (line 420)
+  - function test_alpha_hac_matches_statsmodels_when_available() (line 435)
+  - function test_report_fingerprint_covers_volume_and_benchmark() (line 448)
+  - function test_stops_return_results_and_gap_at_open_is_not_idealized() (line 457)
+  - function test_upload_contract_evaluates_shared_engine() (line 465)
+  - function test_invalid_config_and_missing_price_fail_loudly() (line 476)
+  - function test_entry_does_not_earn_the_pre_entry_overnight_gap() (line 487)
+  - function test_report_rejects_insufficient_history_after_end_cutoff() (line 498)
+  - function test_summary_keeps_both_endpoints_and_initial_loss() (line 503)
+  - function test_eleven_years_cannot_pass_and_missing_win_rate_cannot_pass() (line 515)
+  - function test_http_uploads_require_auth_record_derived_results_and_share_config(monkeypatch, tmp_path) (line 527)
+  - function test_universal_routes_not_mounted_on_default_public_app() (line 557)
+  - function test_pattern_lab_delivers_full_history_to_universal(monkeypatch, tmp_path) (line 562)
+  - async function test_pattern_lab_delivers_full_history_to_universal.load(*args) (line 569)
+  - function test_pattern_lab_delivers_full_history_to_universal.detect(indicators, frame, **kwargs) (line 574)
+  - function test_quant_adapter_keeps_universal_configuration_and_skips_unused_macro(monkeypatch) (line 583)
+  - function test_quant_adapter_keeps_universal_configuration_and_skips_unused_macro.fail() (line 587)
+  - function test_fully_invested_zero_cost_book_tolerates_roundoff() (line 598)
+  - function test_position_policy_is_disabled_by_default_and_never_widens_a_stop() (line 607)
+  - function test_position_policy_respects_daily_bar_timing_and_spike_rules() (line 617)
+  - function test_position_policy_calendar_exit_is_completed_data_only_and_tunable() (line 629)
+  - function test_enabled_position_policy_executes_in_the_v2_cash_ledger() (line 650)
+  - function test_position_policy_rejects_bad_bars_and_blueprint_is_explicit_about_data_needs() (line 670)
+  - function test_position_policy_accepts_provider_roundoff_at_daily_extremes() (line 680)
+  - function test_blueprint_route_requires_auth_and_does_not_claim_live_activation(monkeypatch, tmp_path) (line 692)
+  - function test_upload_contract_accepts_explicit_disabled_or_research_policy_config() (line 717)
+  - function test_market_context_requires_confirming_stress_and_stays_disabled_by_default() (line 731)
+  - function test_multi_family_taxonomy_is_valid_and_does_not_double_count_parent_child_branches() (line 749)
+  - function test_taxonomy_builder_requires_and_writes_a_complete_dated_snapshot(tmp_path) (line 763)
+  - function test_taxonomy_builder_can_make_an_automatic_financedatabase_seed(tmp_path) (line 775)
+
+
+[server/tests/test_universal_yearly_protocol.py]
+Classification: Automated regression test. Source size: 91 lines.
+
+This supporting file belongs to the automated regression test layer. Its role is bounded by
+the adjacent source and configuration files; a change should be evaluated in the workflow that
+actually consumes it rather than judged from the file in isolation.
+
+Imports: backend.universal_engine, backend.universal_market_context,
+backend.universal_yearly_protocol, json, numpy, pandas, pytest
+
+Public code inventory:
+  - function _histories() (line 11)
+  - function test_seeded_protocol_requires_complete_availability_and_selects_reproducibly() (line 18)
+  - function test_seeded_protocol_refuses_to_relax_spacing_or_missing_cash() (line 35)
+  - function test_annual_trials_return_one_cash_funded_observation_per_selected_year() (line 50)
+  - function test_annual_trials_require_explicit_market_closes_when_market_context_is_enabled() (line 68)
+  - function test_declared_chunk_still_requires_an_eligible_year() (line 79)
+
+
+[server/tests/test_universe_selection.py]
+Classification: Automated regression test. Source size: 49 lines.
+
+This supporting file belongs to the automated regression test layer. Its role is bounded by
+the adjacent source and configuration files; a change should be evaluated in the workflow that
+actually consumes it rather than judged from the file in isolation.
+
+Imports: backend.universe_selection, pytest
+
+Public code inventory:
+  - function row(symbol, **overrides) (line 6)
+  - function test_coarse_then_fine_selection_is_deterministic_and_auditable() (line 17)
+  - function test_fine_fundamental_and_cap_rules_refuse_late_or_missing_data() (line 28)
+  - function test_invalid_config_and_late_snapshot_are_rejected() (line 43)
 
 
 [server/tests/test_v8_engine.py]
@@ -5328,6 +5900,22 @@ No classes or functions were found at module scope. The file is likely declarati
 configuration, package initialization, or command glue.
 
 
+[server/tools/audit_tba2_negative_drivers.py]
+Classification: Operator or research utility. Source size: 48 lines.
+
+This supporting file belongs to the operator or research utility layer. Its role is bounded by
+the adjacent source and configuration files; a change should be evaluated in the workflow that
+actually consumes it rather than judged from the file in isolation.
+
+Module statement: Evidence-led TBA 2 loss audit; flags code choices without overstating
+causality.
+
+Imports: __future__, argparse, json, pathlib
+
+Public code inventory:
+  - function main() (line 10)
+
+
 [server/tools/audit_v7_bias.py]
 Classification: Operator or research utility. Source size: 244 lines.
 
@@ -5348,6 +5936,25 @@ Public code inventory:
   - function _ticker_concentration(rows) (line 129)
   - function run_audit(horizon, max_tests, seed, sample_per_group) (line 141)
   - function main() (line 218)
+
+
+[server/tools/build_sec_cik_manifest.py]
+Classification: Operator or research utility. Source size: 66 lines.
+
+This supporting file belongs to the operator or research utility layer. Its role is bounded by
+the adjacent source and configuration files; a change should be evaluated in the workflow that
+actually consumes it rather than judged from the file in isolation.
+
+Module statement: Build a declared ticker/CIK manifest from a saved SEC ticker snapshot. Exact
+ticker matching is intentional. A missing or renamed historical symbol is evidence that a
+point-in-time identity resolver is needed, not permission to guess a successor CIK.
+
+Imports: __future__, argparse, csv, json, pathlib
+
+Public code inventory:
+  - function _symbols(path) (line 16)
+  - function _index(payload) (line 23)
+  - function main() (line 39)
 
 
 [server/tools/build_universal_taxonomy.py]
@@ -5406,6 +6013,25 @@ Imports: __future__, pathlib, sys, tools.cache_guard
 
 No classes or functions were found at module scope. The file is likely declarative
 configuration, package initialization, or command glue.
+
+
+[server/tools/fetch_sec_companyfacts.py]
+Classification: Operator or research utility. Source size: 90 lines.
+
+This supporting file belongs to the operator or research utility layer. Its role is bounded by
+the adjacent source and configuration files; a change should be evaluated in the workflow that
+actually consumes it rather than judged from the file in isolation.
+
+Module statement: Fetch a declared CIK manifest from the SEC Company Facts API politely. The
+tool does not infer tickers, overwrite data, or import facts into Oryntra. It leaves a raw,
+source-addressable acquisition manifest for the separate normalizer and CorporateRepository
+import step.
+
+Imports: __future__, argparse, csv, hashlib, json, pathlib, time, urllib.error, urllib.request
+
+Public code inventory:
+  - function _read_mapping(path) (line 23)
+  - function main() (line 41)
 
 
 [server/tools/generate_master_docs.py]
@@ -5478,6 +6104,38 @@ Public code inventory:
   - function main() (line 60)
 
 
+[server/tools/normalize_sec_companyfacts.py]
+Classification: Operator or research utility. Source size: 32 lines.
+
+This supporting file belongs to the operator or research utility layer. Its role is bounded by
+the adjacent source and configuration files; a change should be evaluated in the workflow that
+actually consumes it rather than judged from the file in isolation.
+
+Module statement: Normalize one downloaded SEC Company Facts JSON file for
+CorporateRepository.
+
+Imports: __future__, argparse, backend.sec_companyfacts, json, pathlib, sys
+
+Public code inventory:
+  - function main() (line 14)
+
+
+[server/tools/normalize_sec_companyfacts_batch.py]
+Classification: Operator or research utility. Source size: 50 lines.
+
+This supporting file belongs to the operator or research utility layer. Its role is bounded by
+the adjacent source and configuration files; a change should be evaluated in the workflow that
+actually consumes it rather than judged from the file in isolation.
+
+Module statement: Normalize a declared SEC Company Facts acquisition directory in one pass.
+
+Imports: __future__, argparse, backend.sec_companyfacts, csv, hashlib, json, pathlib, sys
+
+Public code inventory:
+  - function _mapping(path) (line 16)
+  - function main() (line 24)
+
+
 [server/tools/run_backtest_cli.py]
 Classification: Operator or research utility. Source size: 119 lines.
 
@@ -5529,6 +6187,63 @@ Public code inventory:
   - function main() (line 19)
 
 
+[server/tools/run_seeded_yearly_universal_study.py]
+Classification: Operator or research utility. Source size: 80 lines.
+
+This supporting file belongs to the operator or research utility layer. Its role is bounded by
+the adjacent source and configuration files; a change should be evaluated in the workflow that
+actually consumes it rather than judged from the file in isolation.
+
+Module statement: Run fixed-config, seeded nonconsecutive annual Universal V2 trials. The
+input must include daily OHLCV for stocks plus SPY and QQQ. It is kept separate from tuning:
+this command never searches configurations after it draws years.
+
+Imports: __future__, argparse, backend.universal_engine, backend.universal_yearly_protocol,
+json, pandas, pathlib, sys
+
+Public code inventory:
+  - function main() (line 22)
+
+
+[server/tools/run_tba2_risk_ablation.py]
+Classification: Operator or research utility. Source size: 85 lines.
+
+This supporting file belongs to the operator or research utility layer. Its role is bounded by
+the adjacent source and configuration files; a change should be evaluated in the workflow that
+actually consumes it rather than judged from the file in isolation.
+
+Module statement: Hold cached Qlib scores fixed and measure TBA 1 risk-layer impact.
+
+Imports: __future__, backend.alpha_evaluation, backend.minerva, backend.portfolio_execution,
+backend.universal_engine, json, numpy, pandas, pathlib
+
+Public code inventory:
+  - function risk_targets(predicted, histories, benchmark, config) (line 20)
+  - function native_topk_targets(predicted, dates, symbols) (line 32)
+  - function main() (line 47)
+
+
+[server/tools/run_tba2_risk_component_ablation.py]
+Classification: Operator or research utility. Source size: 132 lines.
+
+This supporting file belongs to the operator or research utility layer. Its role is bounded by
+the adjacent source and configuration files; a change should be evaluated in the workflow that
+actually consumes it rather than judged from the file in isolation.
+
+Module statement: Measure individual portfolio-risk controls on fixed Qlib prediction files.
+This is a research diagnostic, not an optimizer. It never trains a model and it changes
+precisely one construction control per variant. Re-run it only after all score files are
+generated from a fixed model
+
+Imports: __future__, argparse, backend.alpha_evaluation, backend.minerva,
+backend.portfolio_execution, backend.universal_engine, dataclasses, json, numpy, pandas,
+pathlib, sys
+
+Public code inventory:
+  - function targets(predicted, histories, benchmark, config, equal_weight) (line 30)
+  - function main() (line 50)
+
+
 [server/tools/run_universal_study.py]
 Classification: Operator or research utility. Source size: 149 lines.
 
@@ -5562,6 +6277,38 @@ Imports: argparse, backend.database, backend.routes.auth, os, pathlib, sys
 
 Public code inventory:
   - function main() (line 13)
+
+
+[server/tools/summarize_tba2_component_ablations.py]
+Classification: Operator or research utility. Source size: 48 lines.
+
+This supporting file belongs to the operator or research utility layer. Its role is bounded by
+the adjacent source and configuration files; a change should be evaluated in the workflow that
+actually consumes it rather than judged from the file in isolation.
+
+Module statement: Combine resumable one-year TBA2 risk-ablation outputs without re-running
+them.
+
+Imports: __future__, argparse, json, numpy, pathlib
+
+Public code inventory:
+  - function main() (line 12)
+
+
+[server/tools/summarize_three_way_holdout.py]
+Classification: Operator or research utility. Source size: 71 lines.
+
+This supporting file belongs to the operator or research utility layer. Its role is bounded by
+the adjacent source and configuration files; a change should be evaluated in the workflow that
+actually consumes it rather than judged from the file in isolation.
+
+Module statement: Summarize the fixed Minerva / TBA 1 / TBA 2 research holdout fairly.
+
+Imports: __future__, argparse, json, pathlib, statistics
+
+Public code inventory:
+  - function _stats(values) (line 11)
+  - function main() (line 24)
 
 
 [server/tools/train_vai2_cli.py]
