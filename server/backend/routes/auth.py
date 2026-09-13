@@ -262,6 +262,26 @@ def _active_subscription_for(conn, user_id: int) -> Optional[dict]:
             "provider": "owner_debug",
             "started_at": override["updated_at"],
         }
+    email_row = conn.execute("SELECT email FROM users WHERE id=?", (user_id,)).fetchone()
+    if email_row:
+        from .cqc_entitlements import active_products_for_email
+        products, expires_at = active_products_for_email(conn, email_row["email"])
+        if "cqc_max" in products:
+            return {
+                "plan_code": "cqc_max",
+                "plan_name": "CQC Max",
+                "status": "ACTIVE",
+                "provider": "cqc_entitlement",
+                "current_period_end": expires_at,
+            }
+        if "oryntra_pro" in products:
+            return {
+                "plan_code": "pro",
+                "plan_name": "Oryntra Pro",
+                "status": "ACTIVE",
+                "provider": "cqc_entitlement",
+                "current_period_end": expires_at,
+            }
     row = conn.execute(
         """
         SELECT * FROM subscriptions
