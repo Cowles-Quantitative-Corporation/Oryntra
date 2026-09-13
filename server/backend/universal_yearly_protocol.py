@@ -167,9 +167,20 @@ def run_seeded_yearly_trials(histories: dict[str, pd.DataFrame], config: Univers
         annual = [entry for entry in report["alpha"].get("annual", []) if entry.get("complete") and entry.get("status") == "available"]
         if len(annual) != 1:
             raise ValueError(f"Year {year} did not produce one complete annual alpha observation")
+        daily_returns = pd.Series(
+            {pd.Timestamp(entry["date"]): float(entry["net_return"]) for entry in report["daily_returns"]},
+            dtype=float,
+        ).reindex(annual_dates)
+        excess_returns = daily_returns - risk_free.reindex(annual_dates)
+        excess_volatility = float(excess_returns.std(ddof=0))
+        excess_sharpe = (
+            float(np.sqrt(252) * excess_returns.mean() / excess_volatility)
+            if excess_volatility > 1e-12 else None
+        )
         trials.append({"year": year, "symbols": symbols, "symbol_selection_seed": protocol.seed + year,
                        "symbol_count": len(symbols), "eligible_symbol_count": row["eligible_symbols"], "alpha": annual[0],
-                       "performance": report["results"][0], "execution": report["execution"],
+                       "performance": report["results"][0], "excess_return_sharpe": excess_sharpe,
+                       "execution": report["execution"],
                        "position_policy_events": report["position_policy_execution"]["event_count"],
                        "dataset_fingerprint": report["dataset_fingerprint"]})
     alphas = [trial["alpha"]["alpha_pct"] for trial in trials]

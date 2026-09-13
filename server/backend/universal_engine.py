@@ -12,6 +12,7 @@ from .universal_position_policy import PositionPolicyConfig
 from .universal_market_context import MarketContextConfig
 from .universal_peer_shock import PeerShockConfig
 from .universal_learning import walk_forward_ridge_scores
+from .universal_risk_supervisor import RiskSupervisorConfig, supervise_cross_sectional_weights
 
 
 ENGINE_ID = "universal_v2"
@@ -66,16 +67,17 @@ class UniversalConfig:
     position_policy: PositionPolicyConfig = PositionPolicyConfig()
     market_context: MarketContextConfig = MarketContextConfig()
     peer_shock: PeerShockConfig = PeerShockConfig()
+    risk_supervisor: RiskSupervisorConfig = RiskSupervisorConfig()
 
     def __post_init__(self):
-        for name, cls in (("position_policy", PositionPolicyConfig), ("market_context", MarketContextConfig), ("peer_shock", PeerShockConfig)):
+        for name, cls in (("position_policy", PositionPolicyConfig), ("market_context", MarketContextConfig), ("peer_shock", PeerShockConfig), ("risk_supervisor", RiskSupervisorConfig)):
             value = getattr(self, name)
             if isinstance(value, dict):
                 object.__setattr__(self, name, cls(**value))
             elif not isinstance(value, cls):
                 raise ValueError(f"{name} must be a validated configuration")
         for key, value in asdict(self).items():
-            if key not in {"rebalance", "selection_mode", "alpha_model", "research_profile", "maximum_asset_annual_volatility", "maximum_portfolio_market_beta", "position_policy", "market_context", "peer_shock"} and not np.isfinite(value):
+            if key not in {"rebalance", "selection_mode", "alpha_model", "research_profile", "maximum_asset_annual_volatility", "maximum_portfolio_market_beta", "position_policy", "market_context", "peer_shock", "risk_supervisor"} and not np.isfinite(value):
                 raise ValueError(f"{key} must be finite")
         weights = self.weights
         if min(weights) < 0 or not np.isclose(sum(weights), 1):
@@ -378,6 +380,7 @@ def portfolio_targets(prices: pd.DataFrame, config: UniversalConfig = UniversalC
         covariance = (1 - config.covariance_shrinkage) * covariance + config.covariance_shrinkage * diagonal
         marginal = np.sqrt(np.maximum(np.diag(covariance), 0))
         stressed = (1 - config.correlation_stress) * covariance + config.correlation_stress * np.outer(marginal, marginal)
+        weights, _ = supervise_cross_sectional_weights(weights, stressed, config.risk_supervisor)
         risk = float(np.sqrt(max(0, weights @ stressed @ weights) * 252))
         result.iloc[i] = weights * min(1.0, config.vol_target / max(risk, 1e-12))
     return result

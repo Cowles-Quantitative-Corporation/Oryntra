@@ -12,6 +12,7 @@ from .universal_position_policy import (
     evaluate_precommitted_daily_bar,
     open_position,
 )
+from .universal_risk_supervisor import dynamic_exposure_scale
 
 
 def simulate_book(histories: dict[str, pd.DataFrame], targets: pd.DataFrame,
@@ -62,6 +63,8 @@ def simulate_book(histories: dict[str, pd.DataFrame], targets: pd.DataFrame,
     policy_states: dict[str, PositionState] = {}
     pending: dict[str, PositionDirective] = {}
     policy_events = []
+    risk_supervisor_audit = []
+    applied_risk_scale = 1.0
     held_rows = []
     skipped_notional = 0.0
     calendar_rsi = None
@@ -123,9 +126,19 @@ def simulate_book(histories: dict[str, pd.DataFrame], targets: pd.DataFrame,
         previous_nav = nav
         cash *= 1 + float(rf.iloc[i])
         start_equity = cash + shares @ opening[i]
-        desired = values[i - 1] if i else np.zeros(len(names))
+        raw_risk_scale, risk_observation = dynamic_exposure_scale(net, equity, config.vol_target, config.risk_supervisor)
+        risk_scale = raw_risk_scale
+        if (config.risk_supervisor.enabled and config.risk_supervisor.gradual_recovery_enabled
+                and raw_risk_scale > applied_risk_scale):
+            risk_scale = min(raw_risk_scale, applied_risk_scale + config.risk_supervisor.maximum_daily_recovery_step)
+        risk_observation = {**risk_observation, "unconstrained_scale": raw_risk_scale, "scale": risk_scale}
+        desired = values[i - 1] * risk_scale if i else np.zeros(len(names))
         # Only a changed signal target initiates a rebalance. Shares otherwise drift.
-        rebalance = i > 0 and (i == 1 or not np.array_equal(values[i - 1], values[i - 2]) or gates.iloc[i - 1] != gates.iloc[i - 2])
+        risk_scale_changed = abs(risk_scale - applied_risk_scale) >= config.risk_supervisor.scale_rebalance_step
+        rebalance = i > 0 and (i == 1 or not np.array_equal(values[i - 1], values[i - 2]) or gates.iloc[i - 1] != gates.iloc[i - 2] or risk_scale_changed)
+        risk_supervisor_audit.append({"date": str(day.date()), **risk_observation})
+        if rebalance:
+            applied_risk_scale = risk_scale
         day_cost = day_turnover = 0.0
         policy_block_buy = np.zeros(len(names), dtype=bool)
         if policy_enabled and i:
@@ -232,6 +245,7 @@ def simulate_book(histories: dict[str, pd.DataFrame], targets: pd.DataFrame,
             "cash": cash, "unfilled_notional": skipped_notional,
             "win_rate_pct": 100 * sum(row["winner"] for row in closed) / len(closed) if closed else None,
             "position_policy_events": policy_events,
+            "risk_supervisor_audit": risk_supervisor_audit,
             "position_policy_open_states": [{"symbol": symbol, "held_sessions": state.held_sessions,
                                                "current_stop": state.current_stop, "first_take_profit_taken": state.first_take_profit_taken}
                                               for symbol, state in policy_states.items()]}

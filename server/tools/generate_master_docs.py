@@ -28,17 +28,17 @@ OUTPUT = ROOT / "docs" / "Oryntra_AI_Master_Technical_Documentation.txt"
 REVIEWED_ADDITIONS = (
     "server/backend/universal_engine.py", "server/backend/portfolio_execution.py",
     "server/backend/alpha_evaluation.py", "server/backend/universal_research.py",
-    "server/backend/universal_position_policy.py", "server/backend/universal_market_context.py", "server/backend/universal_taxonomy.py", "server/backend/universal_research_blueprint.py",
+    "server/backend/universal_position_policy.py", "server/backend/universal_risk_supervisor.py", "server/backend/universal_market_context.py", "server/backend/universal_taxonomy.py", "server/backend/universal_research_blueprint.py",
     "server/backend/routes/universal.py", "server/tools/run_universal_study.py",
     "server/tools/build_universal_taxonomy.py", "server/data/universal_taxonomy/family_catalog.json",
     "server/data/universal_taxonomy/financedatabase_seed_25000.json",
-    "server/tests/test_universal_engine.py", "server/examples/universal_study_manifest.json",
+    "server/tests/test_universal_engine.py", "server/tests/test_universal_risk_supervisor.py", "server/tools/build_tba_paired_panel.py", "server/tools/run_tba_paired_risk_study.py", "server/tools/run_tba_risk_component_study.py", "server/examples/universal_study_manifest.json",
     "docs/UNIVERSAL_V2_BACKEND.md", "docs/UNIVERSAL_V2_VALIDATION.json", "docs/ASTRA_UNIVERSAL_TUNING_PLAYBOOK.md",
     "server/backend/legal_operator.py", "server/backend/internal_access.py",
     "server/frontend/legal/terms_canonical.html", "server/frontend/legal/privacy_canonical.html",
     "server/frontend/legal/risk-disclaimer_canonical.html", "server/frontend/legal/methodology_canonical.html",
     "server/frontend/legal/refund_canonical.html", "server/tests/test_legal_operator.py",
-    "docs/LEGAL_AND_REGULATORY_CHANGELOG.md",
+    "docs/LEGAL_AND_REGULATORY_CHANGELOG.md", "docs/TBA_RISK_SUPERVISOR.md", "docs/TBA_RISK_PAIRED_RESULTS_2026-09-13.json",
 )
 
 
@@ -243,6 +243,7 @@ DEEP_FILE_NOTES = {
     "server/backend/alpha_evaluation.py": "Annual excess-return regressions estimate arithmetic CAPM alpha against an explicit benchmark and daily cash-return series. Newey-West uncertainty, full-calendar checks and the exact ten-year consistency gates prevent raw return, partial-year or eleven-year results being presented as the requested alpha test. Model-search uncertainty is not eliminated.",
     "server/backend/universal_research.py": "This adapter joins shared targets, the cash/shares ledger and alpha statistics into a Quant-compatible report. It enforces evaluation warmup, keeps data/config/source fingerprints and distinguishes absent alpha inputs from zero alpha. Its output is research evidence, not an automatic promotion.",
     "server/backend/universal_position_policy.py": "This disabled-by-default pure state machine defines the future adaptive-exit contract: entry risk plan, non-widening long stops, precommitted daily-bar stop/target behavior and close-only next-open directives. It is deliberately separate from the ledger until a frozen-manifest integration and accounting tests exist; it cannot place a real order.",
+    "server/backend/universal_risk_supervisor.py": "This TBA-only causal risk layer caps correlated clusters and marginal variance contribution, scales concentrated books, and applies completed-return volatility and rolling-drawdown exposure ceilings. It is disabled for frozen Minerva and carries no performance claim until the declared out-of-sample Sharpe gate passes.",
     "server/backend/universal_market_context.py": "This disabled-by-default pure market overlay turns completed market return, breadth and correlation observations into an interpretable next-open exposure directive. It requires multiple confirming stress signals rather than treating one down index day as an automatic liquidation, and is not yet connected to the V2 ledger.",
     "server/backend/universal_taxonomy.py": "This module validates a versioned many-to-many security/family graph with dated source, membership weight, downside sensitivity and confidence fields. It prevents parent/child double counting and requires point-in-time snapshot coverage before a classification can enter research.",
     "server/backend/universal_research_blueprint.py": "This is the machine-readable roadmap used by the authenticated Quant Lab foundation panel. It names position management, residual selection, event data, regime exposure, diversification and meta-label workstreams, spelling out their inputs, tunable knobs, fixed invariants and evidence gates instead of treating ideas as deployed features.",

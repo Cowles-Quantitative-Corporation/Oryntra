@@ -10,6 +10,7 @@ from dataclasses import replace
 
 from .universal_engine import UniversalConfig
 from .universal_position_policy import PositionPolicyConfig
+from .universal_risk_supervisor import RiskSupervisorConfig
 
 
 MINERVA_ID = "minerva_v1_research"
@@ -53,27 +54,57 @@ def minerva_economic_interactions_candidate(**overrides: object) -> UniversalCon
 
 def tba1_ohlcv_structure_candidate(**overrides: object) -> UniversalConfig:
     """TBA 1: Minerva risk construction with a compact OHLCV feature sleeve."""
-    return minerva_baseline(**({"ridge_include_ohlcv_structure": True} | overrides))
+    return _tba_candidate({"ridge_include_ohlcv_structure": True}, overrides)
+
+
+def tba2_qlib_risk_candidate(**overrides: object) -> UniversalConfig:
+    """TBA 2: portfolio construction for externally frozen Qlib scores."""
+    return _tba_candidate({}, overrides)
 
 
 def tba3_market_residual_target_candidate(**overrides: object) -> UniversalConfig:
     """TBA 3: learn a forward return residualized by completed market beta."""
-    return minerva_baseline(**({"ridge_target_market_residual": True} | overrides))
+    return _tba_candidate({"ridge_target_market_residual": True}, overrides)
 
 
 def tba4_completed_ic_gate_candidate(**overrides: object) -> UniversalConfig:
     """TBA 4: trade only when completed trailing rank IC is nonnegative."""
-    return minerva_baseline(**({"ridge_ic_gate": True, "ridge_ic_lookback_sessions": 63, "ridge_ic_minimum": 0.0} | overrides))
+    return _tba_candidate({"ridge_ic_gate": True, "ridge_ic_lookback_sessions": 63, "ridge_ic_minimum": 0.0}, overrides)
 
 
 def tba5_residual_momentum_candidate(**overrides: object) -> UniversalConfig:
     """TBA 5: add completed 21/63-session stock-market residual momentum."""
-    return minerva_baseline(**({"ridge_residual_momentum_21": True, "ridge_residual_momentum_63": True} | overrides))
+    return _tba_candidate({"ridge_residual_momentum_21": True, "ridge_residual_momentum_63": True}, overrides)
 
 
 def tba6_residual_lifecycle_candidate(**overrides: object) -> UniversalConfig:
     """TBA 6: TBA 5 with the existing causal lifecycle policy enabled."""
-    return tba5_residual_momentum_candidate(**({"position_policy": PositionPolicyConfig(enabled=True)} | overrides))
+    return _tba_candidate({"ridge_residual_momentum_21": True, "ridge_residual_momentum_63": True,
+                           "position_policy": PositionPolicyConfig(enabled=True)}, overrides)
+
+
+def tba8_institutional_risk_candidate(**overrides: object) -> UniversalConfig:
+    """TBA 8: residual-momentum signal with the shared risk supervisor."""
+    return _tba_candidate({"ridge_residual_momentum_21": True, "ridge_residual_momentum_63": True}, overrides)
+
+
+def _tba_candidate(defaults: dict[str, object], overrides: dict[str, object]) -> UniversalConfig:
+    """Apply the shared supervisor to TBA research without changing Minerva."""
+    supervisor = RiskSupervisorConfig(
+        enabled=True,
+        component_risk_enabled=True,
+        maximum_risk_contribution=.10,
+        correlation_cluster_enabled=False,
+        correlation_regime_enabled=False,
+        diversification_enabled=False,
+        realized_volatility_enabled=False,
+        volatility_shock_enabled=False,
+        tail_loss_enabled=False,
+        drawdown_enabled=False,
+        gradual_recovery_enabled=False,
+    )
+    values = {"risk_supervisor": supervisor, **defaults, **overrides}
+    return minerva_baseline(**values)
 
 
 def minerva_beta_ceiling_candidate(**overrides: object) -> UniversalConfig:

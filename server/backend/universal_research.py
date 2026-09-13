@@ -16,6 +16,7 @@ from .universal_market_context import market_context_contract, apply_market_cont
 from .universal_peer_shock import peer_shock_contract
 from .universal_taxonomy import taxonomy_contract
 from .universal_research_blueprint import research_blueprint
+from .universal_risk_supervisor import risk_supervisor_contract
 
 
 def run_universal(histories: dict[str, pd.DataFrame], config: UniversalConfig = UniversalConfig(),
@@ -127,7 +128,7 @@ def run_universal(histories: dict[str, pd.DataFrame], config: UniversalConfig = 
     exposure = held.iloc[-1]
     scorecard = consistency_scorecard(net, benchmark_returns, risk_free, prior_strategy=prior_net)
     code_hash = hashlib.sha256()
-    for module in ("universal_engine.py", "universal_learning.py", "universal_fundamentals.py", "portfolio_execution.py", "alpha_evaluation.py", "alpha_consistency.py", "universal_position_policy.py", "universal_yearly_protocol.py", "universal_market_context.py", "universal_taxonomy.py", "universe_selection.py", "universal_research_blueprint.py", "universal_research.py", "minerva.py", "minerva_corporate.py", "quant_research.py"):
+    for module in ("universal_engine.py", "universal_learning.py", "universal_fundamentals.py", "portfolio_execution.py", "alpha_evaluation.py", "alpha_consistency.py", "universal_position_policy.py", "universal_risk_supervisor.py", "universal_yearly_protocol.py", "universal_market_context.py", "universal_taxonomy.py", "universe_selection.py", "universal_research_blueprint.py", "universal_research.py", "minerva.py", "minerva_corporate.py", "quant_research.py"):
         code_hash.update(module.encode())
         code_hash.update(Path(__file__).with_name(module).read_bytes())
     return {"engine": ENGINE_ID, "engine_version": ENGINE_VERSION, "code_fingerprint": code_hash.hexdigest(), "configuration": asdict(config), "engine_configuration": asdict(config),
@@ -150,6 +151,8 @@ def run_universal(histories: dict[str, pd.DataFrame], config: UniversalConfig = 
                                "integration_status": "Targets scale once from each completed-close context; risk-off blocks buys at the next open.",
                                "decisions": [r for r in context_audit if r["date"] >= str(prices.index[first - 1].date())]},
             "peer_shock": peer_shock_contract(config.peer_shock),
+            "risk_supervisor": {**risk_supervisor_contract(config.risk_supervisor),
+                                "daily_audit": simulation["risk_supervisor_audit"]},
             "taxonomy": taxonomy_contract(),
             "research_blueprint": research_blueprint(),
             "trade_outcomes": {"definition": "Cash-flow P&L of flat-to-flat position episodes, including partial fills and costs; open episodes excluded", "closed": simulation["closed_episodes"], "open_count": len(simulation["open_episodes"]), "win_rate_pct": simulation["win_rate_pct"]},

@@ -2,6 +2,16 @@
 
 This is an append-only, research-only record of candidate-profile evidence. A passing entry permits a profile to be selectable in Quant Lab; it does not establish live performance, suitability, or permission to place an order.
 
+## 2026-09-13 — TBA risk supervisor implementation: awaiting frozen OOS panel
+
+A TBA-only portfolio risk supervisor was added without changing normal Minerva. It controls correlation-cluster weight, positive marginal variance contribution, high-correlation regimes, effective-bet concentration, completed-return realized volatility, volatility acceleration, expected shortfall, rolling drawdown, and gradual recovery. Each control can only reduce risk, uses information available by the previous completed close, and is included in the research configuration and daily audit.
+
+One comparison harness measures identical frozen Qlib scores under native top-24 construction, the legacy Oryntra risk layer, and the new supervisor. A second performs paired native TBA runs where the supervisor configuration is the only change and verifies identical dataset fingerprints.
+
+A newly frozen 43-stock current-survivor engineering panel was used for native paired tests. The initial full supervisor reduced mean Sharpe for all six runnable native TBA configurations. Component ablation on ten development years selected only a 10% positive marginal variance-contribution cap. On eight separately selected confirmation years that cap improved mean excess-return Sharpe for every native TBA: deltas ranged from +0.0014 to +0.0599. TBA4 improved its minimum annual Sharpe; the other five worsened it by 0.0088 to 0.1257. TBA5/TBA8 improved from 0.3957 to 0.4526 mean Sharpe, improved positive-Sharpe years from 5/8 to 6/8, and improved mean annual alpha by 0.5275 percentage points.
+
+Decision: retain the isolated cap as a private TBA research candidate, with all harmful or inactive new dynamic defaults switched off. It is not release-approved and does not pass the strict cross-model minimum-Sharpe gate. The panel is current-survivor biased, and no fresh external Qlib scores were available; no claim of beating an open-source model is recorded. Exact hashes, years, and paired results are in `docs/TBA_RISK_PAIRED_RESULTS_2026-09-13.json`.
+
 ## 2026-09-12 — Universal V2 native and open-source learner review: no promotion
 
 This week added an explicit, auditable research stack around Universal V2: a cash/share next-open ledger; capacity, cost, covariance-shrinkage and correlation-stress controls; a causal lifecycle policy; completed-close market and peer-shock infrastructure; availability-dated SEC Company Facts tooling; seeded annual protocols; and an isolated Microsoft Qlib environment for model comparison. These are research capabilities, not a public-model replacement.

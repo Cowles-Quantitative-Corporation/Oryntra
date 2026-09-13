@@ -1,0 +1,44 @@
+{
+  "status": "research_candidate_not_release_approved",
+  "panel": {
+    "source": "Yahoo Finance via yfinance 1.5.1",
+    "range": "1999-01-01 through 2025-12-31",
+    "stocks": 43,
+    "benchmarks": ["SPY", "QQQ"],
+    "risk_free_proxy": "^IRX",
+    "adjustment": "auto_adjust=True",
+    "bars_sha256": "1f9a847811862b55cd12b005d87742610d305af09f9aade80beff05e5f031a73",
+    "risk_free_sha256": "7aad1143dcee59ab745f606c4cd3c8536e0cfceca7f6c286c742d8a2e719dad4",
+    "qualification": "Current-survivor engineering panel, not point-in-time index membership or public performance evidence."
+  },
+  "development": {
+    "model": "tba5",
+    "years": [2003, 2005, 2007, 2010, 2013, 2015, 2017, 2019, 2021, 2023],
+    "selected_profile": "positive marginal variance contribution cap of 10 percent; all other new supervisor controls disabled",
+    "mean_excess_sharpe_without": 1.298713019143707,
+    "mean_excess_sharpe_with": 1.375203,
+    "mean_excess_sharpe_delta": 0.07649,
+    "minimum_annual_excess_sharpe_delta": 0.038987,
+    "mean_alpha_delta_pct": 0.579526
+  },
+  "confirmation": {
+    "selection_seed": 20260914,
+    "years": [2004, 2006, 2008, 2011, 2014, 2016, 2022, 2025],
+    "paired_change": "RiskSupervisorConfig enabled with only maximum_risk_contribution=0.10",
+    "models": {
+      "tba1": {"mean_sharpe_without": 0.3845, "mean_sharpe_with": 0.4445, "mean_sharpe_delta": 0.0599, "minimum_annual_sharpe_delta": -0.0338, "mean_alpha_delta_pct": 0.3412, "positive_sharpe_years_without": 6, "positive_sharpe_years_with": 6},
+      "tba3": {"mean_sharpe_without": 0.4580, "mean_sharpe_with": 0.4594, "mean_sharpe_delta": 0.0014, "minimum_annual_sharpe_delta": -0.1257, "mean_alpha_delta_pct": -0.4339, "positive_sharpe_years_without": 6, "positive_sharpe_years_with": 6},
+      "tba4": {"mean_sharpe_without": 0.1818, "mean_sharpe_with": 0.2233, "mean_sharpe_delta": 0.0416, "minimum_annual_sharpe_delta": 0.1583, "mean_alpha_delta_pct": 0.0307, "positive_sharpe_years_without": 5, "positive_sharpe_years_with": 5},
+      "tba5": {"mean_sharpe_without": 0.3957, "mean_sharpe_with": 0.4526, "mean_sharpe_delta": 0.0569, "minimum_annual_sharpe_delta": -0.0088, "mean_alpha_delta_pct": 0.5275, "positive_sharpe_years_without": 5, "positive_sharpe_years_with": 6},
+      "tba6": {"mean_sharpe_without": -0.0213, "mean_sharpe_with": -0.0145, "mean_sharpe_delta": 0.0067, "minimum_annual_sharpe_delta": -0.0536, "mean_alpha_delta_pct": 0.3781, "positive_sharpe_years_without": 5, "positive_sharpe_years_with": 5},
+      "tba8": {"mean_sharpe_without": 0.3957, "mean_sharpe_with": 0.4526, "mean_sharpe_delta": 0.0569, "minimum_annual_sharpe_delta": -0.0088, "mean_alpha_delta_pct": 0.5275, "positive_sharpe_years_without": 5, "positive_sharpe_years_with": 6}
+    }
+  },
+  "decision": "Keep the 10 percent contribution cap as a private TBA research candidate because mean Sharpe improved for every native TBA. Do not call it validated: only TBA4 passed the stricter mean-and-minimum-Sharpe gate, and no fresh external Qlib score panel was available.",
+  "rejected_defaults": [
+    "strategy-drawdown scaling",
+    "realized-volatility scaling",
+    "full dynamic-risk bundle",
+    "completed-close SPY/QQQ breadth and correlation market-context overlay"
+  ]
+}

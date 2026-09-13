@@ -60,6 +60,7 @@ def test_annual_trials_return_one_cash_funded_observation_per_selected_year():
     assert report["selected_years"] == [trial["year"] for trial in report["trials"]]
     assert all(trial["symbols"] == sorted(trial["symbols"]) for trial in report["trials"])
     assert all(trial["symbol_selection_seed"] == report["protocol"]["seed"] + trial["year"] for trial in report["trials"])
+    assert all("excess_return_sharpe" in trial for trial in report["trials"])
     # A no-entry configuration should earn only the explicit cash series; each
     # trial is independently opened at the configured initial equity.
     assert all(0 < trial["performance"]["total_return_pct"] < 1 for trial in report["trials"])
