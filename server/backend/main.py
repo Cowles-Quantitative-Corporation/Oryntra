@@ -13,7 +13,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from .database import init_db, get_app_counter
 from .legal_operator import render_legal_template
 from .market_cache import start_market_cache_worker, status as market_cache_status
-from .routes import analysis, watchlist, paper_trading, ai_explain, backtest, patterns, auth, dev_tools, pro, intelligence, quant, portfolio_lab, debug_access
+from .routes import analysis, watchlist, paper_trading, ai_explain, backtest, patterns, auth, dev_tools, pro, intelligence, quant, portfolio_lab, debug_access, cqc_entitlements
 from .routes import universal
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -189,6 +189,7 @@ app.include_router(paper_trading.router, prefix="/api/paper", tags=["Paper Tradi
 app.include_router(ai_explain.router, prefix="/api/ai", tags=["AI Explanation"])
 app.include_router(portfolio_lab.router, prefix="/api/portfolio-lab", tags=["Portfolio Lab"])
 app.include_router(debug_access.router, prefix="/api/internal/debug", tags=["Internal Debug"])
+app.include_router(cqc_entitlements.router, prefix="/api/cqc", tags=["CQC Entitlements"])
 
 
 if _private_research:

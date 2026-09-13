@@ -7,6 +7,7 @@ import 'package:oryntra_ai/screens/quant_lab_screen.dart';
 import 'package:oryntra_ai/services/api_service.dart';
 import 'package:oryntra_ai/widgets/common.dart';
 import 'package:oryntra_ai/widgets/glass.dart';
+import 'package:oryntra_ai/widgets/subscription_comparison.dart';
 
 void main() {
   test('institutional palette keeps a dark readable surface system', () {
@@ -90,6 +91,30 @@ void main() {
     expect(find.text('Conservative · 8%'), findsOneWidget);
     expect(find.byType(Slider), findsNothing);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('membership comparison shows the published plan limits', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(body: SubscriptionComparisonSheet(currentPlan: 'plus')),
+      ),
+    );
+
+    expect(find.text('Research essentials'), findsOneWidget);
+    expect(find.text('Oryntra Pro'), findsOneWidget);
+    expect(find.text('Oryntra Pro + Rule Mirror Pro'), findsOneWidget);
+    expect(find.text('CURRENT'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('10 / day'), 240);
+    expect(find.text('10 / day'), findsOneWidget);
+    expect(find.text('200 / day'), findsOneWidget);
+    expect(find.text('Unlimited'), findsWidgets);
+    await tester.scrollUntilVisible(
+      find.text('Purchases under maintenance'),
+      240,
+    );
+    expect(find.text('Purchases under maintenance'), findsOneWidget);
   });
 
   testWidgets('saved Quant Lab report can be reopened on device', (

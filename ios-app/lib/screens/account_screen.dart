@@ -7,6 +7,7 @@ import '../services/notification_service.dart';
 import '../services/quant_lab_store.dart';
 import '../widgets/common.dart';
 import '../widgets/glass.dart';
+import '../widgets/subscription_comparison.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({
@@ -237,6 +238,17 @@ class AccountScreenState extends State<AccountScreen>
   }
 
   Future<void> showCreateAccount() => _showAuth(create: true);
+
+  Future<void> _showMembershipComparison() => showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => SubscriptionComparisonSheet(
+      currentPlan: widget.user?['subscription'] is Map
+          ? (widget.user!['subscription'] as Map)['plan_code']?.toString()
+          : null,
+    ),
+  );
 
   Future<void> refreshNotificationSettings() => _loadNotificationSettings();
 
@@ -499,6 +511,18 @@ class AccountScreenState extends State<AccountScreen>
                     ),
                   ],
                 ),
+        ),
+        const SizedBox(height: 14),
+        const InstitutionalSectionLabel(label: 'Membership'),
+        AppCard(
+          padding: EdgeInsets.zero,
+          child: ListTile(
+            leading: const Icon(Icons.workspace_premium_outlined),
+            title: const Text('Membership and plans'),
+            subtitle: const Text('Compare Base, Plus, and CQC Max limits.'),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: _showMembershipComparison,
+          ),
         ),
         const SizedBox(height: 14),
         if (user != null) _buildAnalysisCard(context),

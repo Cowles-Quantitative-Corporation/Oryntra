@@ -42,7 +42,7 @@ def daily_limit(user: dict[str, Any] | None = None) -> int | None:
     """
     subscription = (user or {}).get("subscription") or {}
     plan = str(subscription.get("plan_code", "")).lower()
-    if plan in {"max", "max_bundle", "max-bundle"}:
+    if plan in {"max", "max_bundle", "max-bundle", "cqc_max", "cqc-max"}:
         return None
     if plan in {"pro", "plus"}:
         return _bounded_limit("ORYNTRA_PRO_DAILY_ANALYSIS_LIMIT", 200)

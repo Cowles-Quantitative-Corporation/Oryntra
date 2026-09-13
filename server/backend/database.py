@@ -119,6 +119,43 @@ def init_db():
         )
     """)
 
+    # Cross-product bundle grants are intentionally separate from users and
+    # subscriptions. The subject is an opaque HMAC generated in each product;
+    # Rule Mirror never sends a member's email or private records to Oryntra.
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS cqc_entitlements (
+            subject         TEXT NOT NULL,
+            product_code    TEXT NOT NULL,
+            status          TEXT NOT NULL DEFAULT 'ACTIVE',
+            provider        TEXT NOT NULL,
+            provider_ref    TEXT,
+            expires_at      TEXT,
+            updated_at      TEXT DEFAULT (datetime('now')),
+            PRIMARY KEY (subject, product_code)
+        )
+    """)
+
+    entitlement_columns = cursor.execute("PRAGMA table_info(cqc_entitlements)").fetchall()
+    entitlement_pk = [row[1] for row in entitlement_columns if row[5]]
+    if entitlement_pk == ["subject"]:
+        # Upgrade the first local-only draft safely before product records exist.
+        cursor.execute("ALTER TABLE cqc_entitlements RENAME TO cqc_entitlements_legacy")
+        cursor.execute("""
+            CREATE TABLE cqc_entitlements (
+                subject TEXT NOT NULL, product_code TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'ACTIVE', provider TEXT NOT NULL,
+                provider_ref TEXT, expires_at TEXT,
+                updated_at TEXT DEFAULT (datetime('now')),
+                PRIMARY KEY (subject, product_code)
+            )
+        """)
+        cursor.execute("""
+            INSERT INTO cqc_entitlements (subject, product_code, status, provider, provider_ref, expires_at, updated_at)
+            SELECT subject, product_code, status, provider, provider_ref, expires_at, updated_at
+              FROM cqc_entitlements_legacy
+        """)
+        cursor.execute("DROP TABLE cqc_entitlements_legacy")
+
     # Owner-only local test overrides. These intentionally live outside billing
     # records so diagnostic plan changes cannot cancel or rewrite a purchase.
     cursor.execute("""
