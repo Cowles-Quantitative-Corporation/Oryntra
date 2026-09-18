@@ -128,9 +128,9 @@ function initThemeSettings() {
   }
 }
 
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.1.0';
 const APP_RELEASE_KEY = 'oryntra_client_release';
-const PUBLIC_ANALYSIS_ENGINE = 'official';
+const PUBLIC_ANALYSIS_ENGINE = 'v8';
 
 function applyReleaseClientReset() {
   try {
@@ -165,6 +165,13 @@ let analysisAccessState = {
   quota: null,
 };
 let analysisAccessPromise = null;
+let runtimeReadyPromise = null;
+let subscriptionModalContext = 'membership';
+let runtimeCapabilities = {
+  partner_ads: {enabled:false, placements:{native:false, desktop:false, mobile:false}},
+  subscription_offers_enabled: false,
+  turnstile: {enabled:false, site_key:''},
+};
 let pendingAnalysisIntent = null;
 let providerOnboardingRequest = null;
 // A provider key stays on this browser device and never enters a cookie or an Oryntra request.
@@ -248,6 +255,10 @@ function apiJson(response) {
       showSubscriptionModal(detail?.model || 'membership');
       throw new Error(detail?.message || 'An active Oryntra AI Pro subscription is required for this feature.');
     }
+    if (response.status === 409 && detail?.code === 'MODEL_RESEARCH_NOT_RELEASED') {
+      showSubscriptionModal('minerva_unreleased');
+      throw new Error(detail?.message || 'This research candidate is not released yet.');
+    }
     if (response.status === 401) {
       openAuthModal('login');
       throw new Error('Sign in required.');
@@ -271,19 +282,19 @@ function apiJson(response) {
 
 
 const API = {
-  scan: (ticker, period='6mo', model='official') => apiFetch('/api/intelligence/scan', {
+  scan: (ticker, period='6mo', model='v8') => apiFetch('/api/intelligence/scan', {
     method: 'POST',
     headers: authHeaders(true),
     body: JSON.stringify({ticker, period, model})
   }).then(apiJson),
 
-  scanMultiple: (tickers, period='6mo', model='official') => apiFetch('/api/intelligence/scan-multiple', {
+  scanMultiple: (tickers, period='6mo', model='v8') => apiFetch('/api/intelligence/scan-multiple', {
     method: 'POST',
     headers: authHeaders(true),
     body: JSON.stringify({tickers, period, model})
   }).then(apiJson),
 
-  scanUploaded: (ticker, period, provider, bars, model='official') => apiFetch('/api/intelligence/scan-upload', {
+  scanUploaded: (ticker, period, provider, bars, model='v8') => apiFetch('/api/intelligence/scan-upload', {
     method: 'POST',
     headers: authHeaders(true),
     body: JSON.stringify({ticker, period, provider, bars, model})
@@ -405,10 +416,10 @@ let currentInterval = 'D';
 let currentPeriod   = '6mo';
 let currentTicker   = '';
 let savedPatternMode = safeStorageGet('oryntra_pattern_engine_mode');
-const PUBLIC_ENGINE_MODES = ['official'];
+const PUBLIC_ENGINE_MODES = ['v8'];
 if (!PUBLIC_ENGINE_MODES.includes(savedPatternMode)) {
-  savedPatternMode = 'official';
-  safeStorageSet('oryntra_pattern_engine_mode', 'official');
+  savedPatternMode = 'v8';
+  safeStorageSet('oryntra_pattern_engine_mode', 'v8');
 }
 let currentPatternMode = PUBLIC_ANALYSIS_ENGINE;
 let currentCacheWarmJobId = null;
@@ -422,72 +433,58 @@ let lastPatternLabCompletedTickers = 0;
 const DEFAULT_PATTERN_LAB_TICKERS = 'AAPL,MSFT,NVDA,TSLA,AMZN,META,GOOGL,AMD,AVGO,JPM,V,XOM,CVX,UNH,LLY,JNJ,WMT,COST,HD,MCD,NKE,CAT,BA,RTX,NEE,PLTR,CRWD,SPY,QQQ,SMH'.split(',');
 const TRAINING_TICKERS_150 = 'AAPL,MSFT,NVDA,TSLA,AMZN,META,GOOGL,AMD,AVGO,JPM,V,XOM,CVX,UNH,LLY,JNJ,WMT,COST,HD,MCD,NKE,CAT,BA,RTX,NEE,PLTR,CRWD,SPY,QQQ,SMH,ORCL,NFLX,CRM,ADBE,INTC,MU,QCOM,TXN,AMAT,LRCX,KLAC,MRVL,NOW,SNOW,DDOG,NET,PANW,ZS,MDB,SHOP,UBER,ABNB,DASH,PYPL,COIN,HOOD,SOFI,SQ,MSTR,DELL,GS,MS,BAC,C,WFC,AXP,BLK,SCHW,COF,MA,BRK.B,PGR,TRV,AIG,USB,PNC,TFC,BK,ICE,CME,ABBV,MRK,PFE,TMO,DHR,ABT,ISRG,SYK,MDT,GILD,AMGN,REGN,VRTX,BMY,CVS,HUM,CI,ELV,ZBH,BSX,LOW,SBUX,TGT,TJX,ROST,LULU,CMG,YUM,KO,PEP,PG,CL,KMB,MDLZ,CAG,GIS,KR,DG,DLTR,EL,DE,GE,HON,UPS,FDX,LMT,NOC,GD,ETN,EMR,MMM,URI,CSX,NSC,UNP,DAL,UAL,AAL,LUV,RCL,COP,SLB,EOG,MPC,PSX,OXY,KMI,WMB,HAL,BKR,DUK,SO,AEP,EXC,SRE,XEL,D,PEG,ED,AWK'.split(',');
 
+const PARTNER_AD_MARKUP = {
+  native: '<!doctype html><html><body style="margin:0;overflow:hidden"><script async data-cfasync="false" src="https://pl31315343.profitableratecpmnetwork.com/b9eb4d7740a43b0752f4b754ad2da5f7/invoke.js"></script><div id="container-b9eb4d7740a43b0752f4b754ad2da5f7"></div></body></html>',
+  desktop: '<!doctype html><html><body style="margin:0;overflow:hidden"><script>window.atOptions={key:"624025a8c48a0dc2913c48c298076d52",format:"iframe",height:90,width:728,params:{}};</script><script src="https://www.highrevenueformat.com/624025a8c48a0dc2913c48c298076d52/invoke.js"></script></body></html>',
+  mobile: '<!doctype html><html><body style="margin:0;overflow:hidden"><script>window.atOptions={key:"83c7f4353a691c8b530dc86236b66ef1",format:"iframe",height:50,width:320,params:{}};</script><script src="https://www.highrevenueformat.com/83c7f4353a691c8b530dc86236b66ef1/invoke.js"></script></body></html>',
+};
 
-let adsConfig = null;
-
-function adSlotAllowed(el) {
-  const key = el.dataset.adSlot;
-  const width = window.innerWidth || document.documentElement.clientWidth;
-  if (key === 'results_side') return width >= 1200;
-  if (key === 'mobile_bottom') return width < 900;
-  if (key === 'home_top') return width >= 560;
-  return true;
+function clearPartnerAdvertisements() {
+  const region = document.getElementById('partnerAdvertising');
+  if (region) region.hidden = true;
+  document.querySelectorAll('.partner-ad-frame').forEach((slot) => {
+    slot.replaceChildren();
+    slot.hidden = true;
+    delete slot.dataset.loaded;
+  });
 }
 
-function hideAdSlot(el) {
-  el.classList.remove('ad-live', 'ad-preview', 'ad-error');
-  el.classList.add('ad-hidden');
-  el.replaceChildren();
+function mountPartnerAdvertisement(slotId, markup) {
+  const slot = document.getElementById(slotId);
+  if (!slot || slot.dataset.loaded === 'true') return;
+  const frame = document.createElement('iframe');
+  frame.title = 'Advertisement';
+  frame.loading = 'lazy';
+  frame.referrerPolicy = 'no-referrer';
+  frame.setAttribute('sandbox', 'allow-scripts allow-popups');
+  frame.srcdoc = markup;
+  slot.append(frame);
+  slot.dataset.loaded = 'true';
 }
 
-function renderAdsenseSlot(el, config) {
-  if (!adSlotAllowed(el)) {
-    hideAdSlot(el);
-    return false;
-  }
-  const key = el.dataset.adSlot;
-  const slot = config.web.slots[key];
-  const client = config.web.client;
-  if (!client || !slot) {
-    hideAdSlot(el);
-    return false;
-  }
-  const requestedFormat = el.dataset.adFormat || 'auto';
-  const format = requestedFormat === 'rectangle' ? 'rectangle' : requestedFormat === 'horizontal' ? 'horizontal' : 'auto';
-  el.classList.remove('ad-hidden', 'ad-preview', 'ad-error');
-  el.classList.add('ad-live');
-  el.innerHTML = `<div class="ad-zone-kicker">ADVERTISEMENT</div><ins class="adsbygoogle" style="display:block" data-ad-client="${escapeHtml(client)}" data-ad-slot="${escapeHtml(slot)}" data-ad-format="${format}" data-full-width-responsive="true"></ins>`;
-  try {
-    window.adsbygoogle = window.adsbygoogle || [];
-    window.adsbygoogle.push({});
-    return true;
-  } catch (error) {
-    console.warn(`AdSense slot ${key} did not initialize`, error);
-    hideAdSlot(el);
-    return false;
-  }
+function initPartnerAdvertisements() {
+  clearPartnerAdvertisements();
+  if (!currentUser || !runtimeCapabilities.partner_ads?.enabled) return;
+  const placements = runtimeCapabilities.partner_ads?.placements || {};
+  const region = document.getElementById('partnerAdvertising');
+  const enabledSlots = [
+    ['native', 'partnerNativeAd', PARTNER_AD_MARKUP.native],
+    ['desktop', 'partnerDesktopAd', PARTNER_AD_MARKUP.desktop],
+    ['mobile', 'partnerMobileAd', PARTNER_AD_MARKUP.mobile],
+  ].filter(([placement]) => Boolean(placements[placement]));
+  enabledSlots.forEach(([, slotId, markup]) => {
+    const slot = document.getElementById(slotId);
+    if (slot) slot.hidden = false;
+    mountPartnerAdvertisement(slotId, markup);
+  });
+  if (region) region.hidden = enabledSlots.length === 0;
 }
 
-async function initAdSlots() {
-  const slots = Array.from(document.querySelectorAll('[data-ad-slot]'));
-  if (!slots.length) return;
-  slots.forEach(hideAdSlot);
-  try {
-    const response = await apiFetch('/api/app/ads', {cache: 'no-store'});
-    adsConfig = response.ok ? await response.json() : null;
-  } catch (error) {
-    console.warn('Ad configuration could not be loaded', error);
-    return;
-  }
-  if (!adsConfig?.web) return;
-  if (!adsConfig.web.enabled || !adsConfig.web.client) return;
-  slots.forEach((el) => renderAdsenseSlot(el, adsConfig));
-}
 
 document.addEventListener('DOMContentLoaded', () => {
   initAuth();
   initAnalysisAccess();
-  initRuntimeCapabilities();
+  runtimeReadyPromise = initRuntimeCapabilities();
   initTabs();
   initQuantLab();
   initPortfolioLab();
@@ -499,7 +496,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initDevTools();
   initSettingsPage();
   initOwnerDebugMenu();
-  initAdSlots();
   initAccessibility();
 });
 
@@ -610,12 +606,28 @@ async function applyOwnerDebugPlan() {
 }
 
 function initOwnerDebugMenu() {
+  document.getElementById('ownerDebugButton')?.addEventListener('click', openOwnerDebugMenu);
   document.addEventListener('keydown', event => {
-    if (event.ctrlKey && event.shiftKey && event.altKey && event.code === 'KeyO') {
+    const macShortcut = event.metaKey && event.shiftKey && event.code === 'KeyO';
+    const legacyShortcut = event.ctrlKey && event.shiftKey && event.altKey && event.code === 'KeyO';
+    if (macShortcut || legacyShortcut) {
       event.preventDefault();
       openOwnerDebugMenu();
     }
   });
+}
+
+async function refreshOwnerDebugAvailability() {
+  const button = document.getElementById('ownerDebugButton');
+  if (!button) return;
+  button.hidden = true;
+  if (!currentUser) return;
+  try {
+    const access = await API.debug.access();
+    button.hidden = !access?.enabled;
+  } catch (_) {
+    button.hidden = true;
+  }
 }
 
 
@@ -631,7 +643,8 @@ function mountSubscriptionStructure() {
   modal.setAttribute('aria-modal', 'true');
   modal.setAttribute('aria-labelledby', 'subscriptionTitle');
   const features = [
-    ['Official scanner & evidence cards', 'Included', 'Included', 'Included'],
+    ['V8 scanner & evidence cards', 'Included', 'Included', 'Included'],
+    ['Minerva research preview', '✕', 'Included', 'Included'],
     ['Daily scanner reviews', '10 / day', '200 / day', 'Unlimited'],
     ['Watchlist & paper journal', '20 symbols', 'Unlimited', 'Unlimited'],
     ['Historical research demonstrations', 'Included', 'Included', 'Included'],
@@ -640,8 +653,8 @@ function mountSubscriptionStructure() {
     ['Saved research presets & exports', '✕', 'Included', 'Included'],
     ['Rule Mirror Pro', '✕', '✕', 'Included'],
   ];
-  const rows = features.map(([feature, base, plus, max]) => `<tr><th scope="row">${escapeHtml(feature)}</th><td>${escapeHtml(base)}</td><td>${escapeHtml(plus)}</td><td>${escapeHtml(max)}</td></tr>`).join('');
-  modal.innerHTML = `<div class="modal-box subscription-shell"><button class="oryntra-auth-close" id="subscriptionClose" type="button" aria-label="Close subscription page">×</button><p class="eyebrow">Oryntra membership</p><h2 id="subscriptionTitle">Research software access.</h2><p id="subscriptionCopy" class="auth-modal-subtitle">Subscriptions are temporarily unavailable while checkout is under maintenance. Any future subscription provides software access only—not CQC equity, profits, trading participation, or a managed strategy.</p><div class="subscription-plan-headings"><section><span>BASE</span><b>Research essentials</b><small>Official scanner and bounded historical research.</small><button class="button button-secondary subscription-buy" data-subscription-maintenance type="button">Buy Base</button></section><section><span>PLUS</span><b>Oryntra Pro</b><small>More research workspace capacity; no personalized portfolio service.</small><button class="button button-primary subscription-buy" data-subscription-maintenance type="button">Buy Plus</button></section><section><span>MAX BUNDLE</span><b>Oryntra Pro + Rule Mirror Pro</b><small>Expanded software access only.</small><button class="button button-secondary subscription-buy" data-subscription-maintenance type="button">Buy Max Bundle</button></section></div><div class="subscription-compare-scroll"><table class="subscription-compare"><thead><tr><th>Feature</th><th>Base</th><th>Plus</th><th>Max bundle</th></tr></thead><tbody>${rows}</tbody></table></div><p class="subscription-footnote">Research candidates remain gated by validation and are never unlocked merely by payment.</p></div>`;
+  const rows = features.map(([feature, base, pro, max]) => `<tr><th scope="row">${escapeHtml(feature)}</th><td>${escapeHtml(base)}</td><td>${escapeHtml(pro)}</td><td>${escapeHtml(max)}</td></tr>`).join('');
+  modal.innerHTML = `<div class="modal-box subscription-shell"><button class="oryntra-auth-close" id="subscriptionClose" type="button" aria-label="Close subscription page">×</button><p class="eyebrow">Oryntra membership</p><h2 id="subscriptionTitle">Research software access.</h2><p id="subscriptionCopy" class="auth-modal-subtitle">Subscriptions are temporarily unavailable while checkout is under maintenance. Any future subscription provides software access only—not CQC equity, profits, trading participation, or a managed strategy.</p><button class="button button-primary subscription-free-continue" id="subscriptionFreeContinue" type="button">Continue with free V8</button><div class="subscription-plan-headings"><section><span>BASE</span><b>Research essentials</b><small>V8 scanner and bounded historical research.</small><strong class="subscription-current-plan">Current free workspace</strong></section><section><span>PRO</span><b>Oryntra Pro</b><small>Expanded workspace capacity and validated paid previews.</small><button class="button button-primary subscription-buy" data-subscription-maintenance type="button">Choose Pro</button></section><section><span>MAX BUNDLE</span><b>Oryntra Pro + Rule Mirror Pro</b><small>Expanded software access across both products.</small><button class="button button-secondary subscription-buy" data-subscription-maintenance type="button">Choose Max Bundle</button></section></div><div class="subscription-compare-scroll"><table class="subscription-compare"><thead><tr><th>Feature</th><th>Base</th><th>Pro</th><th>Max bundle</th></tr></thead><tbody>${rows}</tbody></table></div><p class="subscription-footnote">Research candidates remain gated by validation and are never unlocked merely by payment.</p></div>`;
 }
 
 function estCalendarDate() {
@@ -652,14 +665,15 @@ function estCalendarDate() {
   }
 }
 
-function showDailySubscriptionOffer(user) {
-  if (!user?.show_subscription_offer) return false;
+function showDailyScannerOffer(user, intent) {
+  if (!runtimeCapabilities.subscription_offers_enabled || !user?.id || intent?.type !== 'scan') return false;
   const key = `oryntra_subscription_offer_seen_${user.id}_${estCalendarDate()}`;
   try {
-    if (sessionStorage.getItem(key)) return false;
-    sessionStorage.setItem(key, '1');
+    if (localStorage.getItem(key)) return false;
+    localStorage.setItem(key, '1');
   } catch (_) {}
-  window.setTimeout(() => showSubscriptionModal('daily_offer'), 0);
+  pendingAnalysisIntent = intent;
+  showSubscriptionModal('daily_offer');
   return true;
 }
 
@@ -668,7 +682,7 @@ function mountMinervaModelGate() {
     const select = document.getElementById(id);
     if (!select || select.dataset.minervaGateMounted) return;
     if (!select.querySelector('option[value="minerva_v1"]')) {
-      const option = new Option('Minerva V1 research candidate · subscriber access', 'minerva_v1');
+      const option = new Option('Minerva · Pro research preview', 'minerva_v1');
       option.dataset.access = 'subscription';
       select.append(option);
     }
@@ -680,21 +694,24 @@ function mountMinervaModelGate() {
         return;
       }
       select.value = lastAvailable;
-      showSubscriptionModal('minerva_v1');
+      if (!hasActiveSubscription()) {
+        showSubscriptionModal('minerva_v1');
+        return;
+      }
+      showSubscriptionModal('minerva_unreleased');
     });
   });
 }
 
 const WORKSPACE_MODEL_KEY = 'oryntra_workspace_model';
 const WORKSPACE_MODELS = [
-  ['official', 'Official scanner model'],
-  ['universal_v2', 'Universal V2 research model'],
-  ['minerva_v1', 'Minerva V1 · subscriber access'],
+  ['v8', 'V8 · Free'],
+  ['minerva_v1', 'Minerva · Pro research preview'],
 ];
 
 function workspaceModel() {
-  const value = safeStorageGet(WORKSPACE_MODEL_KEY) || 'official';
-  return WORKSPACE_MODELS.some(([id]) => id === value) ? value : 'official';
+  const value = safeStorageGet(WORKSPACE_MODEL_KEY) || 'v8';
+  return WORKSPACE_MODELS.some(([id]) => id === value) ? value : 'v8';
 }
 
 function syncWorkspaceModelControls(value) {
@@ -704,7 +721,7 @@ function syncWorkspaceModelControls(value) {
 function chooseWorkspaceModel(value) {
   if (value === 'minerva_v1') {
     syncWorkspaceModelControls(workspaceModel());
-    showSubscriptionModal('minerva_v1');
+    showSubscriptionModal(hasActiveSubscription() ? 'minerva_unreleased' : 'minerva_v1');
     return;
   }
   safeStorageSet(WORKSPACE_MODEL_KEY, value);
@@ -715,8 +732,13 @@ function chooseWorkspaceModel(value) {
   updateSettingsEngineDisplay();
 }
 
+function hasActiveSubscription(user=currentUser) {
+  const plan = String(user?.subscription?.plan_code || '').trim().toLowerCase();
+  return Boolean(plan && !['base', 'free'].includes(plan));
+}
+
 function mountWorkspaceModelControls() {
-  currentPatternMode = workspaceModel() === 'minerva_v1' ? 'official' : workspaceModel();
+  currentPatternMode = workspaceModel() === 'minerva_v1' ? 'v8' : workspaceModel();
   document.querySelectorAll('.tab-panel > .page-header').forEach(header => {
     if (header.parentElement?.id === 'tab-portfolio') return;
     if (header.querySelector('[data-workspace-model]')) return;
@@ -797,6 +819,10 @@ function initAuth() {
 
   const subClose = document.getElementById('subscriptionClose');
   if (subClose) subClose.addEventListener('click', closeSubscriptionModal);
+  document.getElementById('subscriptionFreeContinue')?.addEventListener('click', closeSubscriptionModal);
+  document.getElementById('subscriptionModal')?.addEventListener('click', event => {
+    if (event.target === event.currentTarget) closeSubscriptionModal();
+  });
   const betaPreviewAuthBtn = document.getElementById('betaPreviewAuthBtn');
   if (betaPreviewAuthBtn) betaPreviewAuthBtn.addEventListener('click', () => openAuthModal(currentUser ? 'login' : 'signup'));
   document.querySelectorAll('[data-subscription-maintenance]').forEach(btn => {
@@ -859,7 +885,6 @@ async function refreshAuthState() {
       currentUser = res.user;
       storeCachedAuthUser(currentUser);
       setAuthUI(currentUser);
-      showDailySubscriptionOffer(currentUser);
       loadPersistedProviderKeys().then(() => refreshProviderCredentialSettings()).catch(() => {});
       refreshAnalysisAccess({silent:true}).catch(() => {});
       return;
@@ -882,6 +907,8 @@ function setAuthUI(user) {
   const state = document.getElementById('authStateText');
   const btn = document.getElementById('authOpenBtn');
   if (!user) {
+    clearPartnerAdvertisements();
+    refreshOwnerDebugAvailability();
     if (state) state.textContent = 'SIGNED OUT';
     if (btn) btn.textContent = 'LOGIN';
     analysisAccessState = {ready:false, policy:null, quota:null};
@@ -898,6 +925,8 @@ function setAuthUI(user) {
   if (workspaceName) workspaceName.textContent = user.display_name || user.email;
   if (workspaceSubtitle) workspaceSubtitle.textContent = 'Private research workspace';
   closeAuthModal();
+  initPartnerAdvertisements();
+  refreshOwnerDebugAvailability();
   renderAnalysisAccess();
   renderPortfolioLabAccess();
 }
@@ -931,10 +960,33 @@ function openAuthModal(mode='login') {
   if (password) password.autocomplete = mode === 'signup' ? 'new-password' : 'current-password';
   const err = document.getElementById('authError');
   if (err) err.textContent = '';
+  mountTurnstile();
   openAccessibleDialog(
     modal,
     mode === 'signup' ? document.getElementById('authName') : document.getElementById('authEmail')
   );
+}
+
+function mountTurnstile() {
+  const form = document.getElementById('authForm');
+  const existing = document.getElementById('turnstileAuthSlot');
+  if (!runtimeCapabilities.turnstile?.enabled || !runtimeCapabilities.turnstile?.site_key) {
+    existing?.remove();
+    return;
+  }
+  if (!form || existing) return;
+  const slot = document.createElement('div');
+  slot.id = 'turnstileAuthSlot';
+  slot.className = 'turnstile-slot';
+  const error = document.getElementById('authError');
+  form.insertBefore(slot, error || null);
+  const render = () => {
+    if (!window.turnstile || slot.dataset.rendered) return;
+    window.turnstile.render(slot, {sitekey: runtimeCapabilities.turnstile.site_key, theme: 'auto'});
+    slot.dataset.rendered = 'true';
+  };
+  render();
+  if (!slot.dataset.rendered) window.setTimeout(render, 300);
 }
 
 function closeAuthModal() {
@@ -1071,21 +1123,27 @@ async function fetchDirectMarketBars(ticker, period = '6mo', preferred = 'auto',
 }
 
 async function submitAuth() {
+  await (runtimeReadyPromise || Promise.resolve());
   const err = document.getElementById('authError');
   if (err) err.textContent = '';
   const email = (document.getElementById('authEmail')?.value || '').trim();
   const password = document.getElementById('authPassword')?.value || '';
   const display_name = (document.getElementById('authName')?.value || '').trim();
   const accept_legal = Boolean(document.getElementById('authLegalAccept')?.checked);
+  const captcha_token = document.querySelector('[name="cf-turnstile-response"]')?.value || '';
   if (authMode === 'signup' && !accept_legal) {
     if (err) err.textContent = 'Accept the Terms, Privacy Policy, and research-only disclosure to create an account.';
+    return;
+  }
+  if (runtimeCapabilities.turnstile?.enabled && !captcha_token) {
+    if (err) err.textContent = 'Complete the security check before continuing.';
     return;
   }
   try {
     const completedMode = authMode;
     const res = authMode === 'signup'
-      ? await API.auth.signup({email, password, display_name, accept_legal})
-      : await API.auth.login({email, password});
+      ? await API.auth.signup({email, password, display_name, accept_legal, captcha_token})
+      : await API.auth.login({email, password, captcha_token});
     const openedDailyOffer = applyAuthResponse(res, {resume: completedMode !== 'signup'});
     closeAuthModal();
     if (completedMode === 'signup' && !openedDailyOffer) openProviderOnboarding();
@@ -1105,7 +1163,6 @@ function applyAuthResponse(res, {resume=true} = {}) {
   const user = res.user || null;
   storeCachedAuthUser(user);
   setAuthUI(user);
-  const openedDailyOffer = showDailySubscriptionOffer(user);
   loadUniversalBlueprint();
   loadPersistedProviderKeys().then(() => refreshProviderCredentialSettings()).catch(() => {});
   clearTickerIfAutofilledEmail();
@@ -1118,7 +1175,7 @@ function applyAuthResponse(res, {resume=true} = {}) {
       .catch(() => resumePendingAnalysisIntent());
   }
   refreshProviderCredentialSettings().catch(() => {});
-  return openedDailyOffer;
+  return false;
 }
 
 async function logoutUser() {
@@ -1140,14 +1197,18 @@ async function logoutUser() {
 function showSubscriptionModal(context='membership') {
   const modal = document.getElementById('subscriptionModal');
   if (!modal) return;
+  subscriptionModalContext = context;
   const title = document.getElementById('subscriptionTitle');
   const copy = document.getElementById('subscriptionCopy');
   if (context === 'minerva_v1') {
     if (title) title.textContent = 'Minerva access';
     if (copy) copy.textContent = 'Minerva is reserved for active subscribers. Membership and checkout will be configured here after the subscription experience is designed.';
+  } else if (context === 'minerva_unreleased') {
+    if (title) title.textContent = 'Minerva validation in progress';
+    if (copy) copy.textContent = 'Your subscription is recognized. Minerva is still a private research candidate, so it cannot run in the workspace until its validation and release gate is complete.';
   } else if (context === 'daily_offer') {
-    if (title) title.textContent = 'Welcome to your research workspace.';
-    if (copy) copy.textContent = 'Here is the current membership comparison. Subscriptions are under maintenance — check back again later.';
+    if (title) title.textContent = 'V8 is ready to scan.';
+    if (copy) copy.textContent = 'V8 remains free. You can close this comparison or continue below and your scan will start—no plan selection required.';
   } else {
     if (title) title.textContent = 'Choose the research workspace.';
     if (copy) copy.textContent = 'Compare the workspaces below. Subscriptions are temporarily unavailable while checkout is under maintenance.';
@@ -1157,7 +1218,10 @@ function showSubscriptionModal(context='membership') {
 
 function closeSubscriptionModal() {
   const modal = document.getElementById('subscriptionModal');
+  const shouldResume = subscriptionModalContext === 'daily_offer';
+  subscriptionModalContext = 'membership';
   closeAccessibleDialog(modal);
+  if (shouldResume) resumePendingAnalysisIntent();
 }
 
 function initTabs() {
@@ -1457,18 +1521,18 @@ function renderQuantCurve(points) {
 async function initRuntimeCapabilities() {
   try {
     const runtime = await API.runtime();
+    runtimeCapabilities = {
+      ...runtimeCapabilities,
+      ...runtime,
+      partner_ads: {...runtimeCapabilities.partner_ads, ...(runtime?.partner_ads || {})},
+      turnstile: {...runtimeCapabilities.turnstile, ...(runtime?.turnstile || {})},
+    };
+    initPartnerAdvertisements();
+    mountTurnstile();
     const privateResearch = Boolean(runtime?.private_research_routes);
-    const backtestNav = document.getElementById('nav-backtest');
-    const backtestPanel = document.getElementById('tab-backtest');
-    const quantNav = document.getElementById('nav-quant');
-    const quantPanel = document.getElementById('tab-quant');
     const devPanel = document.getElementById('devLabPanel');
     const betaBadge = document.querySelector('.beta-version-badge');
     if (!privateResearch) {
-      if (backtestNav) backtestNav.hidden = true;
-      if (backtestPanel) backtestPanel.hidden = true;
-      if (quantNav) quantNav.hidden = true;
-      if (quantPanel) quantPanel.hidden = true;
       if (devPanel) devPanel.hidden = true;
       if (betaBadge) {
         betaBadge.removeAttribute('role');
@@ -1613,7 +1677,7 @@ function portfolioDirectiveCard(row) {
   const lifecycleLine = lifecycle.current_stop
     ? `Active research stop ${Number(lifecycle.current_stop).toFixed(2)} · ${Number(lifecycle.held_sessions || 0)} sessions held`
     : 'No active lifecycle state recorded for this symbol.';
-  return `<article class="portfolio-directive portfolio-${escapeHtml(action)}"><div class="portfolio-directive-head"><strong>${escapeHtml(row.symbol || '—')}</strong><span>${escapeHtml(row.action || 'HOLD')}</span></div><div class="portfolio-directive-values"><div><small>Target</small><b>${Number(row.target_weight_pct || row.target_weight || 0).toFixed(2)}%</b></div><div><small>Prior</small><b>${Number(row.prior_weight_pct || row.prior_weight || 0).toFixed(2)}%</b></div><div><small>Reference close</small><b>${Number(row.reference_close || row.reference_price || 0).toFixed(2)}</b></div><div><small>Target shares</small><b>${Number(row.estimated_target_shares || row.estimated_shares || 0).toFixed(2)}</b></div></div><p>${escapeHtml(row.rationale || '')}</p><small class="portfolio-lifecycle">${escapeHtml(lifecycleLine)}</small></article>`;
+  return `<article class="portfolio-directive portfolio-${escapeHtml(action)}"><div class="portfolio-directive-head"><strong>${escapeHtml(row.symbol || '—')}</strong><span>${escapeHtml(row.action || 'UNCHANGED')}</span></div><div class="portfolio-directive-values"><div><small>Study weight</small><b>${Number(row.target_weight_pct || row.target_weight || 0).toFixed(2)}%</b></div><div><small>Prior study weight</small><b>${Number(row.prior_weight_pct || row.prior_weight || 0).toFixed(2)}%</b></div><div><small>Reference close</small><b>${Number(row.reference_close || row.reference_price || 0).toFixed(2)}</b></div><div><small>Modeled units</small><b>${Number(row.estimated_target_shares || row.estimated_shares || 0).toFixed(2)}</b></div></div><p>${escapeHtml(row.rationale || '')}</p><small class="portfolio-lifecycle">${escapeHtml(lifecycleLine)}</small></article>`;
 }
 
 function renderPortfolioDecision(report, {stored=false} = {}) {
@@ -1621,8 +1685,8 @@ function renderPortfolioDecision(report, {stored=false} = {}) {
   if (!results) return;
   const directives = report.directives || [];
   const actions = directives.reduce((counts, row) => { counts[row.action] = (counts[row.action] || 0) + 1; return counts; }, {});
-  const summary = ['BUY', 'SELL', 'TRIM', 'HOLD'].filter(key => actions[key]).map(key => `<span><b>${actions[key]}</b> ${key.toLowerCase()}</span>`).join('') || '<span>No directives</span>';
-  results.innerHTML = `<section class="panel portfolio-decision-summary"><div><p class="eyebrow">${stored ? 'Latest saved ledger' : 'Decision saved'}</p><h2>${escapeHtml(report.label || 'Portfolio Lab')}</h2><p>${escapeHtml(report.execution_note || 'This record is research-only. No broker order was created.')}</p></div><div class="portfolio-action-summary">${summary}</div><div class="portfolio-fingerprints"><span>AS OF <b>${escapeHtml(report.as_of || '—')}</b></span><span>DATASET <code>${escapeHtml(String(report.dataset_fingerprint || '').slice(0, 14))}…</code></span><span>CONFIG <code>${escapeHtml(String(report.configuration_fingerprint || '').slice(0, 14))}…</code></span></div></section><section class="portfolio-directive-grid">${directives.map(portfolioDirectiveCard).join('')}</section>`;
+  const summary = ['INCREASE', 'REDUCE', 'EXIT', 'UNCHANGED'].filter(key => actions[key]).map(key => `<span><b>${actions[key]}</b> ${key.toLowerCase()}</span>`).join('') || '<span>No study changes</span>';
+  results.innerHTML = `<section class="panel portfolio-decision-summary"><div><p class="eyebrow">${stored ? 'Latest saved study' : 'Study saved'}</p><h2>${escapeHtml(report.label || 'Portfolio Lab')}</h2><p>${escapeHtml(report.execution_note || 'Educational hypothetical study only. Not financial advice or a recommendation; no broker order was created.')}</p></div><div class="portfolio-action-summary">${summary}</div><div class="portfolio-fingerprints"><span>AS OF <b>${escapeHtml(report.as_of || '—')}</b></span><span>DATASET <code>${escapeHtml(String(report.dataset_fingerprint || '').slice(0, 14))}…</code></span><span>CONFIG <code>${escapeHtml(String(report.configuration_fingerprint || '').slice(0, 14))}…</code></span></div></section><section class="portfolio-directive-grid">${directives.map(portfolioDirectiveCard).join('')}</section>`;
 }
 
 async function loadPortfolioLedger() {
@@ -1794,7 +1858,9 @@ async function runScan(ticker = null, period = null) {
 
   currentTicker = raw;
   currentPeriod = period || currentPeriod;
-  const allowed = await requireAnalysisAccess({type:'scan', ticker:raw, period:currentPeriod});
+  const scanIntent = {type:'scan', ticker:raw, period:currentPeriod};
+  if (showDailyScannerOffer(currentUser, scanIntent)) return;
+  const allowed = await requireAnalysisAccess(scanIntent);
   if (!allowed) return;
   showLoading(true);
   hideError();
@@ -2457,22 +2523,21 @@ function initDevTools() {
 
   if (select) {
     if (!Array.from(select.options).some(opt => opt.value === currentPatternMode)) {
-      // Pattern Lab has its own small comparison catalog.  Do not overwrite
-      // the workspace-wide Universal V2 selection just because this developer
-      // control does not offer that research engine.
-      if (currentPatternMode !== 'universal_v2') {
-        currentPatternMode = 'official';
-        safeStorageSet('oryntra_pattern_engine_mode', 'official');
+      // Pattern Lab has its own comparison catalog. Keep the public workspace
+      // on V8 when a stale or private-only mode is encountered.
+      if (currentPatternMode !== 'minerva_v1') {
+        currentPatternMode = 'v8';
+        safeStorageSet('oryntra_pattern_engine_mode', 'v8');
       }
     }
-    select.value = Array.from(select.options).some(opt => opt.value === currentPatternMode) ? currentPatternMode : 'official';
+    select.value = Array.from(select.options).some(opt => opt.value === currentPatternMode) ? currentPatternMode : 'v8';
     if (select.value !== currentPatternMode) {
-      currentPatternMode = 'official';
-      select.value = 'official';
-      safeStorageSet('oryntra_pattern_engine_mode', 'official');
+      currentPatternMode = 'v8';
+      select.value = 'v8';
+      safeStorageSet('oryntra_pattern_engine_mode', 'v8');
     }
     select.addEventListener('change', () => {
-      currentPatternMode = select.value || 'official';
+      currentPatternMode = select.value || 'v8';
       safeStorageSet('oryntra_pattern_engine_mode', currentPatternMode);
       if (['official','v8','vai2'].includes(currentPatternMode)) updateSettingsEngineDisplay();
       const settingsSelect = document.getElementById('settingsEngineSelect'); if (settingsSelect && ['official','v8','vai2'].includes(currentPatternMode)) settingsSelect.value = currentPatternMode;
@@ -2563,13 +2628,13 @@ function updatePatternModePill() {
 
 
 function engineLabel(mode) {
-  const labels = {official: 'V1.0 OFFICIAL', universal_v2: 'UNIVERSAL V2 RESEARCH', v8: 'V1.0 ANALYTICS', vai2: 'V1.0 QUANT'};
-  return labels[String(mode || '').toLowerCase()] || String(mode || 'official').toUpperCase();
+  const labels = {v8: 'V8', minerva_v1: 'MINERVA · PRO'};
+  return labels[String(mode || '').toLowerCase()] || 'V8';
 }
 
 function setAppEngine(mode, opts={}) {
-  const allowed = ['official', 'universal_v2'];
-  const next = allowed.includes(String(mode || '').toLowerCase()) ? String(mode).toLowerCase() : 'official';
+  const allowed = ['v8'];
+  const next = allowed.includes(String(mode || '').toLowerCase()) ? String(mode).toLowerCase() : 'v8';
   currentPatternMode = next;
   safeStorageSet('oryntra_pattern_engine_mode', next);
   safeStorageSet(WORKSPACE_MODEL_KEY, next);
@@ -2589,7 +2654,7 @@ function setAppEngine(mode, opts={}) {
 function initSettingsPage() {
   const select = document.getElementById('settingsEngineSelect');
   if (select) {
-    select.value = 'official';
+    select.value = 'v8';
     select.addEventListener('change', () => setAppEngine(select.value, {notice:true}));
   }
   initQuantSettings();

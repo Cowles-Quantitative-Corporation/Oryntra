@@ -16,7 +16,6 @@ from ..database import get_connection
 from .auth import require_current_user
 
 router = APIRouter()
-DEBUG_ALLOWED_IP = "47.202.51.193"
 PLANS = {
     "actual": None,
     "base": ("base", "Base"),
@@ -61,7 +60,9 @@ def _client_ip(request: Request) -> str | None:
 
 def _require_debug_access(request: Request) -> dict:
     user = require_current_user(request)
-    allowed_ip = os.getenv("ORYNTRA_DEBUG_ALLOWED_IP", DEBUG_ALLOWED_IP).strip()
+    # Fail closed.  An owner-control deployment must explicitly name the one
+    # allowed address; a source-code default must never accidentally expose it.
+    allowed_ip = os.getenv("ORYNTRA_DEBUG_ALLOWED_IP", "").strip()
     if not _enabled() or _client_ip(request) != allowed_ip:
         # Do not reveal whether the tool exists or why it is inaccessible.
         raise HTTPException(status_code=404, detail="Not found")

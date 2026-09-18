@@ -15,8 +15,8 @@ class SubscriptionComparisonSheet extends StatelessWidget {
       description: 'Official scanner and bounded historical research.',
     ),
     _PlanDetails(
-      code: 'plus',
-      label: 'PLUS',
+      code: 'pro',
+      label: 'PRO',
       name: 'Oryntra Pro',
       description:
           'More research workspace capacity; no personalized portfolio service.',
@@ -89,7 +89,7 @@ class SubscriptionComparisonSheet extends StatelessWidget {
           .contains(_normalizedPlan);
     }
     return _normalizedPlan == code ||
-        (code == 'plus' && _normalizedPlan == 'pro');
+        (code == 'pro' && _normalizedPlan == 'plus');
   }
 
   @override
