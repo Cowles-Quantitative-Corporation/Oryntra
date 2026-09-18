@@ -10,9 +10,14 @@ from backend.minerva import (
     tba5_residual_momentum_candidate,
     tba6_residual_lifecycle_candidate,
     tba8_institutional_risk_candidate,
+    tba9_integrity_candidate,
 )
 from backend.portfolio_execution import simulate_book
-from backend.universal_engine import UniversalConfig
+from backend.universal_engine import UniversalConfig, portfolio_targets
+from backend.universal_institutional_decision import (
+    InstitutionalDecisionConfig,
+    constrain_institutional_weights,
+)
 from backend.universal_risk_supervisor import (
     RiskSupervisorConfig,
     dynamic_exposure_scale,
@@ -30,11 +35,98 @@ def test_every_named_tba_candidate_enables_supervisor_but_minerva_does_not():
         tba5_residual_momentum_candidate(),
         tba6_residual_lifecycle_candidate(),
         tba8_institutional_risk_candidate(),
+        tba9_integrity_candidate(),
     )
     assert all(candidate.risk_supervisor.enabled for candidate in candidates)
     assert all(candidate.risk_supervisor.component_risk_enabled for candidate in candidates)
     assert all(candidate.risk_supervisor.maximum_risk_contribution == .10 for candidate in candidates)
     assert all(not candidate.risk_supervisor.drawdown_enabled for candidate in candidates)
+
+
+def test_tba8_and_tba9_enable_the_same_frozen_institutional_layer():
+    assert minerva_baseline().institutional_decision.enabled is False
+    assert tba5_residual_momentum_candidate().institutional_decision.enabled is False
+    candidate = tba8_institutional_risk_candidate()
+    assert candidate.institutional_decision.enabled is True
+    assert candidate.ridge_score_smoothing == .25
+    assert candidate.institutional_decision.round_trip_cost_multiplier == 0.0
+    assert candidate.institutional_decision.weak_edge_scale == .50
+    successor = tba9_integrity_candidate()
+    assert successor.institutional_decision == candidate.institutional_decision
+    assert successor.research_profile == "tba9_integrity"
+
+
+def test_institutional_layer_only_reduces_and_enforces_capacity():
+    proposed = np.array([.40, .40, .20])
+    adjusted, audit = constrain_institutional_weights(
+        proposed,
+        predicted_return=np.array([.01, -.01, .01]),
+        prediction_error=np.array([.01, .01, .01]),
+        prior_median_dollar_volume=np.array([100e6, 100e6, 2e6]),
+        capital=1e6,
+        base_cost_bps=10,
+        impact_bps=20,
+        participation=.02,
+        config=InstitutionalDecisionConfig(enabled=True, round_trip_cost_multiplier=0,
+                                           weak_edge_scale=.5, liquidity_horizon_sessions=3,
+                                           capacity_buffer=.8),
+    )
+    assert np.all(adjusted <= proposed)
+    assert np.isclose(adjusted[0], proposed[0])
+    assert np.isclose(adjusted[1], proposed[1] * .5)
+    assert np.isclose(adjusted[2], .096)
+    assert audit["strong_edge_names"] == 2
+    assert audit["weak_edge_names"] == 1
+    assert audit["capacity_limited_names"] == 1
+
+
+def test_cost_hurdle_is_tunable_and_scales_a_weak_edge():
+    proposed = np.array([.5, .5])
+    adjusted, audit = constrain_institutional_weights(
+        proposed,
+        predicted_return=np.array([.004, .0005]),
+        prediction_error=np.array([.01, .01]),
+        prior_median_dollar_volume=np.array([100e6, 100e6]),
+        capital=1e6,
+        base_cost_bps=10,
+        impact_bps=20,
+        participation=.02,
+        config=InstitutionalDecisionConfig(enabled=True, round_trip_cost_multiplier=1,
+                                           weak_edge_scale=.25, liquidity_horizon_sessions=3),
+    )
+    assert np.isclose(adjusted[0], .5)
+    assert np.isclose(adjusted[1], .125)
+    assert audit["strong_edge_names"] == 1
+    assert audit["weak_edge_names"] == 1
+
+
+def test_zero_cost_multiplier_handles_missing_liquidity_without_numeric_warning():
+    with np.errstate(invalid="raise"):
+        adjusted, audit = constrain_institutional_weights(
+            np.array([.5]), np.array([.01]), np.array([.02]), np.array([0.0]),
+            capital=1e6, base_cost_bps=10, impact_bps=20, participation=.02,
+            config=InstitutionalDecisionConfig(enabled=True, round_trip_cost_multiplier=0),
+        )
+    assert adjusted[0] == 0
+    assert audit["illiquid_names"] == 1
+
+
+def test_tba8_portfolio_path_records_decision_audit_and_keeps_it_causal():
+    dates = pd.bdate_range("2020-01-01", periods=300)
+    prices = pd.DataFrame({"AAA": np.linspace(100, 130, 300), "BBB": np.linspace(80, 110, 300)}, index=dates)
+    volumes = pd.DataFrame(10e6, index=dates, columns=prices.columns)
+    panel = {
+        "score": pd.DataFrame(.8, index=dates, columns=prices.columns),
+        "volatility": pd.DataFrame(.01, index=dates, columns=prices.columns),
+        "predicted_return": pd.DataFrame({"AAA": .01, "BBB": -.01}, index=dates),
+        "prediction_error": pd.DataFrame(.02, index=dates, columns=prices.columns),
+    }
+    config = tba8_institutional_risk_candidate(rebalance="daily")
+    targets = portfolio_targets(prices, config, volumes=volumes, precomputed_panel=panel)
+    audit = targets.attrs["institutional_decision_audit"]
+    assert len(audit) == len(dates) - 252
+    assert all(row["strong_edge_names"] == 1 and row["weak_edge_names"] == 1 for row in audit)
+    assert np.all(targets.loc[dates[252]:, "BBB"] <= targets.loc[dates[252]:, "AAA"])
 
 
 def test_cluster_and_component_caps_only_reduce_risky_concentration():

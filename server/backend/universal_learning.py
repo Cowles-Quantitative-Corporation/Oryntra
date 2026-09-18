@@ -31,7 +31,8 @@ def walk_forward_ridge_scores(closes: pd.DataFrame, opens: pd.DataFrame, volumes
                               score_smoothing: float = 0.0,
                               ic_gate: bool = False,
                               ic_lookback_sessions: int = 63,
-                              ic_minimum: float = 0.0) -> pd.DataFrame:
+                              ic_minimum: float = 0.0,
+                              return_diagnostics: bool = False) -> pd.DataFrame | dict[str, pd.DataFrame]:
     """Return cross-sectional scores trained only on outcomes completed before each date.
 
     At close ``t`` the model sees features through ``t``. Training labels are
@@ -61,6 +62,8 @@ def walk_forward_ridge_scores(closes: pd.DataFrame, opens: pd.DataFrame, volumes
         raise ValueError("score_smoothing must be in [0, 1)")
     if not (isinstance(ic_gate, bool) and 21 <= ic_lookback_sessions <= 252 and -1 <= ic_minimum <= 1):
         raise ValueError("Invalid information-coefficient gate configuration")
+    if not isinstance(return_diagnostics, bool):
+        raise ValueError("return_diagnostics must be boolean")
 
     residual_horizons = ((21, 63) if include_residual_momentum else ()) if residual_momentum_horizons is None else tuple(residual_momentum_horizons)
     if any(horizon not in {21, 63} for horizon in residual_horizons) or len(set(residual_horizons)) != len(residual_horizons):
@@ -109,7 +112,11 @@ def walk_forward_ridge_scores(closes: pd.DataFrame, opens: pd.DataFrame, volumes
         label = forward
     relative_label = label.sub(label.mean(axis=1), axis=0)
     scores = pd.DataFrame(0.0, index=closes.index, columns=closes.columns)
+    predicted_returns = pd.DataFrame(0.0, index=closes.index, columns=closes.columns)
+    prediction_errors = pd.DataFrame(1.0, index=closes.index, columns=closes.columns)
     last_score: np.ndarray | None = None
+    last_prediction: np.ndarray | None = None
+    last_prediction_error: np.ndarray | None = None
     first = max(252, training_sessions + horizon_sessions + 1)
     for current in range(first, len(closes)):
         if last_score is None or (current - first) % retrain_sessions == 0:
@@ -135,20 +142,32 @@ def walk_forward_ridge_scores(closes: pd.DataFrame, opens: pd.DataFrame, volumes
                 coefficients = np.linalg.solve(design.T @ design + regularizer, design.T @ y_train)
             except np.linalg.LinAlgError:
                 coefficients = np.linalg.lstsq(design.T @ design + regularizer, design.T @ y_train, rcond=None)[0]
+            fitted = design @ coefficients
+            residual_error = max(float(np.sqrt(np.mean(np.square(y_train - fitted)))), 1e-8)
+            gram_inverse = np.linalg.pinv(design.T @ design + regularizer)
             current_features = features[current]
             raw = np.full(len(closes.columns), np.nan)
+            uncertainty = np.full(len(closes.columns), np.nan)
             valid_current = np.isfinite(current_features).all(axis=1)
             current_design = np.column_stack((np.ones(valid_current.sum()), np.clip((current_features[valid_current] - mean) / scale, -8, 8)))
             raw[valid_current] = current_design @ coefficients
+            leverage = np.einsum("ij,jk,ik->i", current_design, gram_inverse, current_design)
+            uncertainty[valid_current] = residual_error * np.sqrt(1.0 + np.maximum(leverage, 0.0))
             ranks = pd.Series(raw, index=closes.columns).rank(pct=True, method="first")
             candidate_score = ranks.mul(2).sub(1).fillna(0).to_numpy()
             last_score = candidate_score if last_score is None else (
                 score_smoothing * last_score + (1 - score_smoothing) * candidate_score
             )
+            last_prediction = np.nan_to_num(raw, nan=0.0)
+            last_prediction_error = np.nan_to_num(uncertainty, nan=1.0, posinf=1.0, neginf=1.0)
         if last_score is not None:
             scores.iloc[current] = last_score
+            predicted_returns.iloc[current] = last_prediction
+            prediction_errors.iloc[current] = last_prediction_error
     if ic_gate:
         scores = _apply_completed_ic_gate(scores, relative_label, horizon_sessions, ic_lookback_sessions, ic_minimum)
+    if return_diagnostics:
+        return {"score": scores, "predicted_return": predicted_returns, "prediction_error": prediction_errors}
     return scores
 
 

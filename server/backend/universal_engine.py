@@ -12,6 +12,7 @@ from .universal_position_policy import PositionPolicyConfig
 from .universal_market_context import MarketContextConfig
 from .universal_peer_shock import PeerShockConfig
 from .universal_learning import walk_forward_ridge_scores
+from .universal_institutional_decision import InstitutionalDecisionConfig, constrain_institutional_weights
 from .universal_risk_supervisor import RiskSupervisorConfig, supervise_cross_sectional_weights
 
 
@@ -68,16 +69,17 @@ class UniversalConfig:
     market_context: MarketContextConfig = MarketContextConfig()
     peer_shock: PeerShockConfig = PeerShockConfig()
     risk_supervisor: RiskSupervisorConfig = RiskSupervisorConfig()
+    institutional_decision: InstitutionalDecisionConfig = InstitutionalDecisionConfig()
 
     def __post_init__(self):
-        for name, cls in (("position_policy", PositionPolicyConfig), ("market_context", MarketContextConfig), ("peer_shock", PeerShockConfig), ("risk_supervisor", RiskSupervisorConfig)):
+        for name, cls in (("position_policy", PositionPolicyConfig), ("market_context", MarketContextConfig), ("peer_shock", PeerShockConfig), ("risk_supervisor", RiskSupervisorConfig), ("institutional_decision", InstitutionalDecisionConfig)):
             value = getattr(self, name)
             if isinstance(value, dict):
                 object.__setattr__(self, name, cls(**value))
             elif not isinstance(value, cls):
                 raise ValueError(f"{name} must be a validated configuration")
         for key, value in asdict(self).items():
-            if key not in {"rebalance", "selection_mode", "alpha_model", "research_profile", "maximum_asset_annual_volatility", "maximum_portfolio_market_beta", "position_policy", "market_context", "peer_shock", "risk_supervisor"} and not np.isfinite(value):
+            if key not in {"rebalance", "selection_mode", "alpha_model", "research_profile", "maximum_asset_annual_volatility", "maximum_portfolio_market_beta", "position_policy", "market_context", "peer_shock", "risk_supervisor", "institutional_decision"} and not np.isfinite(value):
                 raise ValueError(f"{key} must be finite")
         weights = self.weights
         if min(weights) < 0 or not np.isclose(sum(weights), 1):
@@ -86,7 +88,7 @@ class UniversalConfig:
             raise ValueError("Invalid threshold or volatility target")
         if self.alpha_model not in {"handcrafted", "walk_forward_ridge"}:
             raise ValueError("alpha_model must be handcrafted or walk_forward_ridge")
-        if self.research_profile not in {"universal_v2", "minerva_v1"}:
+        if self.research_profile not in {"universal_v2", "minerva_v1", "tba9_integrity"}:
             raise ValueError("Unknown research profile")
         if not all(isinstance(value, bool) for value in (self.ridge_include_residual_momentum,
                                                           self.ridge_residual_momentum_21,
@@ -221,7 +223,7 @@ def signal_panel(prices: pd.DataFrame, config: UniversalConfig = UniversalConfig
             raise ValueError("Walk-forward learning requires close, open and volume panels together")
         source_closes, source_opens, source_volumes = (supplied if all(item is not None for item in supplied)
                                                         else (prices, opens, volumes))
-        learned = walk_forward_ridge_scores(source_closes, source_opens, source_volumes,
+        learned_output = walk_forward_ridge_scores(source_closes, source_opens, source_volumes,
                                             training_sessions=config.ridge_training_sessions,
                                             retrain_sessions=config.ridge_retrain_sessions,
                                             horizon_sessions=config.ridge_horizon_sessions,
@@ -236,7 +238,14 @@ def signal_panel(prices: pd.DataFrame, config: UniversalConfig = UniversalConfig
                                             score_smoothing=config.ridge_score_smoothing,
                                             ic_gate=config.ridge_ic_gate,
                                             ic_lookback_sessions=config.ridge_ic_lookback_sessions,
-                                            ic_minimum=config.ridge_ic_minimum)
+                                            ic_minimum=config.ridge_ic_minimum,
+                                            return_diagnostics=config.institutional_decision.enabled)
+        if config.institutional_decision.enabled:
+            learned = learned_output["score"]
+            components["predicted_return"] = learned_output["predicted_return"].reindex(index=prices.index, columns=prices.columns)
+            components["prediction_error"] = learned_output["prediction_error"].reindex(index=prices.index, columns=prices.columns)
+        else:
+            learned = learned_output
         if not set(prices.columns).issubset(learned.columns):
             raise ValueError("Walk-forward learning panel must cover every evaluated symbol")
         learned = learned.reindex(index=prices.index, columns=prices.columns)
@@ -321,6 +330,8 @@ def portfolio_targets(prices: pd.DataFrame, config: UniversalConfig = UniversalC
         market_variance = market.rolling(126, min_periods=126).var(ddof=0)
         asset_market_beta = returns.rolling(126, min_periods=126).cov(market).div(market_variance, axis=0)
     result = pd.DataFrame(0.0, index=prices.index, columns=prices.columns)
+    institutional_audit: list[dict[str, object]] = []
+    prior_median_dollar_volume = prices.mul(volumes).rolling(20, min_periods=20).median().shift(1) if config.institutional_decision.enabled else None
     periods = prices.index.to_period("W-FRI" if config.rebalance == "weekly" else "M")
     for i in range(252, len(prices)):
         if config.rebalance != "daily" and i > 252 and periods[i] == periods[i - 1]:
@@ -358,6 +369,19 @@ def portfolio_targets(prices: pd.DataFrame, config: UniversalConfig = UniversalC
                 break
             weights[free] += excess * raw[free] / raw[free].sum()
         weights = np.minimum(weights, config.name_cap)
+        if config.institutional_decision.enabled:
+            weights, decision_audit = constrain_institutional_weights(
+                weights,
+                panel["predicted_return"].iloc[i].to_numpy(dtype=float),
+                panel["prediction_error"].iloc[i].to_numpy(dtype=float),
+                prior_median_dollar_volume.iloc[i].to_numpy(dtype=float),
+                capital=config.initial_equity,
+                base_cost_bps=config.cost_bps,
+                impact_bps=config.impact_bps,
+                participation=config.participation,
+                config=config.institutional_decision,
+            )
+            institutional_audit.append({"date": str(prices.index[i].date()), **decision_audit})
         if asset_market_beta is not None:
             betas = asset_market_beta.iloc[i].to_numpy(dtype=float)
             if not np.isfinite(betas).all():
@@ -383,4 +407,5 @@ def portfolio_targets(prices: pd.DataFrame, config: UniversalConfig = UniversalC
         weights, _ = supervise_cross_sectional_weights(weights, stressed, config.risk_supervisor)
         risk = float(np.sqrt(max(0, weights @ stressed @ weights) * 252))
         result.iloc[i] = weights * min(1.0, config.vol_target / max(risk, 1e-12))
+    result.attrs["institutional_decision_audit"] = institutional_audit
     return result

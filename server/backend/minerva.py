@@ -10,6 +10,7 @@ from dataclasses import replace
 
 from .universal_engine import UniversalConfig
 from .universal_position_policy import PositionPolicyConfig
+from .universal_institutional_decision import InstitutionalDecisionConfig
 from .universal_risk_supervisor import RiskSupervisorConfig
 
 
@@ -84,8 +85,38 @@ def tba6_residual_lifecycle_candidate(**overrides: object) -> UniversalConfig:
 
 
 def tba8_institutional_risk_candidate(**overrides: object) -> UniversalConfig:
-    """TBA 8: residual-momentum signal with the shared risk supervisor."""
-    return _tba_candidate({"ridge_residual_momentum_21": True, "ridge_residual_momentum_63": True}, overrides)
+    """TBA 8: persistent residual forecasts with causal confidence and capacity."""
+    return _tba_candidate({
+        "ridge_residual_momentum_21": True,
+        "ridge_residual_momentum_63": True,
+        "ridge_score_smoothing": .25,
+        "institutional_decision": InstitutionalDecisionConfig(
+            enabled=True,
+            minimum_signal_to_noise=0.0,
+            # Retain the tunable cost estimate and audit, but do not hard-gate
+            # on it: every positive multiplier reduced development Sharpe.
+            round_trip_cost_multiplier=0.0,
+            weak_edge_scale=.50,
+            liquidity_horizon_sessions=3,
+            capacity_buffer=.80,
+            minimum_dollar_volume=1_000_000.0,
+        ),
+    }, overrides)
+
+
+TBA9_ID = "tba9_integrity_research"
+TBA9_STATUS = "candidate_not_release_approved"
+
+
+def tba9_integrity_candidate(**overrides: object) -> UniversalConfig:
+    """TBA 9: TBA 8 economics under a point-in-time research contract.
+
+    The signal and risk controls are intentionally inherited unchanged from
+    TBA 8.  TBA 9's upgrade is the required universe, locked-holdout, and
+    diagnostic protocol implemented by :mod:`tba9_integrity`; it is not a
+    retrospective weight optimization and is never exposed to the product.
+    """
+    return tba8_institutional_risk_candidate(**({"research_profile": "tba9_integrity"} | overrides))
 
 
 def _tba_candidate(defaults: dict[str, object], overrides: dict[str, object]) -> UniversalConfig:

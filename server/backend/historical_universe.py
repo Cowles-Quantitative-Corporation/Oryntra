@@ -107,6 +107,12 @@ def _validate_snapshot(snapshot: dict[str, Any]) -> dict[str, Any]:
 
 
 def _date(value: str | date, name: str) -> date:
+    # pandas.Timestamp is a datetime subclass; reduce it to its calendar date
+    # so schedule comparisons remain timezone-free and deterministic.
+    if hasattr(value, "date") and not isinstance(value, date):
+        value = value.date()
+    elif value.__class__.__module__.startswith("pandas"):
+        value = value.date()
     if isinstance(value, date):
         return value
     try:

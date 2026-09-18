@@ -17,6 +17,7 @@ from .universal_peer_shock import peer_shock_contract
 from .universal_taxonomy import taxonomy_contract
 from .universal_research_blueprint import research_blueprint
 from .universal_risk_supervisor import risk_supervisor_contract
+from .universal_institutional_decision import institutional_decision_contract
 
 
 def run_universal(histories: dict[str, pd.DataFrame], config: UniversalConfig = UniversalConfig(),
@@ -26,7 +27,8 @@ def run_universal(histories: dict[str, pd.DataFrame], config: UniversalConfig = 
                   fundamental_scores: pd.DataFrame | None = None,
                   fundamental_acceleration_scores: pd.DataFrame | None = None,
                   fundamental_observed: pd.DataFrame | None = None,
-                  learning_panels: tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame] | None = None) -> dict:
+                  learning_panels: tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame] | None = None,
+                  universe_eligibility: pd.DataFrame | None = None) -> dict:
     from .quant_research import _summary, _performance_diagnostics, _correlation_stress_report
     if not histories:
         raise ValueError("Supply at least one history")
@@ -43,6 +45,10 @@ def run_universal(histories: dict[str, pd.DataFrame], config: UniversalConfig = 
         volumes = volumes.loc[:evaluation_end]
     if len(prices) < 254:
         raise ValueError("Evaluation end leaves fewer than 253 warmup bars and one evaluation bar")
+    if universe_eligibility is not None:
+        universe_eligibility = universe_eligibility.reindex(index=prices.index, columns=prices.columns)
+        if universe_eligibility.isna().any().any() or universe_eligibility.to_numpy().dtype != bool:
+            raise ValueError("universe_eligibility must be a complete boolean panel aligned to researched prices")
     needs_fundamental = config.fundamental_weight or config.fundamental_quality_overlay_weight
     if needs_fundamental:
         if fundamental_scores is None or not set(prices.columns).issubset(fundamental_scores.columns):
@@ -67,7 +73,16 @@ def run_universal(histories: dict[str, pd.DataFrame], config: UniversalConfig = 
                          fundamental_acceleration_scores=fundamental_acceleration_scores)
     target = portfolio_targets(prices, config, benchmark_returns, fundamental_scores, opens, volumes, *learning, highs, lows,
                                fundamental_acceleration_scores=fundamental_acceleration_scores, precomputed_panel=panel)
+    institutional_audit = list(target.attrs.get("institutional_decision_audit", []))
     target, entry_gate, context_audit = apply_market_context(target, market_observations, config.market_context)
+    # The membership decision is known at this close and affects the following
+    # session's target.  It is deliberately applied after every signal/risk
+    # transform so an ineligible name cannot be reintroduced downstream.
+    if universe_eligibility is not None:
+        target = target.where(universe_eligibility, 0.0)
+        # Market context is a portfolio-level gate; it remains a Series.  A
+        # fully ineligible session must also block new entries.
+        entry_gate = entry_gate & universe_eligibility.any(axis=1)
     start = pd.Timestamp(evaluation_start) if evaluation_start else prices.index[253]
     if start <= prices.index[252]:
         raise ValueError("Evaluation must begin after the 253-bar signal warmup")
@@ -124,16 +139,22 @@ def run_universal(histories: dict[str, pd.DataFrame], config: UniversalConfig = 
     if config.alpha_model == "walk_forward_ridge" and learning_panels is not None:
         for panel_source in learning_panels:
             source_hash.update(pd.util.hash_pandas_object(panel_source, index=True).values.tobytes())
+    if universe_eligibility is not None:
+        source_hash.update(b"point-in-time-universe-eligibility-v1")
+        source_hash.update(pd.util.hash_pandas_object(universe_eligibility, index=True).values.tobytes())
     fills = simulation["fills"]
     exposure = held.iloc[-1]
     scorecard = consistency_scorecard(net, benchmark_returns, risk_free, prior_strategy=prior_net)
     code_hash = hashlib.sha256()
-    for module in ("universal_engine.py", "universal_learning.py", "universal_fundamentals.py", "portfolio_execution.py", "alpha_evaluation.py", "alpha_consistency.py", "universal_position_policy.py", "universal_risk_supervisor.py", "universal_yearly_protocol.py", "universal_market_context.py", "universal_taxonomy.py", "universe_selection.py", "universal_research_blueprint.py", "universal_research.py", "minerva.py", "minerva_corporate.py", "quant_research.py"):
+    for module in ("universal_engine.py", "universal_learning.py", "universal_fundamentals.py", "portfolio_execution.py", "alpha_evaluation.py", "alpha_consistency.py", "universal_position_policy.py", "universal_risk_supervisor.py", "universal_institutional_decision.py", "universal_yearly_protocol.py", "universal_market_context.py", "universal_taxonomy.py", "universe_selection.py", "universal_research_blueprint.py", "universal_research.py", "minerva.py", "minerva_corporate.py", "quant_research.py"):
         code_hash.update(module.encode())
         code_hash.update(Path(__file__).with_name(module).read_bytes())
     return {"engine": ENGINE_ID, "engine_version": ENGINE_VERSION, "code_fingerprint": code_hash.hexdigest(), "configuration": asdict(config), "engine_configuration": asdict(config),
             "config_fingerprint": config.fingerprint, "dataset_fingerprint": source_hash.hexdigest(),
-            "universe": {"symbols": list(prices.columns), "start": str(evaluation_index[0].date()), "end": str(evaluation_index[-1].date()), "sessions": len(net)},
+            "universe": {"symbols": list(prices.columns), "start": str(evaluation_index[0].date()), "end": str(evaluation_index[-1].date()), "sessions": len(net),
+                         "eligibility": {"mode": "point_in_time_mask" if universe_eligibility is not None else "static_input_unverified",
+                                         "eligible_name_observations": int(universe_eligibility.reindex(evaluation_index).to_numpy().sum()) if universe_eligibility is not None else None,
+                                         "total_name_observations": int(universe_eligibility.reindex(evaluation_index).size) if universe_eligibility is not None else None}},
             "results": [{"id": "strategy_ensemble", "label": "Universal V2 research engine", **report_summary}],
             "alpha": scorecard, "validation": {"status": "fixed_rule_evaluation", "note": "Calendar results are descriptive; unseen data and a frozen selection protocol are required for confirmation."},
             "execution": {"model": "cash_and_shares_next_open", "fill_count": len(fills),
@@ -153,6 +174,8 @@ def run_universal(histories: dict[str, pd.DataFrame], config: UniversalConfig = 
             "peer_shock": peer_shock_contract(config.peer_shock),
             "risk_supervisor": {**risk_supervisor_contract(config.risk_supervisor),
                                 "daily_audit": simulation["risk_supervisor_audit"]},
+            "institutional_decision": {**institutional_decision_contract(config.institutional_decision),
+                                       "daily_audit": institutional_audit},
             "taxonomy": taxonomy_contract(),
             "research_blueprint": research_blueprint(),
             "trade_outcomes": {"definition": "Cash-flow P&L of flat-to-flat position episodes, including partial fills and costs; open episodes excluded", "closed": simulation["closed_episodes"], "open_count": len(simulation["open_episodes"]), "win_rate_pct": simulation["win_rate_pct"]},
@@ -161,5 +184,5 @@ def run_universal(histories: dict[str, pd.DataFrame], config: UniversalConfig = 
             "visual_diagnostics": {"performance": _performance_diagnostics(net), "correlation_stress": _correlation_stress_report(held, prices.pct_change(fill_method=None))},
             "corporate_data": {"status": "availability_dated_fundamental_panel" if (needs_fundamental or config.fundamental_acceleration_overlay_weight) else "not_used",
                                "signal_coverage_pct": round(observed_fraction * 100, 2) if observed_fraction is not None else 0}, "macro_data": {"status": "not_used", "signal_coverage_pct": 0},
-            "methodology": {"execution_timing": "t close signal -> t+1 open transaction -> mark at close", "cash_rate": "explicit daily risk-free series" if risk_free is not None else "zero; alpha unavailable without risk-free input", "warnings": ["Long-only research candidate; no validated alpha claim.", "Adjusted OHLC must use consistent corporate-action adjustments; complete data required.", "Current-survivor baskets are exploratory and may contain selection bias."]},
+            "methodology": {"execution_timing": "t close signal -> t+1 open transaction -> mark at close", "cash_rate": "explicit daily risk-free series" if risk_free is not None else "zero; alpha unavailable without risk-free input", "warnings": ["Long-only research candidate; no validated alpha claim.", "Adjusted OHLC must use consistent corporate-action adjustments; complete data required."] + ([] if universe_eligibility is not None else ["Current-survivor baskets are exploratory and may contain selection bias."])},
             "daily_returns": [{"date": str(day.date()), "net_return": float(value)} for day, value in net.items()]}
