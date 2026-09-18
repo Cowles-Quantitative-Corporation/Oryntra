@@ -11,7 +11,7 @@ from typing import Any
 import pandas as pd
 
 from .quant_research import MODEL_PROFILES, STRATEGIES, QuantConfig, evaluate_strategies
-from .research_experiments import fingerprint, record_experiment
+from .research_experiments import fingerprint, record_experiment, record_experiment_partitions
 
 
 CONFIG_FIELDS = {
@@ -103,4 +103,11 @@ def run_manifest_experiment(
         metrics={"primary_result": overall, "validation": report.get("validation", {}), "benchmark": report.get("benchmark", {})},
         notes=str(manifest.get("hypothesis") or manifest.get("notes") or ""),
     )
+    common_sessions = sorted(set.intersection(*[{str(day.date()) for day in history.index} for history in eligible.values()]))
+    holdout_sessions = max(63, len(common_sessions) // 5)
+    if len(common_sessions) > holdout_sessions:
+        record_experiment_partitions(experiment_id, {
+            "development": common_sessions[:-holdout_sessions],
+            "holdout": common_sessions[-holdout_sessions:],
+        })
     return {**report, "experiment_id": experiment_id, "dataset_fingerprint": dataset_fingerprint, "manifest": manifest, "configuration": config.as_dict()}

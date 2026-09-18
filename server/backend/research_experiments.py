@@ -262,6 +262,26 @@ def ensure_experiment_schema() -> None:
             );
             CREATE INDEX IF NOT EXISTS idx_research_experiment_created
                 ON research_experiments(created_at DESC);
+            CREATE TABLE IF NOT EXISTS research_universe_snapshots (
+                snapshot_id TEXT PRIMARY KEY,
+                decision_date TEXT NOT NULL,
+                available_at TEXT NOT NULL,
+                source_json TEXT NOT NULL,
+                selection_fingerprint TEXT NOT NULL,
+                input_fingerprint TEXT NOT NULL,
+                symbols_json TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS research_experiment_partitions (
+                experiment_id TEXT NOT NULL,
+                partition_name TEXT NOT NULL,
+                start_date TEXT NOT NULL,
+                end_date TEXT NOT NULL,
+                session_count INTEGER NOT NULL,
+                dataset_fingerprint TEXT NOT NULL,
+                locked_at TEXT NOT NULL,
+                PRIMARY KEY (experiment_id, partition_name)
+            );
             """
         )
         conn.commit()
@@ -335,3 +355,48 @@ def record_experiment(
         conn.close()
     return identifier
 
+
+def record_universe_snapshot(snapshot: dict[str, Any]) -> str:
+    """Persist compact, auditable membership evidence—not raw vendor data."""
+    required = ("snapshot_id", "decision_date", "source", "input_fingerprint", "symbols", "selection")
+    if any(key not in snapshot for key in required):
+        raise ValueError("Incomplete point-in-time universe snapshot")
+    source = dict(snapshot["source"] or {})
+    available_at = str(source.get("available_at") or "")
+    if not available_at:
+        raise ValueError("Universe snapshot requires source availability")
+    ensure_experiment_schema()
+    conn = get_connection()
+    try:
+        conn.execute("""INSERT INTO research_universe_snapshots
+            (snapshot_id, decision_date, available_at, source_json, selection_fingerprint, input_fingerprint, symbols_json, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(snapshot_id) DO NOTHING""", (
+            str(snapshot["snapshot_id"]), str(snapshot["decision_date"]), available_at,
+            stable_json(source), str((snapshot["selection"] or {}).get("fingerprint") or ""),
+            str(snapshot["input_fingerprint"]), stable_json(sorted(set(snapshot["symbols"]))), utc_now_iso(),
+        ))
+        conn.commit()
+    finally:
+        conn.close()
+    return str(snapshot["snapshot_id"])
+
+
+def record_experiment_partitions(experiment_id: str, partitions: dict[str, Sequence[str]]) -> None:
+    """Lock chronological development/holdout ranges used by an experiment."""
+    ensure_experiment_schema()
+    now = utc_now_iso()
+    conn = get_connection()
+    try:
+        for name, raw_dates in partitions.items():
+            dates = sorted({str(day)[:10] for day in raw_dates if str(day)})
+            if not dates:
+                continue
+            conn.execute("""INSERT INTO research_experiment_partitions
+                (experiment_id, partition_name, start_date, end_date, session_count, dataset_fingerprint, locked_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(experiment_id, partition_name) DO NOTHING""",
+                (experiment_id, str(name), dates[0], dates[-1], len(dates), fingerprint(dates), now))
+        conn.commit()
+    finally:
+        conn.close()
