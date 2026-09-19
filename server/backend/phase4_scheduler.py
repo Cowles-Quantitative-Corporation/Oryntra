@@ -14,7 +14,7 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from .database import get_connection
-from .phase4_runner import run_candidate_cycle
+from .automation_orchestrator import run_candidate_automation as run_candidate_cycle
 
 _ET = ZoneInfo("America/New_York")
 _STATUS: dict[str, Any] = {

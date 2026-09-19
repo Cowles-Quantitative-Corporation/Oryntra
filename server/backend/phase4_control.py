@@ -13,7 +13,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from .minerva import minerva_baseline, tba8_institutional_risk_candidate
+from .minerva import minerva_baseline, tba8_institutional_risk_candidate, alpha_v1_candidate
 from .universal_engine import ENGINE_ID, ENGINE_VERSION, UniversalConfig
 from .universal_factor_model import FactorModelConfig
 from .universal_optimizer import PortfolioOptimizerConfig
@@ -32,6 +32,11 @@ ALPHA_MODELS: dict[str, dict[str, Any]] = {
     "tba8": {
         "label": "TBA8 institutional alpha path",
         "description": "Persistent residual forecasts with causal confidence/capacity controls.",
+        "public": False,
+    },
+    "alpha_v1": {
+        "label": "Alpha V1 cross-sectional",
+        "description": "Separate causal relative-return model with evidence-weighted sleeves and forecast uncertainty.",
         "public": False,
     },
 }
@@ -169,7 +174,7 @@ def build_control_config(*, alpha_model: str = "tba8", construction: str = "phas
     if risk_key not in RISK_MODELS:
         raise ValueError(f"Unknown risk model: {risk_model}")
 
-    base = minerva_baseline() if alpha_key == "minerva_v1" else tba8_institutional_risk_candidate()
+    base = minerva_baseline() if alpha_key == "minerva_v1" else (alpha_v1_candidate() if alpha_key == "alpha_v1" else tba8_institutional_risk_candidate())
     phase2 = CONSTRUCTION_MODES[construction_key]["phase2"]
     values: dict[str, Any] = {
         "research_profile": "control_plane",
@@ -221,7 +226,7 @@ def code_fingerprint() -> str:
         "universal_engine.py", "universal_learning.py", "universal_risk_supervisor.py",
         "universal_risk_v201.py", "universal_risk_v202.py", "universal_risk_v203.py",
         "universal_factor_model.py", "universal_optimizer.py", "universal_phase3.py",
-        "universal_research.py", "portfolio_execution.py", "minerva.py",
+        "universal_research.py", "portfolio_execution.py", "minerva.py", "alpha_v1.py",
         "phase4_control.py", "phase4_ledger.py", "phase4_runner.py", "phase4_scheduler.py",
     )
     digest = hashlib.sha256()

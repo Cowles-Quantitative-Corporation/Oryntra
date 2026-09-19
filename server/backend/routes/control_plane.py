@@ -16,7 +16,7 @@ from ..database import get_connection
 from ..internal_access import require_control_operator
 from ..phase4_control import registry_payload
 from ..phase4_jobs import get_job, list_jobs, submit_job
-from ..phase4_runner import run_candidate_cycle
+from ..automation_orchestrator import run_candidate_automation, list_alerts, acknowledge_alert, recent_automation_runs
 from ..phase4_scheduler import run_automation_sweep, scheduler_status
 from ..phase4_ledger import (
     create_candidate, get_candidate, list_candidates, record_simulated_fill, set_candidate_status,
@@ -110,6 +110,8 @@ def overview(request: Request):
         "candidates": list_candidates(user["id"]),
         "jobs": list_jobs(user["id"], 20),
         "automation": scheduler_status(),
+        "alerts": list_alerts(user["id"], 20),
+        "automation_runs": recent_automation_runs(user["id"], 10),
     }
 
 
@@ -145,7 +147,7 @@ async def candidate_cycle(candidate_id: int, request: Request):
     user = require_control_operator(request)
     try:
         async with _cycle_lock:
-            return await asyncio.to_thread(run_candidate_cycle, candidate_id, user["id"])
+            return await asyncio.to_thread(run_candidate_automation, candidate_id, user["id"])
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -169,6 +171,25 @@ def automation_status(request: Request):
 async def automation_sweep(request: Request):
     require_control_operator(request)
     return await asyncio.to_thread(run_automation_sweep, force=True)
+
+
+@router.get("/alerts")
+def automation_alerts(request: Request):
+    user = require_control_operator(request)
+    return {"alerts": list_alerts(user["id"], 200)}
+
+
+@router.post("/alerts/{alert_id}/ack")
+def automation_alert_ack(alert_id: int, request: Request):
+    user = require_control_operator(request)
+    acknowledge_alert(user["id"], alert_id)
+    return {"ok": True}
+
+
+@router.get("/automation/runs")
+def automation_runs(request: Request):
+    user = require_control_operator(request)
+    return {"runs": recent_automation_runs(user["id"], 100)}
 
 
 @router.post("/jobs")

@@ -10,6 +10,7 @@ import json
 import pandas as pd
 
 from .database import get_connection
+from .corporate_repository import get_corporate_repository
 from .market_repository import get_market_repository
 from .phase4_control import code_fingerprint
 from .phase4_ledger import (
@@ -132,6 +133,11 @@ def run_candidate_cycle(candidate_id: int, user_id: int) -> dict:
         conn.close()
 
     decision = None
+    quality_panel = None
+    fundamental_metadata = {"status": "not_requested", "coverage_pct": 0.0, "facts_used": 0}
+    if getattr(config, "alpha_model", "") == "alpha_v1" or getattr(getattr(config, "factor_model", None), "enabled", False):
+        quality_panel, metadata_quality = get_corporate_repository().factor_panel(candidate["universe"], common)
+        fundamental_metadata = {"status": "point_in_time_local_repository", **metadata_quality}
     if not existing:
         research_histories = {symbol: histories[symbol].reindex(common) for symbol in candidate["universe"]}
         decision_result = run_completed_close_decision(
@@ -139,6 +145,7 @@ def run_candidate_cycle(candidate_id: int, user_id: int) -> dict:
             user_id=user_id,
             histories=research_histories,
             benchmark_returns=benchmark_returns,
+            factor_quality_scores=quality_panel,
         )
         decision = decision_result["decision"]
 
@@ -146,6 +153,7 @@ def run_candidate_cycle(candidate_id: int, user_id: int) -> dict:
         "candidate_id": candidate_id,
         "latest_completed_session": latest_date,
         "data": metadata,
+        "fundamentals": fundamental_metadata,
         "fills_recorded": fills,
         "mark": mark,
         "reconciliation": reconciliation,

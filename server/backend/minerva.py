@@ -15,6 +15,7 @@ from .universal_risk_supervisor import RiskSupervisorConfig, v201_risk_config, v
 from .universal_factor_model import FactorModelConfig
 from .universal_optimizer import PortfolioOptimizerConfig
 from .universal_phase3 import Phase3Config
+from .alpha_v1 import AlphaV1Config
 
 
 MINERVA_ID = "minerva_v1_research"
@@ -138,6 +139,26 @@ def risk_v203_candidate(**overrides: object) -> UniversalConfig:
     values = dict(overrides)
     supervisor = values.pop("risk_supervisor", v203_risk_config())
     return replace(base, risk_supervisor=supervisor, **values)
+
+
+ALPHA_V1_ID = "alpha_v1_research"
+ALPHA_V1_STATUS = "candidate_not_release_approved"
+
+
+def alpha_v1_candidate(**overrides: object) -> UniversalConfig:
+    """Separate Alpha V1 family under the same TBA8 construction/risk stack.
+
+    Paired studies isolate the alpha path: this is private research only and
+    does not change Minerva, TBA8, or any public product model.
+    """
+    base = tba8_institutional_risk_candidate()
+    values = dict(overrides)
+    alpha_cfg = values.pop("alpha_v1", AlphaV1Config(enabled=True))
+    return replace(base, alpha_model="alpha_v1", research_profile="alpha_v1",
+                   alpha_v1=alpha_cfg, selection_mode="relative_rank",
+                   minimum_relative_rank=.60, entry_threshold=0.0,
+                   ridge_residual_momentum_21=False, ridge_residual_momentum_63=False,
+                   ridge_include_residual_momentum=False, **values)
 
 
 def phase2_factor_optimizer_candidate(**overrides: object) -> UniversalConfig:

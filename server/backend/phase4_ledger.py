@@ -469,7 +469,8 @@ def reconcile_latest(*, candidate_id: int, tolerance: float = 0.0025) -> dict[st
 
 def run_completed_close_decision(*, candidate_id: int, user_id: int, histories: dict[str, pd.DataFrame],
                                  benchmark_returns: pd.Series | None = None,
-                                 risk_free: pd.Series | None = None) -> dict[str, Any]:
+                                 risk_free: pd.Series | None = None,
+                                 factor_quality_scores: pd.DataFrame | None = None) -> dict[str, Any]:
     """Run the frozen candidate on completed bars and record the next-open intent."""
     candidate = get_candidate(candidate_id, user_id=user_id)
     # Prospective evidence is valid only while the frozen code fingerprint is
@@ -484,7 +485,8 @@ def run_completed_close_decision(*, candidate_id: int, user_id: int, histories: 
     configuration = UniversalConfig(**manifest["configuration"])
     if configuration.fingerprint != str(candidate.get("config_fingerprint") or ""):
         raise ValueError("Frozen candidate configuration fingerprint mismatch")
-    report = run_universal(histories, configuration, benchmark_returns, risk_free)
+    report = run_universal(histories, configuration, benchmark_returns, risk_free,
+                           factor_quality_scores=factor_quality_scores)
     common = None
     for frame in histories.values():
         common = frame.index if common is None else common.intersection(frame.index)
@@ -492,8 +494,14 @@ def run_completed_close_decision(*, candidate_id: int, user_id: int, histories: 
         raise ValueError("Prospective decision requires aligned completed histories")
     common = common.sort_values()
     prices = pd.DataFrame({symbol: histories[symbol].reindex(common)["Close"] for symbol in candidate["universe"]}, index=common)
+    opens = pd.DataFrame({symbol: histories[symbol].reindex(common)["Open"] for symbol in candidate["universe"]}, index=common)
+    highs = pd.DataFrame({symbol: histories[symbol].reindex(common)["High"] for symbol in candidate["universe"]}, index=common)
+    lows = pd.DataFrame({symbol: histories[symbol].reindex(common)["Low"] for symbol in candidate["universe"]}, index=common)
     volumes = pd.DataFrame({symbol: histories[symbol].reindex(common)["Volume"] for symbol in candidate["universe"]}, index=common)
-    target = portfolio_targets(prices, configuration, benchmark_returns=benchmark_returns, volumes=volumes)
+    target = portfolio_targets(prices, configuration, benchmark_returns=benchmark_returns, opens=opens, volumes=volumes,
+                               learning_highs=highs, learning_lows=lows,
+                               factor_quality_scores=factor_quality_scores,
+                               alpha_quality_scores=factor_quality_scores)
     latest = {str(k): float(v) for k, v in target.iloc[-1].items() if float(v) > 1e-12}
     as_of = str(common[-1].date())
     closes = {symbol: float(prices.loc[common[-1], symbol]) for symbol in candidate["universe"]}

@@ -18,6 +18,7 @@ from .universal_risk_v202 import V202PredictiveConfig, build_systemic_risk_panel
 from .universal_factor_model import FactorModelConfig, build_factor_snapshot, portfolio_factor_diagnostics
 from .universal_optimizer import PortfolioOptimizerConfig, optimize_portfolio
 from .universal_phase3 import Phase3Config, build_phase3_snapshot
+from .alpha_v1 import AlphaV1Config, alpha_v1_scores
 
 
 ENGINE_ID = "universal_v2"
@@ -77,25 +78,26 @@ class UniversalConfig:
     factor_model: FactorModelConfig = FactorModelConfig()
     portfolio_optimizer: PortfolioOptimizerConfig = PortfolioOptimizerConfig()
     phase3: Phase3Config = Phase3Config()
+    alpha_v1: AlphaV1Config = AlphaV1Config()
 
     def __post_init__(self):
-        for name, cls in (("position_policy", PositionPolicyConfig), ("market_context", MarketContextConfig), ("peer_shock", PeerShockConfig), ("risk_supervisor", RiskSupervisorConfig), ("institutional_decision", InstitutionalDecisionConfig), ("factor_model", FactorModelConfig), ("portfolio_optimizer", PortfolioOptimizerConfig), ("phase3", Phase3Config)):
+        for name, cls in (("position_policy", PositionPolicyConfig), ("market_context", MarketContextConfig), ("peer_shock", PeerShockConfig), ("risk_supervisor", RiskSupervisorConfig), ("institutional_decision", InstitutionalDecisionConfig), ("factor_model", FactorModelConfig), ("portfolio_optimizer", PortfolioOptimizerConfig), ("phase3", Phase3Config), ("alpha_v1", AlphaV1Config)):
             value = getattr(self, name)
             if isinstance(value, dict):
                 object.__setattr__(self, name, cls(**value))
             elif not isinstance(value, cls):
                 raise ValueError(f"{name} must be a validated configuration")
         for key, value in asdict(self).items():
-            if key not in {"rebalance", "selection_mode", "alpha_model", "research_profile", "maximum_asset_annual_volatility", "maximum_portfolio_market_beta", "position_policy", "market_context", "peer_shock", "risk_supervisor", "institutional_decision", "factor_model", "portfolio_optimizer", "phase3"} and not np.isfinite(value):
+            if key not in {"rebalance", "selection_mode", "alpha_model", "research_profile", "maximum_asset_annual_volatility", "maximum_portfolio_market_beta", "position_policy", "market_context", "peer_shock", "risk_supervisor", "institutional_decision", "factor_model", "portfolio_optimizer", "phase3", "alpha_v1"} and not np.isfinite(value):
                 raise ValueError(f"{key} must be finite")
         weights = self.weights
         if min(weights) < 0 or not np.isclose(sum(weights), 1):
             raise ValueError("Signal weights must be nonnegative and sum to one")
         if not (0 <= self.entry_threshold < 1 and 0 < self.vol_target <= .5):
             raise ValueError("Invalid threshold or volatility target")
-        if self.alpha_model not in {"handcrafted", "walk_forward_ridge"}:
-            raise ValueError("alpha_model must be handcrafted or walk_forward_ridge")
-        if self.research_profile not in {"universal_v2", "minerva_v1", "tba9_integrity", "phase2_factor_optimizer", "phase15_v203", "phase15_phase3", "phase15_phase2_phase3", "control_plane"}:
+        if self.alpha_model not in {"handcrafted", "walk_forward_ridge", "alpha_v1"}:
+            raise ValueError("alpha_model must be handcrafted, walk_forward_ridge, or alpha_v1")
+        if self.research_profile not in {"universal_v2", "minerva_v1", "tba9_integrity", "phase2_factor_optimizer", "phase15_v203", "phase15_phase3", "phase15_phase2_phase3", "control_plane", "alpha_v1"}:
             raise ValueError("Unknown research profile")
         if not all(isinstance(value, bool) for value in (self.ridge_include_residual_momentum,
                                                           self.ridge_residual_momentum_21,
@@ -143,6 +145,10 @@ class UniversalConfig:
             raise ValueError("Invalid buffer or participation ceiling")
         if not (0 <= self.cost_bps <= 250 and 0 <= self.impact_bps <= 500 and self.initial_equity >= 100):
             raise ValueError("Invalid cost or capital assumption")
+        if self.alpha_model == "alpha_v1" and not self.alpha_v1.enabled:
+            object.__setattr__(self, "alpha_v1", AlphaV1Config(**({**asdict(self.alpha_v1), "enabled": True})))
+        if self.alpha_model != "alpha_v1" and self.alpha_v1.enabled:
+            raise ValueError("Alpha V1 configuration may only be enabled when alpha_model=alpha_v1")
         if self.portfolio_optimizer.enabled and not self.factor_model.enabled:
             raise ValueError("Phase 2 portfolio optimizer requires the factor model")
 
@@ -171,7 +177,10 @@ def signal_panel(prices: pd.DataFrame, config: UniversalConfig = UniversalConfig
                  learning_closes: pd.DataFrame | None = None, learning_opens: pd.DataFrame | None = None,
                  learning_volumes: pd.DataFrame | None = None,
                  learning_highs: pd.DataFrame | None = None, learning_lows: pd.DataFrame | None = None,
-                 fundamental_acceleration_scores: pd.DataFrame | None = None) -> dict[str, pd.DataFrame]:
+                 fundamental_acceleration_scores: pd.DataFrame | None = None,
+                 alpha_sector_labels: pd.DataFrame | None = None,
+                 alpha_value_scores: pd.DataFrame | None = None,
+                 alpha_quality_scores: pd.DataFrame | None = None) -> dict[str, pd.DataFrame]:
     """Features at t use only data through t; signals are executed after t."""
     if not isinstance(prices.index, pd.DatetimeIndex) or not prices.index.is_monotonic_increasing or prices.index.has_duplicates:
         raise ValueError("Signals require unique, increasing dates")
@@ -224,7 +233,12 @@ def signal_panel(prices: pd.DataFrame, config: UniversalConfig = UniversalConfig
             raise ValueError("Fundamental acceleration scores must be finite and bounded to [-1, 1]")
     components = dict(trend=trend, momentum=momentum, breakout=breakout, pullback=pullback,
                       residual=residual, fundamental=fundamental, fundamental_acceleration=fundamental_acceleration)
-    if config.alpha_model == "walk_forward_ridge":
+    if config.alpha_model == "alpha_v1":
+        alpha_output = alpha_v1_scores(prices, benchmark_returns=benchmark_returns, sector_labels=alpha_sector_labels, value_scores=alpha_value_scores, quality_scores=alpha_quality_scores, config=config.alpha_v1)
+        score = alpha_output["score"].reindex(index=prices.index, columns=prices.columns)
+        ready = alpha_output["ready"].reindex(index=prices.index, columns=prices.columns).fillna(False)
+        components.update(predicted_return=alpha_output["predicted_return"].reindex_like(prices), prediction_error=alpha_output["prediction_error"].reindex_like(prices), alpha_v1_score=score)
+    elif config.alpha_model == "walk_forward_ridge":
         if opens is None or volumes is None:
             raise ValueError("Walk-forward ridge research requires aligned open and volume panels")
         supplied = (learning_closes, learning_opens, learning_volumes)
@@ -319,6 +333,9 @@ def portfolio_targets(prices: pd.DataFrame, config: UniversalConfig = UniversalC
                       factor_size_scores: pd.DataFrame | None = None,
                       factor_value_scores: pd.DataFrame | None = None,
                       factor_quality_scores: pd.DataFrame | None = None,
+                      alpha_sector_labels: pd.DataFrame | None = None,
+                      alpha_value_scores: pd.DataFrame | None = None,
+                      alpha_quality_scores: pd.DataFrame | None = None,
                       precomputed_panel: dict[str, pd.DataFrame] | None = None) -> pd.DataFrame:
     """Create causal targets with risk decisions on the configured rebalance schedule.
 
@@ -331,6 +348,7 @@ def portfolio_targets(prices: pd.DataFrame, config: UniversalConfig = UniversalC
         prices, config, benchmark_returns, fundamental_scores, opens, volumes,
         learning_closes, learning_opens, learning_volumes, learning_highs, learning_lows,
         fundamental_acceleration_scores=fundamental_acceleration_scores,
+        alpha_sector_labels=alpha_sector_labels, alpha_value_scores=alpha_value_scores, alpha_quality_scores=alpha_quality_scores,
     )
     required_panel = {"score", "volatility"}
     if not required_panel.issubset(panel):
