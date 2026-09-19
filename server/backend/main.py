@@ -1,6 +1,7 @@
 import sqlite3
 import json
 import os
+import re
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
@@ -47,6 +48,31 @@ def env_bool(name: str, default: bool = False) -> bool:
 
 def public_site_url() -> str:
     return os.getenv("PUBLIC_BASE_URL", "").strip().rstrip("/")
+
+
+def frontend_asset_version(filename: str) -> str:
+    """Return a deterministic cache-buster for a locally served frontend asset.
+
+    The public site deliberately uses no-cache response headers.  This extra
+    version marker prevents a browser or intermediary that retained an older
+    HTML document from pairing it with an obsolete JavaScript client.
+    """
+    path = os.path.join(FRONTEND_DIR, "static", filename)
+    try:
+        return str(os.stat(path).st_mtime_ns)
+    except OSError:
+        return APP_VERSION
+
+
+def render_frontend_html(source: str) -> str:
+    """Render public HTML and pin its application bundle to this deployment."""
+    html = render_legal_template(source)
+    asset_version = frontend_asset_version(os.path.join("js", "app.js"))
+    return re.sub(
+        r"(/static/js/app\.js)(?:\?v=[^\"']*)?",
+        lambda match: f"{match.group(1)}?v={asset_version}",
+        html,
+    )
 
 
 @asynccontextmanager
@@ -178,7 +204,7 @@ async def serve_frontend():
         )
     path = os.path.join(FRONTEND_DIR, "index.html")
     with open(path, "r", encoding="utf-8") as handle:
-        html = render_legal_template(handle.read())
+        html = render_frontend_html(handle.read())
     return HTMLResponse(html, headers=NO_CACHE_HEADERS)
 
 

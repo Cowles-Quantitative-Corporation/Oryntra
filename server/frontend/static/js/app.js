@@ -128,7 +128,7 @@ function initThemeSettings() {
   }
 }
 
-const APP_VERSION = '1.1.2';
+const APP_VERSION = '1.1.3';
 const APP_RELEASE_KEY = 'oryntra_client_release';
 const PUBLIC_ANALYSIS_ENGINE = 'v8';
 
