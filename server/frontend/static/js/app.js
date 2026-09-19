@@ -128,7 +128,7 @@ function initThemeSettings() {
   }
 }
 
-const APP_VERSION = '1.1.1';
+const APP_VERSION = '1.1.2';
 const APP_RELEASE_KEY = 'oryntra_client_release';
 const PUBLIC_ANALYSIS_ENGINE = 'v8';
 
@@ -638,6 +638,23 @@ function mountIdentityProviderOptions() {
   form.insertAdjacentHTML('afterend', `<div id="oauthProviderOptions" class="oauth-provider-options"><div class="auth-divider"><span>or continue with</span></div><div class="oauth-provider-buttons" aria-label="Continue with an identity provider"><button class="oauth-provider-button" data-oauth-provider="google" type="button" disabled><span class="oauth-provider-mark oauth-google-mark" aria-hidden="true">G</span>Continue with Google</button><button class="oauth-provider-button" data-oauth-provider="apple" type="button" disabled><span class="oauth-provider-mark oauth-apple-mark" aria-hidden="true">●</span>Continue with Apple</button></div><p id="oauthProviderStatus" class="oauth-provider-status" role="status">Checking sign-in options…</p></div>`);
 }
 
+function mountQuantModelCatalog() {
+  const options = [
+    ['v8_official', 'V8 Official · Free'],
+    ['minerva_baseline', 'Minerva baseline · Pro / Max'],
+  ];
+  ['quantModel', 'settingsQuantModel'].forEach(id => {
+    const select = document.getElementById(id);
+    if (!select) return;
+    const selected = options.some(([value]) => value === select.value) ? select.value : 'v8_official';
+    const current = Array.from(select.options).map(option => option.value);
+    if (current.length !== options.length || current.some((value, index) => value !== options[index][0])) {
+      select.innerHTML = options.map(([value, label]) => `<option value="${value}">${escapeHtml(label)}</option>`).join('');
+    }
+    select.value = selected;
+  });
+}
+
 function mountSubscriptionStructure() {
   const modal = document.getElementById('subscriptionModal');
   if (!modal || modal.querySelector('.subscription-shell')) return;
@@ -645,7 +662,7 @@ function mountSubscriptionStructure() {
   modal.setAttribute('aria-labelledby', 'subscriptionTitle');
   const features = [
     ['V8 scanner & evidence cards', 'Included', 'Included', 'Included'],
-    ['Minerva candidate updates', '—', 'Validation-gated', 'Validation-gated'],
+    ['Minerva baseline Quant Lab', '—', 'Included', 'Included'],
     ['Daily scanner reviews', '10 / day', '200 / day', 'Unlimited'],
     ['Watchlist & paper journal', '20 symbols', 'Unlimited', 'Unlimited'],
     ['Historical research demonstrations', 'Included', 'Included', 'Included'],
@@ -792,9 +809,8 @@ function beginIdentityProviderSignIn(provider) {
 
 function initAuth() {
   mountIdentityProviderOptions();
+  mountQuantModelCatalog();
   mountSubscriptionStructure();
-  mountMinervaModelGate();
-  mountWorkspaceModelControls();
   refreshIdentityProviderOptions();
   const authBtn = document.getElementById('authOpenBtn');
   if (authBtn) authBtn.addEventListener('click', () => currentUser ? logoutUser() : openAuthModal('login'));
@@ -1279,7 +1295,7 @@ function initQuantLab() {
   // server repeats this boundary; these removals prevent misleading controls.
   document.querySelector('.universal-blueprint-panel')?.setAttribute('hidden', '');
   document.querySelector('.quant-workbench-grid')?.setAttribute('hidden', '');
-  ['quantModel', 'quantLookback', 'quantLongShort'].forEach(id => document.getElementById(id)?.closest('label')?.setAttribute('hidden', ''));
+  ['quantLookback', 'quantLongShort'].forEach(id => document.getElementById(id)?.closest('label')?.setAttribute('hidden', ''));
   document.querySelectorAll('[data-quant-preset]').forEach(item => item.closest('.quant-preset-row')?.setAttribute('hidden', ''));
   button.addEventListener('click', runQuantResearch);
   document.querySelectorAll('.quant-allocation-slider, .quant-strategy-set input[type="checkbox"]').forEach(input => {
@@ -1287,6 +1303,13 @@ function initQuantLab() {
     input.addEventListener('change', updateQuantAllocationUI);
   });
   document.getElementById('quantModel')?.addEventListener('change', event => {
+    if (event.target.value === 'minerva_baseline') {
+      const period = document.getElementById('quantPeriod');
+      if (period && ['1y', '2y'].includes(period.value)) period.value = '5y';
+      const note = document.getElementById('quantStatus');
+      if (note) note.textContent = 'Minerva baseline needs at least 758 completed daily sessions, so Quant Lab has been set to five years.';
+      return;
+    }
     const profiles = {
       v1_corporate_quant_system: {time_series_trend: 25, cross_sectional_momentum: 20, mean_reversion: 10, defensive_low_volatility: 10, corporate_quality: 35},
       universal_v2: {time_series_trend: 100, cross_sectional_momentum: 0, mean_reversion: 0, defensive_low_volatility: 0, corporate_quality: 0},
@@ -1474,7 +1497,8 @@ async function runQuantResearch() {
     return;
   }
   const period = document.getElementById('quantPeriod')?.value || '2y';
-  const payload = {tickers};
+  const model = document.getElementById('quantModel')?.value || 'v8_official';
+  const payload = {tickers, model};
   button.disabled = true; results.hidden = true; status.textContent = 'Loading histories, applying fixed rules, and modeling next-session execution…';
   try {
     const activeProvider = directProviderFor(requestedProvider);
@@ -1874,7 +1898,7 @@ async function runScan(ticker = null, period = null) {
   try {
     animateLoadingSteps();
     const market = await fetchDirectMarketBars(raw, currentPeriod, 'auto', 320);
-    const data = await API.scanUploaded(raw, currentPeriod, market.provider, market.bars, workspaceModel());
+    const data = await API.scanUploaded(raw, currentPeriod, market.provider, market.bars, PUBLIC_ANALYSIS_ENGINE);
     currentAnalysis = data;
     if (Number.isFinite(Number(data.search_counter))) {
       updateSearchCounter(data.search_counter);
@@ -3524,7 +3548,7 @@ async function scanAllWatchlist() {
       btn.textContent = `⟳ ${index + 1}/${tickers.length}`;
       try {
         const market = await fetchDirectMarketBars(tickers[index], currentPeriod, 'auto', 320);
-        results.push(await API.scanUploaded(tickers[index], currentPeriod, market.provider, market.bars, workspaceModel()));
+        results.push(await API.scanUploaded(tickers[index], currentPeriod, market.provider, market.bars, PUBLIC_ANALYSIS_ENGINE));
       } catch (error) {
         errors.push({ticker: tickers[index], error: error.message || String(error)});
       }
@@ -4106,7 +4130,7 @@ async function runBacktest() {
       period,
       min_score: minScore,
       setups: setupFil ? [setupFil] : [],
-      engine_mode: workspaceModel(),
+      engine_mode: PUBLIC_ANALYSIS_ENGINE,
       provider: market.provider,
       bars: market.bars,
     });

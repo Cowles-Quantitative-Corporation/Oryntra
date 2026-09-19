@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import asdict
 from datetime import datetime, timezone
 
 import pandas as pd
@@ -11,7 +12,9 @@ from ..corporate_repository import get_corporate_repository
 from ..market_repository import get_market_repository, normalize_ticker
 from ..quant_research import MODEL_PROFILES, STRATEGIES, QuantConfig, evaluate_strategies
 from ..research_experiments import record_experiment
-from ..model_access import MINERVA_MODEL_ID, require_model_access
+from ..model_access import MINERVA_BASELINE_QUANT_MODEL_ID, MINERVA_MODEL_ID, require_minerva_baseline_quant_access, require_model_access
+from ..minerva import minerva_baseline
+from ..universal_research import run_universal
 from ..internal_access import require_cqc_internal_operator
 from .analysis import browser_bars_to_history
 from .auth import require_current_user
@@ -47,9 +50,14 @@ async def _evaluate_histories(histories: dict, config: QuantConfig) -> dict:
     return report
 
 
+def _serialized_configuration(config: object) -> dict:
+    serializer = getattr(config, "as_dict", None)
+    return serializer() if callable(serializer) else asdict(config)
+
+
 def _attach_experiment_record(
     report: dict,
-    config: QuantConfig,
+    config: object,
     dataset_fingerprint: str,
     *,
     source: str,
@@ -60,7 +68,7 @@ def _attach_experiment_record(
         identifier = record_experiment(
             experiment_type="quant_strategy",
             status="done",
-            config={"code_version": report.get("engine_version", "quant-api-v1"), "code_fingerprint": report.get("code_fingerprint"), "source": source, "quant_config": config.as_dict(), "engine_configuration": report.get("engine_configuration"), "config_fingerprint": report.get("config_fingerprint")},
+            config={"code_version": report.get("engine_version", "quant-api-v1"), "code_fingerprint": report.get("code_fingerprint"), "source": source, "quant_config": _serialized_configuration(config), "engine_configuration": report.get("engine_configuration"), "config_fingerprint": report.get("config_fingerprint")},
             dataset_fingerprint=dataset_fingerprint,
             dataset_start=report.get("universe", {}).get("start"),
             dataset_end=report.get("universe", {}).get("end"),
@@ -172,6 +180,7 @@ class PublicBrowserQuantResearchRequest(BaseModel):
     """
     model_config = ConfigDict(extra="forbid")
     provider: str
+    model: str = "v8_official"
     tickers: list[str] = Field(default_factory=lambda: ["SPY", "QQQ", "IWM", "GLD", "TLT", "XLE"])
     histories: list[BrowserQuantHistory] = Field(min_length=2, max_length=40)
 
@@ -180,6 +189,13 @@ class PublicBrowserQuantResearchRequest(BaseModel):
     def validate_public_provider(cls, value: str) -> str:
         if value not in {"polygon", "twelvedata"}:
             raise ValueError("provider must be polygon or twelvedata")
+        return value
+
+    @field_validator("model")
+    @classmethod
+    def validate_public_model(cls, value: str) -> str:
+        if value not in {"v8_official", MINERVA_BASELINE_QUANT_MODEL_ID}:
+            raise ValueError("Choose V8 Official or the Minerva baseline.")
         return value
 
 
@@ -346,8 +362,10 @@ async def run_internal_browser_research(request: BrowserQuantResearchRequest, ht
 
 @public_router.post("/run-upload")
 async def run_public_browser_research(payload: PublicBrowserQuantResearchRequest, http_request: Request):
-    """Run only the published, fixed public research profile."""
-    require_current_user(http_request)
+    """Run a fixed Base or paid Minerva multi-symbol research profile."""
+    user = require_current_user(http_request)
+    if payload.model == MINERVA_BASELINE_QUANT_MODEL_ID:
+        require_minerva_baseline_quant_access(user)
     request = _public_frozen_request(payload)
     tickers: list[str] = []
     for raw in request.tickers[:40]:
@@ -373,7 +391,12 @@ async def run_public_browser_research(payload: PublicBrowserQuantResearchRequest
         max_adv_participation_pct=2,
     )
     histories, metadata, errors = {}, {}, []
-    minimum_bars = max(config.trend_lookback, config.momentum_lookback, 63) + 5
+    if payload.model == MINERVA_BASELINE_QUANT_MODEL_ID:
+        minerva_config = minerva_baseline()
+        minimum_bars = minerva_config.ridge_training_sessions + 2
+    else:
+        minerva_config = None
+        minimum_bars = max(config.trend_lookback, config.momentum_lookback, 63) + 5
     for ticker in tickers:
         try:
             history = await asyncio.to_thread(browser_bars_to_history, supplied[ticker], minimum_bars)
@@ -384,11 +407,14 @@ async def run_public_browser_research(payload: PublicBrowserQuantResearchRequest
     if len(histories) < 2:
         raise HTTPException(status_code=400, detail={"message": "Not enough usable browser histories for a comparison.", "errors": errors})
     try:
-        report = await _evaluate_histories(histories, config)
+        report = await asyncio.to_thread(run_universal, histories, minerva_config) if minerva_config else await _evaluate_histories(histories, config)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     repository = get_market_repository()
-    dataset_fingerprint = repository.dataset_fingerprint(histories, configuration=config.as_dict())
-    report.update({"ok": True, "run_at": datetime.now(timezone.utc).isoformat(), "configuration": config.as_dict(), "public_profile": "v1_corporate_quant_system", "research_boundary": "Frozen historical demonstration only; not a personal portfolio recommendation.", "data_source": "browser_direct", "data_provider": f"browser_{request.provider}", "source_metadata": metadata, "errors": errors, "dataset_fingerprint": dataset_fingerprint, "raw_market_data_persisted": False})
-    _attach_experiment_record(report, config, dataset_fingerprint, source="public_frozen_browser_direct")
+    active_config = minerva_config if minerva_config else config
+    active_config_payload = _serialized_configuration(active_config)
+    dataset_fingerprint = repository.dataset_fingerprint(histories, configuration=active_config_payload)
+    public_profile = "minerva_baseline" if minerva_config else "v8_official"
+    report.update({"ok": True, "run_at": datetime.now(timezone.utc).isoformat(), "configuration": active_config_payload, "public_profile": public_profile, "research_boundary": "Frozen historical demonstration only; not a personal portfolio recommendation.", "data_source": "browser_direct", "data_provider": f"browser_{request.provider}", "source_metadata": metadata, "errors": errors, "dataset_fingerprint": dataset_fingerprint, "raw_market_data_persisted": False})
+    _attach_experiment_record(report, active_config, dataset_fingerprint, source=f"{public_profile}_browser_direct")
     return report
