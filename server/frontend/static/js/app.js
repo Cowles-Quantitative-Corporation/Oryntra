@@ -1668,7 +1668,9 @@ function renderPortfolioLabAccess() {
 }
 
 function hasPortfolioProAccess(user) {
-  return ['pro', 'plus', 'max', 'max_bundle', 'max-bundle'].includes(String(user?.subscription?.plan_code || '').toLowerCase());
+  // CQC Max includes Oryntra Pro. Keep this explicit rather than inferring it
+  // from a display name, which can be changed by a billing provider.
+  return ['pro', 'plus', 'max', 'max_bundle', 'max-bundle', 'cqc_max', 'cqc-max'].includes(String(user?.subscription?.plan_code || '').toLowerCase());
 }
 
 function portfolioDirectiveCard(row) {

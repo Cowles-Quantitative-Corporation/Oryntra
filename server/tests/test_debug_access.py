@@ -67,6 +67,21 @@ def test_forwarded_ip_is_ignored_when_the_peer_is_not_a_trusted_proxy(monkeypatc
     assert debug_access._client_ip(_request("203.0.113.9", {"cf-connecting-ip": "47.202.51.193"})) == "203.0.113.9"
 
 
+def test_owner_debug_accepts_cloudflare_ip_only_from_configured_loopback_proxy(monkeypatch, tmp_path):
+    """Exercise the production tunnel shape without trusting public headers."""
+    monkeypatch.setattr(database, "DB_PATH", str(tmp_path / "trusted-proxy-debug.db"))
+    monkeypatch.setenv("ORYNTRA_DEBUG_TOOLS_ENABLED", "true")
+    monkeypatch.setenv("ORYNTRA_DEBUG_ALLOWED_IP", "47.202.51.193")
+    monkeypatch.setenv("ORYNTRA_DEBUG_TRUSTED_PROXY_CIDRS", "127.0.0.1/32")
+    with TestClient(app, client=("127.0.0.1", 50000)) as client:
+        token = _signup(client)
+        response = client.get(
+            "/api/internal/debug/access",
+            headers={"Authorization": f"Bearer {token}", "CF-Connecting-IP": "47.202.51.193"},
+        )
+    assert response.status_code == 200, response.text
+
+
 def test_owner_access_fails_closed_without_an_explicit_allowed_ip(monkeypatch):
     monkeypatch.setattr(debug_access, "require_current_user", lambda request: {"id": 1})
     monkeypatch.setenv("ORYNTRA_DEBUG_TOOLS_ENABLED", "true")
