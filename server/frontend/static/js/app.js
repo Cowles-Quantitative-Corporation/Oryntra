@@ -569,6 +569,22 @@ function mountOwnerDebugMenu() {
   document.getElementById('ownerDebugApply')?.addEventListener('click', applyOwnerDebugPlan);
 }
 
+function ensureOwnerDebugButton() {
+  let button = document.getElementById('ownerDebugButton');
+  if (button) return button;
+  const anchor = document.querySelector('.sidebar-bottom .sidebar-version, .sidebar-bottom .sidebar-meta');
+  if (!anchor) return null;
+  button = document.createElement('button');
+  button.id = 'ownerDebugButton';
+  button.type = 'button';
+  button.hidden = true;
+  button.className = 'nav-item';
+  button.title = 'Owner controls · Command-Shift-O';
+  button.textContent = '◆ Owner controls';
+  anchor.insertAdjacentElement('beforebegin', button);
+  return button;
+}
+
 async function openOwnerDebugMenu() {
   if (!currentUser) return;
   try {
@@ -607,7 +623,7 @@ async function applyOwnerDebugPlan() {
 }
 
 function initOwnerDebugMenu() {
-  document.getElementById('ownerDebugButton')?.addEventListener('click', openOwnerDebugMenu);
+  ensureOwnerDebugButton()?.addEventListener('click', openOwnerDebugMenu);
   document.addEventListener('keydown', event => {
     const macShortcut = event.metaKey && event.shiftKey && event.code === 'KeyO';
     const legacyShortcut = event.ctrlKey && event.shiftKey && event.altKey && event.code === 'KeyO';
@@ -619,7 +635,7 @@ function initOwnerDebugMenu() {
 }
 
 async function refreshOwnerDebugAvailability() {
-  const button = document.getElementById('ownerDebugButton');
+  const button = ensureOwnerDebugButton();
   if (!button) return;
   button.hidden = true;
   if (!currentUser) return;
