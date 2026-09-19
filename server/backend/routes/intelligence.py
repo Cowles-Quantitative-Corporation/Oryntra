@@ -14,7 +14,7 @@ from ..analysis_access import (
     usage_status,
 )
 from ..public_payload import assert_no_raw_market_data, public_analysis_payload
-from ..model_access import SCANNER_MODEL_IDS, require_model_access
+from ..model_access import normalize_scanner_model, require_model_access
 from .analysis import ScanRequest, _run_scan_pipeline, _run_uploaded_scan_pipeline
 
 router = APIRouter()
@@ -23,7 +23,7 @@ router = APIRouter()
 class IntelligenceScanRequest(BaseModel):
     ticker: str
     period: str = "6mo"
-    model: str = "official"
+    model: str = "v8"
 
     @field_validator("ticker")
     @classmethod
@@ -45,15 +45,13 @@ class IntelligenceScanRequest(BaseModel):
     @field_validator("model")
     @classmethod
     def valid_model(cls, value: str) -> str:
-        if value not in SCANNER_MODEL_IDS:
-            raise ValueError("Choose a supported scanner model.")
-        return value
+        return normalize_scanner_model(value)
 
 
 class IntelligenceMultiScanRequest(BaseModel):
     tickers: list[str]
     period: str = "6mo"
-    model: str = "official"
+    model: str = "v8"
 
     @field_validator("tickers")
     @classmethod

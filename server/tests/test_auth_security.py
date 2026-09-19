@@ -48,6 +48,45 @@ class AuthSecurityTests(unittest.TestCase):
         self.assertEqual(response.headers["x-frame-options"], "DENY")
         self.assertEqual(response.headers["referrer-policy"], "strict-origin-when-cross-origin")
 
+    def test_runtime_exposes_only_public_presentation_configuration(self):
+        environment = {
+            "ORYNTRA_PARTNER_ADS_ENABLED": "false",
+            "ORYNTRA_SUBSCRIPTION_OFFERS_ENABLED": "false",
+            "ORYNTRA_TURNSTILE_SITE_KEY": "public-site-key",
+            "ORYNTRA_TURNSTILE_SECRET_KEY": "",
+        }
+        with patch.dict(os.environ, environment, clear=False), TestClient(app) as client:
+            response = client.get("/api/app/version")
+        payload = response.json()
+        self.assertEqual(payload["public_engine"], "v8")
+        self.assertFalse(payload["partner_ads"]["enabled"])
+        self.assertFalse(payload["subscription_offers_enabled"])
+        self.assertEqual(payload["turnstile"], {"enabled": False, "site_key": ""})
+        self.assertNotIn("secret", str(payload).lower())
+
+    def test_mobile_turnstile_page_exposes_widget_without_secret(self):
+        environment = {
+            "ORYNTRA_TURNSTILE_SITE_KEY": "public-mobile-site-key",
+            "ORYNTRA_TURNSTILE_SECRET_KEY": "private-test-secret",
+        }
+        with patch.dict(os.environ, environment, clear=False), TestClient(app) as client:
+            response = client.get("/api/auth/turnstile/mobile")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("public-mobile-site-key", response.text)
+        self.assertIn("mobile_auth", response.text)
+        self.assertNotIn("private-test-secret", response.text)
+        self.assertIn("no-store", response.headers["cache-control"])
+        self.assertIn("challenges.cloudflare.com", response.headers["content-security-policy"])
+
+    def test_mobile_turnstile_page_fails_closed_when_unconfigured(self):
+        environment = {
+            "ORYNTRA_TURNSTILE_SITE_KEY": "",
+            "ORYNTRA_TURNSTILE_SECRET_KEY": "",
+        }
+        with patch.dict(os.environ, environment, clear=False), TestClient(app) as client:
+            response = client.get("/api/auth/turnstile/mobile")
+        self.assertEqual(response.status_code, 503)
+
     def test_oauth_configuration_status_never_exposes_secrets(self):
         with patch.dict(os.environ, {"ORYNTRA_GOOGLE_CLIENT_ID": "", "ORYNTRA_GOOGLE_CLIENT_SECRET": "", "ORYNTRA_APPLE_CLIENT_ID": "", "ORYNTRA_APPLE_CLIENT_SECRET": ""}, clear=False):
             status = auth.oauth_provider_status()
@@ -112,9 +151,19 @@ class AuthSecurityTests(unittest.TestCase):
             _require_model_access({"subscription": None}, MINERVA_MODEL_ID)
         self.assertEqual(raised.exception.status_code, 402)
         self.assertEqual(raised.exception.detail["code"], "MODEL_SUBSCRIPTION_REQUIRED")
+        with self.assertRaises(HTTPException) as unreleased:
+            _require_model_access({"subscription": {"plan_code": "pro"}}, MINERVA_MODEL_ID)
+        self.assertEqual(unreleased.exception.status_code, 409)
+        self.assertEqual(unreleased.exception.detail["code"], "MODEL_RESEARCH_NOT_RELEASED")
 
     def test_scanner_accepts_only_the_shared_workspace_model_catalog(self):
-        self.assertEqual(IntelligenceScanRequest(ticker="AAPL", model="universal_v2").model, "universal_v2")
+        self.assertEqual(IntelligenceScanRequest(ticker="AAPL", model="v8").model, "v8")
+        # Older browser clients persisted these labels for the now-V8 public
+        # scanner. They must remain usable after a server deployment.
+        self.assertEqual(IntelligenceScanRequest(ticker="AAPL", model="official").model, "v8")
+        self.assertEqual(IntelligenceScanRequest(ticker="AAPL", model="v8_official").model, "v8")
+        with self.assertRaises(ValueError):
+            IntelligenceScanRequest(ticker="AAPL", model="universal_v2")
         with self.assertRaises(ValueError):
             IntelligenceScanRequest(ticker="AAPL", model="made_up_model")
 
