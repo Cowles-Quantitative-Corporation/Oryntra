@@ -17,6 +17,7 @@ from ..internal_access import require_control_operator
 from ..phase4_control import registry_payload
 from ..phase4_jobs import get_job, list_jobs, submit_job
 from ..automation_orchestrator import run_candidate_automation, list_alerts, acknowledge_alert, recent_automation_runs
+from ..ibkr_adapter import ibkr_settings, save_ibkr_settings, ibkr_connection_status, ibkr_audit_log, LIVE_CONFIRMATION
 from ..phase4_scheduler import run_automation_sweep, scheduler_status
 from ..phase4_ledger import (
     create_candidate, get_candidate, list_candidates, record_simulated_fill, set_candidate_status,
@@ -67,6 +68,17 @@ class ManualFillRequest(BaseModel):
     fees: float = Field(default=0.0, ge=0)
 
 
+class IBKRSettingsRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    mode: str = "DISABLED"
+    account_id: str | None = None
+    base_url: str = "https://localhost:5000/v1/api"
+    verify_ssl: bool = False
+    paper_transmit_enabled: bool = False
+    live_transmit_enabled: bool = False
+    live_confirmation: str | None = None
+
+
 def _candidate_snapshot(candidate_id: int, user_id: int) -> dict[str, Any]:
     candidate = get_candidate(candidate_id, user_id=user_id)
     conn = get_connection()
@@ -112,6 +124,7 @@ def overview(request: Request):
         "automation": scheduler_status(),
         "alerts": list_alerts(user["id"], 20),
         "automation_runs": recent_automation_runs(user["id"], 10),
+        "ibkr": ibkr_settings(user["id"]),
     }
 
 
@@ -171,6 +184,33 @@ def automation_status(request: Request):
 async def automation_sweep(request: Request):
     require_control_operator(request)
     return await asyncio.to_thread(run_automation_sweep, force=True)
+
+
+@router.get("/ibkr/settings")
+def get_ibkr_settings(request: Request):
+    user = require_control_operator(request)
+    return ibkr_settings(user["id"])
+
+
+@router.post("/ibkr/settings")
+def update_ibkr_settings(payload: IBKRSettingsRequest, request: Request):
+    user = require_control_operator(request)
+    try:
+        return save_ibkr_settings(user["id"], **payload.model_dump())
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.get("/ibkr/status")
+def get_ibkr_status(request: Request):
+    user = require_control_operator(request)
+    return ibkr_connection_status(user["id"])
+
+
+@router.get("/ibkr/audit")
+def get_ibkr_audit(request: Request):
+    user = require_control_operator(request)
+    return {"rows": ibkr_audit_log(user["id"]), "live_confirmation_phrase": LIVE_CONFIRMATION}
 
 
 @router.get("/alerts")

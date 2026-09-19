@@ -228,6 +228,7 @@ def code_fingerprint() -> str:
         "universal_factor_model.py", "universal_optimizer.py", "universal_phase3.py",
         "universal_research.py", "portfolio_execution.py", "minerva.py", "alpha_v1.py",
         "phase4_control.py", "phase4_ledger.py", "phase4_runner.py", "phase4_scheduler.py",
+        "automation_orchestrator.py", "ibkr_adapter.py",
     )
     digest = hashlib.sha256()
     for name in modules:
