@@ -11,6 +11,7 @@ import sys
 from typing import Any
 
 from .database import get_connection
+from .control_research import run_current_market_snapshot, run_interactive_backtest
 from .phase4_control import DEFAULT_TEST_SUITES
 
 
@@ -59,6 +60,8 @@ def _command(job_id: int, suite_id: str, spec: dict[str, Any]) -> tuple[list[str
     suite = DEFAULT_TEST_SUITES[suite_id]
     if suite["kind"] == "pytest":
         return [sys.executable, "-m", "pytest", "-q", *suite["targets"]], None
+    if suite["kind"] in {"interactive_backtest", "current_market"}:
+        return [], None
     if suite["kind"] not in {"study", "custom_study"}:
         raise ValueError("Unsupported job kind")
     bars = _validate_existing_path(spec.get("bars_csv", ""), "Frozen bars CSV")
@@ -92,23 +95,31 @@ def _run(job_id: int, suite_id: str, spec: dict[str, Any]) -> None:
     finally:
         conn.close()
     try:
-        command, output_path = _command(job_id, suite_id, spec)
-        env = os.environ.copy()
-        env.setdefault("PYTHONPATH", str(_ROOT))
-        with log_path.open("w", encoding="utf-8") as handle:
-            proc = subprocess.run(command, cwd=_ROOT, stdout=handle, stderr=subprocess.STDOUT, text=True, env=env, timeout=int(spec.get("timeout_seconds", 7200)))
-        result = None
-        if output_path and output_path.exists():
-            try:
-                result = json.loads(output_path.read_text(encoding="utf-8"))
-            except Exception:
-                result = {"output_path": str(output_path)}
-        status = "PASSED" if proc.returncode == 0 else "FAILED"
+        suite = DEFAULT_TEST_SUITES[suite_id]
+        if suite["kind"] in {"interactive_backtest", "current_market"}:
+            with log_path.open("w", encoding="utf-8") as handle:
+                handle.write(f"Starting {suite['label']}\n")
+                result = run_interactive_backtest(int(spec["user_id"]), spec) if suite["kind"] == "interactive_backtest" else run_current_market_snapshot(int(spec["user_id"]), spec)
+                handle.write("Completed successfully\n")
+            output_path, exit_code, status = None, 0, "PASSED"
+        else:
+            command, output_path = _command(job_id, suite_id, spec)
+            env = os.environ.copy()
+            env.setdefault("PYTHONPATH", str(_ROOT))
+            with log_path.open("w", encoding="utf-8") as handle:
+                proc = subprocess.run(command, cwd=_ROOT, stdout=handle, stderr=subprocess.STDOUT, text=True, env=env, timeout=int(spec.get("timeout_seconds", 7200)))
+            result = None
+            if output_path and output_path.exists():
+                try:
+                    result = json.loads(output_path.read_text(encoding="utf-8"))
+                except Exception:
+                    result = {"output_path": str(output_path)}
+            exit_code, status = int(proc.returncode), "PASSED" if proc.returncode == 0 else "FAILED"
         conn = get_connection()
         try:
             conn.execute(
                 """UPDATE phase4_jobs SET status=?,exit_code=?,output_path=?,result_json=?,finished_at=? WHERE id=?""",
-                (status, int(proc.returncode), str(output_path) if output_path else None,
+                (status, exit_code, str(output_path) if output_path else None,
                  _safe_json(result) if result is not None else None, _now(), int(job_id)),
             )
             conn.commit()
@@ -132,6 +143,8 @@ def submit_job(user_id: int, suite_id: str, spec: dict[str, Any] | None = None) 
     if suite_id not in DEFAULT_TEST_SUITES:
         raise ValueError("Unknown test suite")
     payload = dict(spec or {})
+    if DEFAULT_TEST_SUITES[suite_id]["kind"] in {"interactive_backtest", "current_market"}:
+        payload["user_id"] = int(user_id)
     job_id = _insert_job(user_id, suite_id, payload)
     _EXECUTOR.submit(_run, job_id, suite_id, payload)
     return get_job(user_id, job_id)
