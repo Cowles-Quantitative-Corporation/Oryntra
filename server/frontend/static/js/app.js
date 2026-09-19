@@ -739,15 +739,13 @@ function mountMinervaModelGate() {
 
 const WORKSPACE_MODEL_KEY = 'oryntra_workspace_model';
 const WORKSPACE_MODELS = [
-  ['v8', 'V8 · Free'],
-  ['minerva_v1', 'Minerva · Pro research preview'],
+  ['v8', 'V8 Official · Scanner · Free'],
+  ['minerva_baseline', 'Minerva baseline · Quant Lab · Pro / Max'],
 ];
 
 function workspaceModel() {
   const value = safeStorageGet(WORKSPACE_MODEL_KEY) || 'v8';
-  // No paid candidate is currently released to the scanner. A stale browser
-  // selection must never turn a normal V8 scan into an invalid API request.
-  return value === 'v8' ? value : 'v8';
+  return WORKSPACE_MODELS.some(([id]) => id === value) ? value : 'v8';
 }
 
 function syncWorkspaceModelControls(value) {
@@ -755,9 +753,26 @@ function syncWorkspaceModelControls(value) {
 }
 
 function chooseWorkspaceModel(value) {
-  if (value === 'minerva_v1') {
-    syncWorkspaceModelControls(workspaceModel());
-    showSubscriptionModal(hasActiveSubscription() ? 'minerva_unreleased' : 'minerva_v1');
+  if (value === 'minerva_baseline') {
+    if (!hasActiveSubscription()) {
+      syncWorkspaceModelControls(workspaceModel());
+      showSubscriptionModal('minerva_v1');
+      return;
+    }
+    safeStorageSet(WORKSPACE_MODEL_KEY, value);
+    currentPatternMode = value;
+    // V8 remains the single-ticker scanner engine. Minerva has a frozen,
+    // multi-symbol Quant Lab implementation, so do not substitute it into a
+    // scanner result or present a cosmetic selector.
+    const quantModel = document.getElementById('quantModel');
+    if (quantModel) quantModel.value = 'minerva_baseline';
+    const settingsModel = document.getElementById('settingsQuantModel');
+    if (settingsModel) settingsModel.value = 'minerva_baseline';
+    safeStorageSet('oryntra_quant_model', 'minerva_baseline');
+    syncWorkspaceModelControls(value);
+    updatePatternModePill();
+    updateSettingsEngineDisplay();
+    document.querySelector('[data-tab="quant"]')?.click();
     return;
   }
   safeStorageSet(WORKSPACE_MODEL_KEY, value);
@@ -774,7 +789,7 @@ function hasActiveSubscription(user=currentUser) {
 }
 
 function mountWorkspaceModelControls() {
-  currentPatternMode = workspaceModel() === 'minerva_v1' ? 'v8' : workspaceModel();
+  currentPatternMode = workspaceModel();
   document.querySelectorAll('.tab-panel > .page-header').forEach(header => {
     if (header.parentElement?.id === 'tab-portfolio') return;
     if (header.querySelector('[data-workspace-model]')) return;
@@ -786,7 +801,7 @@ function mountWorkspaceModelControls() {
     select.addEventListener('change', () => chooseWorkspaceModel(select.value));
     const control = document.createElement('label');
     control.className = 'workspace-model-control';
-    control.innerHTML = '<span>Research model</span>';
+    control.innerHTML = '<span>Research engine</span>';
     control.append(select);
     header.append(control);
   });
@@ -826,6 +841,7 @@ function beginIdentityProviderSignIn(provider) {
 function initAuth() {
   mountIdentityProviderOptions();
   mountQuantModelCatalog();
+  mountWorkspaceModelControls();
   mountSubscriptionStructure();
   refreshIdentityProviderOptions();
   const authBtn = document.getElementById('authOpenBtn');
@@ -2673,7 +2689,7 @@ function updatePatternModePill() {
 
 
 function engineLabel(mode) {
-  const labels = {v8: 'V8', minerva_v1: 'MINERVA · PRO'};
+  const labels = {v8: 'V8', minerva_baseline: 'MINERVA · PRO/MAX', minerva_v1: 'MINERVA · PRO'};
   return labels[String(mode || '').toLowerCase()] || 'V8';
 }
 
