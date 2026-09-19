@@ -182,19 +182,6 @@ def run_seeded_yearly_trials(histories: dict[str, pd.DataFrame], config: Univers
                        "performance": report["results"][0], "excess_return_sharpe": excess_sharpe,
                        "execution": report["execution"],
                        "position_policy_events": report["position_policy_execution"]["event_count"],
-                       "factor_model_decisions": len(report.get("factor_model", {}).get("decision_audit", [])),
-                       "optimizer_decisions": len(report.get("portfolio_optimizer", {}).get("decision_audit", [])),
-                       "optimizer_accepted": int(sum(bool(event.get("accepted")) for event in report.get("portfolio_optimizer", {}).get("decision_audit", []))),
-                       "risk_supervisor_decisions": len(report.get("risk_supervisor", {}).get("target_audit", [])),
-                       "phase3_decisions": len(report.get("phase3", {}).get("decision_audit", [])),
-                       "phase3_critical_alerts": int(sum(
-                           sum(1 for alert in event.get("risk_radar", {}).get("alerts", []) if alert.get("severity") == "critical")
-                           for event in report.get("phase3", {}).get("decision_audit", [])
-                       )),
-                       "phase3_high_alerts": int(sum(
-                           sum(1 for alert in event.get("risk_radar", {}).get("alerts", []) if alert.get("severity") == "high")
-                           for event in report.get("phase3", {}).get("decision_audit", [])
-                       )),
                        "dataset_fingerprint": report["dataset_fingerprint"]})
     alphas = [trial["alpha"]["alpha_pct"] for trial in trials]
     return {"protocol": {"id": PROTOCOL_ID, **asdict(protocol)}, "selection_method": selection_method, "availability": availability,

@@ -11,10 +11,7 @@ from dataclasses import replace
 from .universal_engine import UniversalConfig
 from .universal_position_policy import PositionPolicyConfig
 from .universal_institutional_decision import InstitutionalDecisionConfig
-from .universal_risk_supervisor import RiskSupervisorConfig, v201_risk_config, v202_risk_config, v203_risk_config
-from .universal_factor_model import FactorModelConfig
-from .universal_optimizer import PortfolioOptimizerConfig
-from .universal_phase3 import Phase3Config
+from .universal_risk_supervisor import RiskSupervisorConfig, v201_risk_config, v202_risk_config
 
 
 MINERVA_ID = "minerva_v1_research"
@@ -127,70 +124,6 @@ def risk_v202_candidate(**overrides: object) -> UniversalConfig:
     return replace(tba8_institutional_risk_candidate(), **values)
 
 
-def risk_v203_candidate(**overrides: object) -> UniversalConfig:
-    """TBA8 alpha path with Risk Supervisor V2.0.3.
-
-    V2.0.3 preserves V1 as the baseline, activates the softened economically-gated
-    structural sleeve, and counts predictive persistence in scheduled rebalance
-    decisions. It remains research-only until a fresh point-in-time holdout.
-    """
-    base = tba8_institutional_risk_candidate()
-    values = dict(overrides)
-    supervisor = values.pop("risk_supervisor", v203_risk_config())
-    return replace(base, risk_supervisor=supervisor, **values)
-
-
-def phase2_factor_optimizer_candidate(**overrides: object) -> UniversalConfig:
-    """Phase 2A/B: TBA8 alpha path + factor risk + constrained optimizer + V1.
-
-    The base factor model uses causal market, momentum and low-volatility factors.
-    Point-in-time sector/industry, size, value and quality factors activate only
-    when explicit availability-dated panels are supplied to the research engine.
-    """
-    base = tba8_institutional_risk_candidate()
-    values = dict(overrides)
-    factor_model = values.pop("factor_model", FactorModelConfig(enabled=True))
-    optimizer = values.pop("portfolio_optimizer", PortfolioOptimizerConfig(enabled=True))
-    return replace(base, research_profile="phase2_factor_optimizer",
-                   factor_model=factor_model, portfolio_optimizer=optimizer, **values)
-
-
-def phase2_factor_optimizer_v203_candidate(**overrides: object) -> UniversalConfig:
-    """Phase 2A/B with Risk Supervisor V2.0.3 as the post-optimizer safety layer."""
-    values = dict(overrides)
-    supervisor = values.pop("risk_supervisor", v203_risk_config())
-    base = phase2_factor_optimizer_candidate(**values)
-    return replace(base, risk_supervisor=supervisor)
-
-
-
-
-def phase15_v203_candidate(**overrides: object) -> UniversalConfig:
-    """Explicit Phase 1.5 arm: TBA8 alpha path + frozen Risk V2.0.3 only."""
-    values = dict(overrides)
-    base = risk_v203_candidate(**values)
-    return replace(base, research_profile="phase15_v203")
-
-
-def phase15_phase3_candidate(**overrides: object) -> UniversalConfig:
-    """Phase 1.5 + Phase 3 diagnostics, with Phase 2 disabled.
-
-    Phase 3 is observational and cannot change the Phase 1.5 target portfolio.
-    """
-    values = dict(overrides)
-    phase3 = values.pop("phase3", Phase3Config(enabled=True))
-    base = risk_v203_candidate(**values)
-    return replace(base, research_profile="phase15_phase3", phase3=phase3)
-
-
-def phase15_phase2_phase3_candidate(**overrides: object) -> UniversalConfig:
-    """Phase 1.5 + Phase 2 factor/optimizer + Phase 3 diagnostics."""
-    values = dict(overrides)
-    phase3 = values.pop("phase3", Phase3Config(enabled=True))
-    base = phase2_factor_optimizer_v203_candidate(**values)
-    return replace(base, research_profile="phase15_phase2_phase3", phase3=phase3)
-
-
 def tba9_integrity_candidate(**overrides: object) -> UniversalConfig:
     """TBA 9: TBA 8 economics under a point-in-time research contract.
 
@@ -241,10 +174,6 @@ def minerva_contract() -> dict[str, object]:
             {"id": "portfolio_beta_ceiling", "input": "trailing 126-session stock beta to completed SPY/QQQ", "default_weight": None},
             {"id": "fundamental_quality", "input": "availability-dated cross-sectional corporate quality panel", "default_weight": 0.0},
             {"id": "filing_acceleration", "input": "availability-dated change in filing-derived growth score", "default_weight": 0.0},
-            {"id": "phase2_factor_risk", "input": "completed benchmark/stock returns plus optional availability-dated sector/style panels", "default_enabled": False},
-            {"id": "phase2_portfolio_optimizer", "input": "expected alpha, prediction uncertainty, factor covariance, turnover and liquidity constraints", "default_enabled": False},
-            {"id": "phase3_institutional_diagnostics", "input": "approved portfolio targets, completed returns, liquidity and optional Phase 2 factor state", "default_enabled": False},
-            {"id": "risk_supervisor_v2_0_3", "input": "V1-approved proposal plus causal fragility/predictive diagnostics", "default_enabled": False},
         ],
         "promotion_gate": "Freeze each nonzero feature weight on development data, then pass an unseen, point-in-time universe evaluation and the documented alpha consistency gates.",
     }

@@ -6,7 +6,7 @@ import uvicorn
 try:
     from dotenv import load_dotenv
 
-    load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
+    load_dotenv(os.getenv("ORYNTRA_ENV_FILE", os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")))
 except ImportError:
     pass
 
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     )
     uvicorn.run(
         "backend.main:app",
-        host="0.0.0.0",
+        host=os.getenv("ORYNTRA_BIND_HOST", "0.0.0.0"),
         port=port,
         reload=env_bool("ORYNTRA_RELOAD", False),
         reload_dirs=["backend"] if env_bool("ORYNTRA_RELOAD", False) else None,

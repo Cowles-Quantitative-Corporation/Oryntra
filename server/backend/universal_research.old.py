@@ -18,9 +18,6 @@ from .universal_taxonomy import taxonomy_contract
 from .universal_research_blueprint import research_blueprint
 from .universal_risk_supervisor import risk_supervisor_contract
 from .universal_institutional_decision import institutional_decision_contract
-from .universal_factor_model import factor_model_contract
-from .universal_optimizer import optimizer_contract
-from .universal_phase3 import phase3_contract, realized_security_attribution
 
 
 def run_universal(histories: dict[str, pd.DataFrame], config: UniversalConfig = UniversalConfig(),
@@ -31,11 +28,7 @@ def run_universal(histories: dict[str, pd.DataFrame], config: UniversalConfig = 
                   fundamental_acceleration_scores: pd.DataFrame | None = None,
                   fundamental_observed: pd.DataFrame | None = None,
                   learning_panels: tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame] | None = None,
-                  universe_eligibility: pd.DataFrame | None = None,
-                  factor_sector_labels: pd.DataFrame | None = None,
-                  factor_size_scores: pd.DataFrame | None = None,
-                  factor_value_scores: pd.DataFrame | None = None,
-                  factor_quality_scores: pd.DataFrame | None = None) -> dict:
+                  universe_eligibility: pd.DataFrame | None = None) -> dict:
     from .quant_research import _summary, _performance_diagnostics, _correlation_stress_report
     if not histories:
         raise ValueError("Supply at least one history")
@@ -78,17 +71,9 @@ def run_universal(histories: dict[str, pd.DataFrame], config: UniversalConfig = 
     learning = (None, None, None) if learning_panels is None else learning_panels
     panel = signal_panel(prices, config, benchmark_returns, fundamental_scores, opens, volumes, *learning, highs, lows,
                          fundamental_acceleration_scores=fundamental_acceleration_scores)
-    target = portfolio_targets(
-        prices, config, benchmark_returns, fundamental_scores, opens, volumes, *learning, highs, lows,
-        fundamental_acceleration_scores=fundamental_acceleration_scores,
-        factor_sector_labels=factor_sector_labels, factor_size_scores=factor_size_scores,
-        factor_value_scores=factor_value_scores, factor_quality_scores=factor_quality_scores,
-        precomputed_panel=panel,
-    )
+    target = portfolio_targets(prices, config, benchmark_returns, fundamental_scores, opens, volumes, *learning, highs, lows,
+                               fundamental_acceleration_scores=fundamental_acceleration_scores, precomputed_panel=panel)
     institutional_audit = list(target.attrs.get("institutional_decision_audit", []))
-    factor_model_audit = list(target.attrs.get("factor_model_audit", []))
-    portfolio_optimizer_audit = list(target.attrs.get("portfolio_optimizer_audit", []))
-    phase3_audit = list(target.attrs.get("phase3_audit", []))
     risk_target_audit = list(target.attrs.get("risk_supervisor_target_audit", []))
     target, entry_gate, context_audit = apply_market_context(target, market_observations, config.market_context)
     # The membership decision is known at this close and affects the following
@@ -155,11 +140,6 @@ def run_universal(histories: dict[str, pd.DataFrame], config: UniversalConfig = 
     if config.alpha_model == "walk_forward_ridge" and learning_panels is not None:
         for panel_source in learning_panels:
             source_hash.update(pd.util.hash_pandas_object(panel_source, index=True).values.tobytes())
-    for name, factor_panel in (("factor_sector_labels", factor_sector_labels), ("factor_size_scores", factor_size_scores),
-                               ("factor_value_scores", factor_value_scores), ("factor_quality_scores", factor_quality_scores)):
-        if factor_panel is not None:
-            source_hash.update(name.encode())
-            source_hash.update(pd.util.hash_pandas_object(factor_panel.reindex(index=prices.index, columns=prices.columns), index=True).values.tobytes())
     if universe_eligibility is not None:
         source_hash.update(b"point-in-time-universe-eligibility-v1")
         source_hash.update(pd.util.hash_pandas_object(universe_eligibility, index=True).values.tobytes())
@@ -167,7 +147,7 @@ def run_universal(histories: dict[str, pd.DataFrame], config: UniversalConfig = 
     exposure = held.iloc[-1]
     scorecard = consistency_scorecard(net, benchmark_returns, risk_free, prior_strategy=prior_net)
     code_hash = hashlib.sha256()
-    for module in ("universal_engine.py", "universal_learning.py", "universal_fundamentals.py", "portfolio_execution.py", "alpha_evaluation.py", "alpha_consistency.py", "universal_position_policy.py", "universal_risk_supervisor.py", "universal_risk_v201.py", "universal_risk_v202.py", "universal_risk_v203.py", "universal_factor_model.py", "universal_optimizer.py", "universal_phase3.py", "universal_institutional_decision.py", "universal_yearly_protocol.py", "universal_market_context.py", "universal_taxonomy.py", "universe_selection.py", "universal_research_blueprint.py", "universal_research.py", "minerva.py", "minerva_corporate.py", "quant_research.py"):
+    for module in ("universal_engine.py", "universal_learning.py", "universal_fundamentals.py", "portfolio_execution.py", "alpha_evaluation.py", "alpha_consistency.py", "universal_position_policy.py", "universal_risk_supervisor.py", "universal_risk_v201.py", "universal_risk_v202.py", "universal_institutional_decision.py", "universal_yearly_protocol.py", "universal_market_context.py", "universal_taxonomy.py", "universe_selection.py", "universal_research_blueprint.py", "universal_research.py", "minerva.py", "minerva_corporate.py", "quant_research.py"):
         code_hash.update(module.encode())
         code_hash.update(Path(__file__).with_name(module).read_bytes())
     return {"engine": ENGINE_ID, "engine_version": ENGINE_VERSION, "code_fingerprint": code_hash.hexdigest(), "configuration": asdict(config), "engine_configuration": asdict(config),
@@ -196,17 +176,6 @@ def run_universal(histories: dict[str, pd.DataFrame], config: UniversalConfig = 
             "risk_supervisor": {**risk_supervisor_contract(config.risk_supervisor),
                                 "target_audit": risk_target_audit,
                                 "daily_audit": simulation["risk_supervisor_audit"]},
-            "factor_model": {**factor_model_contract(config.factor_model),
-                             "decision_audit": factor_model_audit},
-            "portfolio_optimizer": {**optimizer_contract(config.portfolio_optimizer),
-                                    "decision_audit": portfolio_optimizer_audit},
-            "phase3": {**phase3_contract(config.phase3),
-                       "decision_audit": phase3_audit,
-                       "realized_security_attribution": (
-                           realized_security_attribution(
-                               held, prices.pct_change(fill_method=None).reindex(evaluation_index), net
-                           ) if config.phase3.enabled else None
-                       )},
             "institutional_decision": {**institutional_decision_contract(config.institutional_decision),
                                        "daily_audit": institutional_audit},
             "taxonomy": taxonomy_contract(),

@@ -47,17 +47,10 @@ from .universal_risk_v202 import (
     portfolio_weighted_tail_dependence,
     predictive_gross_modifier,
 )
-from .universal_risk_v203 import (
-    V203ControlConfig,
-    bounded_predictive_trim,
-    predictive_modifier_v203,
-    soft_structural_sleeve,
-)
 
 
 RISK_MODEL_ID = "universal_stock_risk_supervisor_v2_0_1"
 RISK_MODEL_V202_ID = "universal_stock_risk_supervisor_v2_0_2"
-RISK_MODEL_V203_ID = "universal_stock_risk_supervisor_v2_0_3"
 
 
 @dataclass(frozen=True)
@@ -156,20 +149,6 @@ class RiskSupervisorConfig:
     v202_optimizer_learning_rate: float = .08
     v202_optimizer_turnover_tolerance: float = .005
 
-    # V2.0.3: active-but-soft structural sleeve plus predictive overlay.
-    # Persistence is explicitly counted in scheduled rebalance decisions.
-    v203_enabled: bool = False
-    v203_structural_intervention_enabled: bool = False
-    v203_systemic_trigger_percentile: float = .82
-    v203_persistence_rebalances: int = 2
-    v203_maximum_additional_gross_reduction: float = .10
-    v203_minimum_predictive_gross_change: float = .015
-    v203_structural_strength: float = .50
-    v203_structural_no_trade_band: float = .015
-    v203_minimum_structural_risk_improvement: float = .01
-    v203_maximum_structural_priority_loss_fraction: float = .02
-    v203_maximum_structural_incremental_turnover: float = .02
-
     def __post_init__(self) -> None:
         switches = [
             self.enabled, self.component_risk_enabled, self.correlation_cluster_enabled,
@@ -182,12 +161,9 @@ class RiskSupervisorConfig:
             self.stress_testing_enabled, self.risk_radar_enabled,
             self.v202_enabled, self.v202_predictive_risk_enabled,
             self.v202_structural_intervention_enabled, self.v202_liquidity_intervention_enabled,
-            self.v203_enabled, self.v203_structural_intervention_enabled,
         ]
         if not all(isinstance(value, bool) for value in switches):
             raise ValueError("Risk supervisor switches must be boolean")
-        if sum(int(value) for value in (self.v201_enabled, self.v202_enabled, self.v203_enabled)) > 1:
-            raise ValueError("Only one explicit risk-supervisor research version may be enabled")
         numeric_values = [
             value for value in asdict(self).values()
             if isinstance(value, (int, float)) and not isinstance(value, bool)
@@ -268,23 +244,6 @@ class RiskSupervisorConfig:
             optimizer_learning_rate=self.v202_optimizer_learning_rate,
             optimizer_turnover_tolerance=self.v202_optimizer_turnover_tolerance,
         )
-        V203ControlConfig(
-            systemic_trigger_percentile=self.v203_systemic_trigger_percentile,
-            persistence_rebalances=self.v203_persistence_rebalances,
-            maximum_additional_gross_reduction=self.v203_maximum_additional_gross_reduction,
-            minimum_predictive_gross_change=self.v203_minimum_predictive_gross_change,
-            structural_enabled=self.v203_structural_intervention_enabled,
-            structural_strength=self.v203_structural_strength,
-            structural_no_trade_band=self.v203_structural_no_trade_band,
-            minimum_structural_risk_improvement=self.v203_minimum_structural_risk_improvement,
-            maximum_structural_priority_loss_fraction=self.v203_maximum_structural_priority_loss_fraction,
-            maximum_structural_incremental_turnover=self.v203_maximum_structural_incremental_turnover,
-            optimizer_risk_aversion=self.v202_optimizer_risk_aversion,
-            optimizer_turnover_penalty=self.v202_optimizer_turnover_penalty,
-            optimizer_iterations=self.v202_optimizer_iterations,
-            optimizer_learning_rate=self.v202_optimizer_learning_rate,
-            optimizer_turnover_tolerance=self.v202_optimizer_turnover_tolerance,
-        )
 
 
 def v201_risk_config(**overrides: object) -> RiskSupervisorConfig:
@@ -337,35 +296,6 @@ def v202_risk_config(**overrides: object) -> RiskSupervisorConfig:
         v202_predictive_risk_enabled=True,
         v202_structural_intervention_enabled=False,
         v202_liquidity_intervention_enabled=False,
-    )
-    return replace(base, **overrides)
-
-
-def v203_risk_config(**overrides: object) -> RiskSupervisorConfig:
-    """V2.0.3 research profile: V1 baseline + soft structural sleeve + predictor.
-
-    Defaults are deliberately predeclared and moderate rather than selected as the
-    numerically best settings from the already-seen V2.0.2 panel.  The structural
-    sleeve is active because it was the only V2.0.2 ablation with broad incremental
-    improvement, but it is softened and economically gated before acceptance.
-    """
-    base = RiskSupervisorConfig(
-        enabled=True,
-        component_risk_enabled=True,
-        maximum_risk_contribution=.10,
-        correlation_cluster_enabled=False,
-        correlation_regime_enabled=False,
-        diversification_enabled=False,
-        realized_volatility_enabled=False,
-        volatility_shock_enabled=False,
-        tail_loss_enabled=False,
-        drawdown_enabled=False,
-        gradual_recovery_enabled=False,
-        v203_enabled=True,
-        v202_predictive_risk_enabled=True,
-        v202_structural_intervention_enabled=False,
-        v202_liquidity_intervention_enabled=False,
-        v203_structural_intervention_enabled=True,
     )
     return replace(base, **overrides)
 
@@ -704,26 +634,6 @@ def _v202_predictive_config(config: RiskSupervisorConfig) -> V202PredictiveConfi
     )
 
 
-def _v203_control_config(config: RiskSupervisorConfig) -> V203ControlConfig:
-    return V203ControlConfig(
-        systemic_trigger_percentile=config.v203_systemic_trigger_percentile,
-        persistence_rebalances=config.v203_persistence_rebalances,
-        maximum_additional_gross_reduction=config.v203_maximum_additional_gross_reduction,
-        minimum_predictive_gross_change=config.v203_minimum_predictive_gross_change,
-        structural_enabled=config.v203_structural_intervention_enabled,
-        structural_strength=config.v203_structural_strength,
-        structural_no_trade_band=config.v203_structural_no_trade_band,
-        minimum_structural_risk_improvement=config.v203_minimum_structural_risk_improvement,
-        maximum_structural_priority_loss_fraction=config.v203_maximum_structural_priority_loss_fraction,
-        maximum_structural_incremental_turnover=config.v203_maximum_structural_incremental_turnover,
-        optimizer_risk_aversion=config.v202_optimizer_risk_aversion,
-        optimizer_turnover_penalty=config.v202_optimizer_turnover_penalty,
-        optimizer_iterations=config.v202_optimizer_iterations,
-        optimizer_learning_rate=config.v202_optimizer_learning_rate,
-        optimizer_turnover_tolerance=config.v202_optimizer_turnover_tolerance,
-    )
-
-
 def _supervise_v202(
     weights: np.ndarray,
     covariance: np.ndarray,
@@ -982,225 +892,6 @@ def _supervise_v202(
     }
 
 
-
-def _supervise_v203(
-    weights: np.ndarray,
-    covariance: np.ndarray,
-    config: RiskSupervisorConfig,
-    *,
-    returns_history: np.ndarray,
-    expected_alpha: np.ndarray | None,
-    prediction_error: np.ndarray | None,
-    fallback_priority: np.ndarray | None,
-    adv_dollars: np.ndarray | None,
-    capital: float | None,
-    symbols: Sequence[str] | None,
-    predictive_forecast: dict[str, Any] | None,
-    previous_persistence_count: int,
-    current_weights: np.ndarray | None,
-) -> tuple[np.ndarray, dict[str, Any]]:
-    """V1-anchored V2.0.3 with soft structural repair and rebalance persistence."""
-    proposed = np.asarray(weights, dtype=float).reshape(-1)
-    if proposed.sum() <= 0:
-        return proposed.copy(), {
-            "enabled": True,
-            "model": RISK_MODEL_V203_ID,
-            "scale": 1.0,
-            "persistence_count": 0,
-            "persistence_rebalances": 0,
-            "predictive_forecast": predictive_forecast or {"available": False, "reason": "empty_portfolio"},
-        }
-    history = np.asarray(returns_history, dtype=float)
-    if history.ndim != 2 or history.shape[1] != len(proposed) or not np.isfinite(history).all():
-        raise ValueError("V2.0.3 returns_history must be finite and align with the portfolio")
-
-    # 1) Exact V1-compatible baseline.  Engine integration ensures this is only
-    # evaluated on the portfolio's scheduled decision events.
-    v1_weights, v1_audit = _legacy_supervise(proposed, covariance, config)
-    v1_gross = float(v1_weights.sum())
-
-    # 2) Keep the professional V2.0.1 / V2.0.2 measurement stack.
-    diagnostics = V201DiagnosticsConfig(
-        long_window=config.v201_long_window,
-        short_window=config.v201_short_window,
-        downside_quantile=.35,
-        tail_quantile=config.v201_tail_quantile,
-        covariance_shrinkage=config.v201_covariance_shrinkage,
-        covariance_anchor_weight=config.v201_covariance_anchor_weight,
-        ewma_half_life=config.v201_ewma_half_life,
-        cluster_threshold=config.correlation_cluster_threshold,
-        bootstrap_samples=config.v201_bootstrap_samples if config.risk_uncertainty_enabled else 0,
-        bootstrap_block_size=config.v201_bootstrap_block_size,
-        bootstrap_seed=config.v201_bootstrap_seed,
-        statistical_factor_count=config.v201_statistical_factor_count,
-    )
-    ensemble_covariance, ensemble_audit = adaptive_covariance_ensemble(
-        history, v1_weights, diagnostics, anchor_covariance=covariance,
-    )
-    priority = alpha_priority(expected_alpha, prediction_error, fallback_priority, len(proposed))
-    topology = topology_metrics(
-        history, v1_weights, config.correlation_cluster_threshold,
-        config.v201_topology_window, config.v201_topology_compare_window,
-    )
-    raw_structure = pca_risk_structure(ensemble_covariance, config.v201_statistical_factor_count)
-    weighted_structure = portfolio_weighted_risk_structure(v1_weights, ensemble_covariance)
-    factor_risk = (
-        statistical_factor_risk(v1_weights, ensemble_covariance, symbols, config.v201_statistical_factor_count)
-        if config.factor_risk_enabled else {}
-    )
-    tail_sample = history[-min(config.v201_tail_window, len(history)):]
-    weighted_tail = (
-        portfolio_weighted_tail_dependence(tail_sample, v1_weights, config.v201_tail_quantile)
-        if config.tail_dependence_enabled else 1.0
-    )
-    uncertainty = (
-        moving_block_bootstrap_volatility_uncertainty(
-            history[-min(config.v201_long_window, len(history)):], v1_weights,
-            config.v201_bootstrap_samples, config.v201_bootstrap_block_size, config.v201_bootstrap_seed,
-        ) if config.risk_uncertainty_enabled else {"p10": 0.0, "median": 0.0, "p90": 0.0, "relative_width": 0.0}
-    )
-    liquidity = (
-        liquidity_diagnostics(
-            v1_weights, capital, adv_dollars, config.v201_liquidity_participation,
-            config.v201_liquidity_horizon_sessions,
-        ) if config.liquidity_enabled else {"available": False, "reason": "disabled"}
-    )
-    max_liquidity_days = (
-        float(liquidity["max_days_to_liquidate"])
-        if liquidity.get("available") and math.isfinite(float(liquidity["max_days_to_liquidate"])) else None
-    )
-
-    components = fragility_components(
-        first_pc_share=float(weighted_structure["first_pc_share"]),
-        effective_dimension=float(weighted_structure["effective_dimension"]),
-        average_correlation=float(topology["average_positive_correlation"]),
-        correlation_convergence=float(topology["correlation_convergence"]),
-        network_density=float(topology["network_density"]),
-        tail_dependence=float(weighted_tail),
-        volatility_acceleration_ratio=float(ensemble_audit["volatility_acceleration"]),
-        risk_uncertainty_width=float(uncertainty["relative_width"]),
-        effective_bet_count=effective_bets(v1_weights),
-        minimum_effective_bets=config.minimum_effective_bets,
-        liquidity_days=max_liquidity_days,
-        maximum_liquidity_days=config.v201_maximum_liquidation_days,
-    )
-    diagnostic_fragility = weighted_fragility_score(components) if config.fragility_enabled else 0.0
-
-    # 3) Structural sleeve: active in V2.0.3, but only accepted after an economic
-    # risk/alpha/turnover gate.  This is deliberately softer than V2.0.2's full
-    # structural ablation.
-    control = _v203_control_config(config)
-    structural_weights, structural_audit = soft_structural_sleeve(
-        v1_weights,
-        ensemble_covariance,
-        priority,
-        current_weights=current_weights,
-        cluster_enabled=config.correlation_cluster_enabled,
-        component_enabled=config.component_risk_enabled,
-        cluster_threshold=config.correlation_cluster_threshold,
-        maximum_cluster_weight=config.maximum_cluster_weight,
-        maximum_component_risk_share=config.maximum_risk_contribution,
-        maximum_trim_iterations=config.v201_maximum_trim_iterations,
-        control=control,
-    )
-
-    # 4) Predictive overlay: same causal completed-label forecast, but persistence
-    # is explicitly counted in scheduled rebalance decisions by the engine.
-    forecast = predictive_forecast or {"available": False, "reason": "predictive_panel_not_supplied"}
-    modifier = predictive_modifier_v203(
-        forecast if config.v202_predictive_risk_enabled else {"available": False, "reason": "predictive_risk_disabled"},
-        int(previous_persistence_count),
-        _v202_predictive_config(config),
-        control,
-    )
-    predictive_target = v1_gross * float(modifier["gross_modifier"])
-    predictive_cut = max(0.0, v1_gross - predictive_target)
-    if modifier.get("triggered") and predictive_cut < config.v203_minimum_predictive_gross_change - 1e-12:
-        modifier = {
-            **modifier,
-            "triggered": False,
-            "gross_modifier": 1.0,
-            "reason": "predictive_no_trade_band",
-        }
-        predictive_target = v1_gross
-
-    upper = structural_weights
-    target_gross = min(float(upper.sum()), predictive_target)
-    adjusted, optimizer_audit = bounded_predictive_trim(
-        upper,
-        target_gross,
-        ensemble_covariance,
-        priority,
-        current_weights=current_weights,
-        control=control,
-    )
-
-    # Hard invariant: V2.0.3 may never add exposure beyond the V1-approved book.
-    adjusted = np.maximum(np.minimum(adjusted, v1_weights), 0.0)
-    if np.any(adjusted - v1_weights > 1e-10) or float(adjusted.sum()) > v1_gross + 1e-10:
-        raise AssertionError("V2.0.3 increased exposure beyond the V1 baseline")
-    if not np.isfinite(adjusted).all():
-        raise AssertionError("V2.0.3 produced non-finite weights")
-
-    final_component = component_risk_shares(adjusted, ensemble_covariance)
-    before_what_if = evaluate_what_if(v1_weights, ensemble_covariance, priority)
-    after_what_if = evaluate_what_if(adjusted, ensemble_covariance, priority)
-    stress_tests = synthetic_stress_tests(adjusted, ensemble_covariance, factor_risk, symbols) if config.stress_testing_enabled else []
-    radar = risk_radar(
-        fragility_score=diagnostic_fragility,
-        first_pc_share=float(weighted_structure["first_pc_share"]),
-        effective_dimension=float(weighted_structure["effective_dimension"]),
-        average_correlation=float(topology["average_positive_correlation"]),
-        correlation_convergence=float(topology["correlation_convergence"]),
-        tail_dependence=float(weighted_tail),
-        volatility_acceleration_ratio=float(ensemble_audit["volatility_acceleration"]),
-        uncertainty_width=float(uncertainty["relative_width"]),
-        maximum_component_risk=float(final_component.max()) if len(final_component) else 0.0,
-        max_days_to_liquidate=max_liquidity_days,
-        component_limit=config.maximum_risk_contribution,
-    ) if config.risk_radar_enabled else []
-
-    priority_v1 = float(priority @ v1_weights)
-    priority_after = float(priority @ adjusted)
-    return adjusted, {
-        "enabled": True,
-        "model": RISK_MODEL_V203_ID,
-        "decision_unit": "scheduled_rebalance",
-        "scale": float(adjusted.sum() / max(float(proposed.sum()), 1e-18)),
-        "v1_scale": float(v1_gross / max(float(proposed.sum()), 1e-18)),
-        "v1_baseline": v1_audit,
-        "gross_before": float(proposed.sum()),
-        "gross_after_v1": v1_gross,
-        "gross_after_structural": float(structural_weights.sum()),
-        "gross_after": float(adjusted.sum()),
-        "structural_sleeve": structural_audit,
-        "predictive_forecast": forecast,
-        "predictive_modifier": modifier,
-        "persistence_count": int(modifier.get("persistence_rebalances", modifier.get("persistence_count", 0))),
-        "persistence_rebalances": int(modifier.get("persistence_rebalances", modifier.get("persistence_count", 0))),
-        "fragility_score": float(diagnostic_fragility),
-        "fragility_score_role": "diagnostic_only_not_an_exposure_trigger",
-        "fragility_components": components,
-        "portfolio_weighted_first_pc_share": float(weighted_structure["first_pc_share"]),
-        "portfolio_weighted_effective_dimension": float(weighted_structure["effective_dimension"]),
-        "raw_first_pc_share": float(raw_structure["first_pc_share"]),
-        "weighted_tail_dependence_ratio": float(weighted_tail),
-        "average_positive_correlation": float(topology["average_positive_correlation"]),
-        "correlation_convergence": float(topology["correlation_convergence"]),
-        "network_density": float(topology["network_density"]),
-        "risk_estimate_uncertainty": uncertainty,
-        "covariance_ensemble": ensemble_audit,
-        "factor_risk": factor_risk,
-        "liquidity": _serializable_liquidity(liquidity),
-        "optimizer": optimizer_audit,
-        "alpha_priority_v1": priority_v1,
-        "alpha_priority_after": priority_after,
-        "alpha_priority_retention_vs_v1": priority_after / priority_v1 if abs(priority_v1) > 1e-12 else None,
-        "what_if": {"v1": before_what_if, "v203": after_what_if},
-        "stress_tests": stress_tests,
-        "risk_radar": radar,
-    }
-
 def supervise_cross_sectional_weights(
     weights: np.ndarray,
     covariance: np.ndarray,
@@ -1222,25 +913,8 @@ def supervise_cross_sectional_weights(
 
     - V1 callers keep the original supervisor.
     - rejected V2.0.1 remains reproducible when ``v201_enabled`` is explicit.
-    - V2.0.2 remains reproducible as the neutral/rejected predictive branch.
-    - V2.0.3 is the active research challenger with a soft structural sleeve.
+    - V2.0.2 is a separate V1-anchored predictive research branch.
     """
-    if config.v203_enabled:
-        if returns_history is None:
-            return _legacy_supervise(weights, covariance, config)
-        return _supervise_v203(
-            weights, covariance, config,
-            returns_history=returns_history,
-            expected_alpha=expected_alpha,
-            prediction_error=prediction_error,
-            fallback_priority=fallback_priority,
-            adv_dollars=adv_dollars,
-            capital=capital,
-            symbols=symbols,
-            predictive_forecast=predictive_forecast,
-            previous_persistence_count=previous_persistence_count,
-            current_weights=current_weights,
-        )
     if config.v202_enabled:
         if returns_history is None:
             return _legacy_supervise(weights, covariance, config)
@@ -1351,7 +1025,7 @@ def risk_supervisor_contract(config: RiskSupervisorConfig) -> dict[str, Any]:
         "rolling drawdown exposure circuit breaker",
         "gradual exposure recovery after de-risking",
     ]
-    if config.v201_enabled or config.v202_enabled or config.v203_enabled:
+    if config.v201_enabled or config.v202_enabled:
         controls.extend([
             "adaptive long/short/downside covariance ensemble",
             "complete-linkage correlation topology",
@@ -1378,31 +1052,14 @@ def risk_supervisor_contract(config: RiskSupervisorConfig) -> dict[str, Any]:
             "proportional de-risking fallback unless optimizer dominates",
             "hand-weighted fragility score retained as diagnostic only",
         ])
-    if config.v203_enabled:
-        controls.extend([
-            "V1 baseline evaluated only on scheduled portfolio rebalance events",
-            "soft complete-linkage / component-risk structural sleeve",
-            "structural economic gate: modeled risk vs alpha-priority vs incremental turnover",
-            "explicit rebalance-counted predictive persistence",
-            "causal walk-forward forward-volatility / drawdown forecast",
-            "completed-label availability and chronological validation gates",
-            "bounded predictive gross reduction",
-            "predictive and structural no-trade bands",
-            "alpha/risk/turnover-aware constrained optimizer",
-            "proportional de-risking fallback unless optimizer dominates",
-            "V2.0.1 fragility, factor, liquidity, stress, what-if and Risk Radar diagnostics retained",
-        ])
     return {
-        "id": RISK_MODEL_V203_ID if config.v203_enabled else (RISK_MODEL_V202_ID if config.v202_enabled else (RISK_MODEL_ID if config.v201_enabled else "universal_tba_risk_supervisor_v1")),
+        "id": RISK_MODEL_V202_ID if config.v202_enabled else (RISK_MODEL_ID if config.v201_enabled else "universal_tba_risk_supervisor_v1"),
         "status": "active_research" if config.enabled else "disabled",
         "configuration": asdict(config),
         "controls": controls,
         "timing": "All cross-sectional controls use data available no later than the completed close; execution remains next-open.",
         "scope": "Shared Universal stock-risk layer; frozen Minerva remains disabled unless explicitly overridden.",
         "research_warning": (
-            "V2.0.3 structural/predictive settings remain predeclared research hypotheses until paired, "
-            "one-factor sensitivity and fresh point-in-time holdout validation are completed."
-            if config.v203_enabled else
             "V2.0.2 forward-risk forecasts and optimizer settings remain research hypotheses until paired, "
             "sensitivity, ablation and unseen point-in-time holdout validation are completed."
             if config.v202_enabled else

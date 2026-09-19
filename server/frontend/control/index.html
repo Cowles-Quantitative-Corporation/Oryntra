@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Oryntra Control — CQC Private Research</title>
+  <link rel="icon" href="/static/img/oryntra-favicon-64.png">
+  <link rel="stylesheet" href="/control-static/control.css">
+</head>
+<body>
+  <div class="shell">
+    <aside class="rail">
+      <div class="brand"><img src="/static/img/oryntra-logo.png" alt=""><div><b>ORYNTRA</b><span>CONTROL</span></div></div>
+      <div class="private-pill">CQC PRIVATE</div>
+      <nav>
+        <button class="nav active" data-view="overview">Overview</button>
+        <button class="nav" data-view="research">Research Lab</button>
+        <button class="nav" data-view="prospective">Prospective</button>
+        <button class="nav" data-view="architecture">Architecture</button>
+      </nav>
+      <div class="rail-foot"><span id="apiDot" class="dot"></span><span id="apiState">Connecting</span><small>Phase 4 · local/private</small></div>
+    </aside>
+
+    <main>
+      <header>
+        <div><div class="eyebrow">COWLES QUANT CORPORATION</div><h1 id="pageTitle">Research control plane</h1></div>
+        <div class="header-actions"><button id="refreshBtn" class="secondary">Refresh</button><button id="runAutoBtn" class="secondary">Run auto sweep</button><button id="runSmokeBtn">Run smoke suite</button></div>
+      </header>
+
+      <section id="accessPanel" class="access hidden">
+        <div class="access-card">
+          <h2>Private operator sign in</h2>
+          <p>This surface is separate from the public Oryntra product and requires CQC internal access.</p>
+          <input id="loginEmail" type="email" placeholder="Email">
+          <input id="loginPassword" type="password" placeholder="Password">
+          <button id="loginBtn">Sign in</button>
+          <div id="loginError" class="error"></div>
+        </div>
+      </section>
+
+      <section id="appContent">
+        <div id="view-overview" class="view active">
+          <div class="metric-grid">
+            <article class="metric"><span>Private candidates</span><strong id="candidateCount">—</strong><small>Frozen prospective manifests</small></article>
+            <article class="metric"><span>Running jobs</span><strong id="runningCount">—</strong><small>Whitelisted local research jobs</small></article>
+            <article class="metric"><span>Default risk</span><strong>V2.0.3</strong><small>Research candidate; V1 still baseline</small></article>
+            <article class="metric"><span>Execution boundary</span><strong>PAPER</strong><small>No broker-order capability</small></article>
+            <article class="metric"><span>Automation</span><strong id="automationState">—</strong><small id="automationMeta">Post-close shadow/paper cycles</small></article>
+          </div>
+          <div class="split">
+            <article class="panel">
+              <div class="panel-head"><div><h2>System boundary</h2><p>One research engine, two product surfaces.</p></div></div>
+              <div class="boundary">
+                <div class="boundary-card public"><b>PUBLIC ORYNTRA</b><span>Frozen/public profiles</span><small>Published analysis and subscriber features. No private CQC candidate controls.</small></div>
+                <div class="arrow">→</div>
+                <div class="boundary-card private"><b>CQC PROPRIETARY</b><span>Control plane</span><small>Phase 1.5, Phase 2, Phase 3, Phase 4, private tests, frozen candidates and forward ledger.</small></div>
+              </div>
+            </article>
+            <article class="panel">
+              <div class="panel-head"><div><h2>Latest jobs</h2><p>Tests and frozen-panel studies.</p></div></div>
+              <div id="jobMini" class="stack"></div>
+            </article>
+          </div>
+          <article class="panel">
+            <div class="panel-head"><div><h2>Prospective candidates</h2><p>Frozen code/config fingerprints with forward-only decisions.</p></div><button data-jump="prospective" class="secondary">Manage</button></div>
+            <div id="candidateMini" class="candidate-grid"></div>
+          </article>
+        </div>
+
+        <div id="view-research" class="view">
+          <div class="split research-layout">
+            <article class="panel">
+              <div class="panel-head"><div><h2>Study configuration</h2><p>Model and risk are intentionally selected independently.</p></div></div>
+              <div class="form-grid">
+                <label>Alpha / base model<select id="studyAlpha"></select></label>
+                <label>Construction<select id="studyConstruction"></select></label>
+                <label>Risk supervisor<select id="studyRisk"></select></label>
+                <label>Benchmark<select id="studyBenchmark"></select></label>
+                <label class="toggle-line"><input id="studyPhase3" type="checkbox" checked><span>Enable Phase 3 diagnostics</span></label>
+              </div>
+              <div class="divider"></div>
+              <label>Test suite<select id="suiteSelect"></select></label>
+              <div id="frozenInputs">
+                <label>Frozen bars CSV path<input id="barsPath" placeholder="/path/to/frozen_bars.csv"></label>
+                <label>Risk-free CSV path<input id="rfPath" placeholder="/path/to/risk_free.csv"></label>
+                <label>Declared years <input id="declaredYears" placeholder="2006,2007,2009,..."></label>
+              </div>
+              <button id="runSuiteBtn" class="wide">Run selected suite</button>
+              <div class="note">Only whitelisted tests/studies can execute. Commands are assembled server-side; the UI cannot run arbitrary shell commands.</div>
+            </article>
+            <article class="panel job-panel">
+              <div class="panel-head"><div><h2>Job console</h2><p>Background research and test execution.</p></div><button id="refreshJobsBtn" class="secondary">Refresh</button></div>
+              <div id="jobsTable" class="job-list"></div>
+              <pre id="jobLog">Select a job to inspect its log.</pre>
+            </article>
+          </div>
+        </div>
+
+        <div id="view-prospective" class="view">
+          <div class="split prospective-layout">
+            <article class="panel">
+              <div class="panel-head"><div><h2>Freeze prospective candidate</h2><p>Creates an immutable code/config manifest for forward shadow or paper tracking.</p></div></div>
+              <div class="form-grid">
+                <label>Candidate label<input id="candidateLabel" value="Phase 1.5 + 2 + 3 / V2.0.3"></label>
+                <label>Alpha / base model<select id="candidateAlpha"></select></label>
+                <label>Construction<select id="candidateConstruction"></select></label>
+                <label>Risk supervisor<select id="candidateRisk"></select></label>
+                <label>Benchmark<select id="candidateBenchmark"></select></label>
+                <label>Initial paper NAV<input id="candidateNav" type="number" value="1000000" min="100"></label>
+                <label class="toggle-line"><input id="candidatePhase3" type="checkbox" checked><span>Enable Phase 3 diagnostics</span></label>
+              </div>
+              <label>Universe<textarea id="candidateUniverse" rows="5">AAPL,MSFT,NVDA,AMZN,META,GOOGL,AVGO,TSLA,JPM,V,MA,COST,LLY,UNH,XOM,HD,PG,JNJ,WMT,CRM</textarea></label>
+              <button id="freezeCandidateBtn" class="wide">Freeze candidate</button>
+            </article>
+            <article class="panel">
+              <div class="panel-head"><div><h2>Forward ledger</h2><p>Completed close → approved target → next-open paper fill → mark → reconciliation.</p></div></div>
+              <div id="candidateList" class="stack"></div>
+            </article>
+          </div>
+          <article id="candidateDetail" class="panel hidden">
+            <div class="panel-head"><div><h2 id="detailTitle">Candidate</h2><p id="detailMeta"></p></div><button id="closeDetail" class="secondary">Close</button></div>
+            <div class="metric-grid detail-metrics">
+              <article class="metric"><span>NAV</span><strong id="detailNav">—</strong></article>
+              <article class="metric"><span>Gross</span><strong id="detailGross">—</strong></article>
+              <article class="metric"><span>Latest decision</span><strong id="detailDecision">—</strong></article>
+              <article class="metric"><span>Reconciliation</span><strong id="detailRecon">—</strong></article>
+            </div>
+            <canvas id="navChart" height="180"></canvas>
+            <div class="table-wrap"><table><thead><tr><th>Symbol</th><th>Side</th><th>Target</th><th>Notional</th><th>Scheduled</th><th>Status</th></tr></thead><tbody id="orderRows"></tbody></table></div>
+            <div class="table-wrap"><table><thead><tr><th>Symbol</th><th>Approved</th><th>Actual</th><th>Error</th><th>Status</th><th>Reason</th></tr></thead><tbody id="reconRows"></tbody></table></div>
+          </article>
+        </div>
+
+        <div id="view-architecture" class="view">
+          <article class="panel architecture">
+            <div class="panel-head"><div><h2>Current proprietary research architecture</h2><p>Phase 4 adds forward evidence without changing the public product boundary.</p></div></div>
+            <div class="flow">
+              <div>TBA8 / Minerva<br><small>alpha</small></div><b>→</b>
+              <div>Phase 2<br><small>factor + optimizer</small></div><b>→</b>
+              <div>Risk V2.0.3<br><small>independent safety</small></div><b>→</b>
+              <div>Phase 3<br><small>stress + attribution</small></div><b>→</b>
+              <div class="accent">Phase 4<br><small>forward ledger + reconciliation</small></div>
+            </div>
+            <div class="architecture-notes">
+              <div><b>Research control</b><span>Model, construction, risk and benchmark can be selected separately.</span></div>
+              <div><b>Frozen evidence</b><span>Each prospective candidate stores config and code fingerprints.</span></div>
+              <div><b>Execution</b><span>Paper fills only. No broker-submit function exists in the control plane.</span></div>
+              <div><b>Reconciliation</b><span>Every forward deviation is classified instead of being silently absorbed.</span></div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+  <div id="toast" class="toast"></div>
+  <script src="/control-static/control.js"></script>
+</body>
+</html>

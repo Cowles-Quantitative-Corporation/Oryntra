@@ -1,8 +1,6 @@
 import sqlite3
 import json
 import os
-import re
-from html import escape
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
@@ -13,16 +11,17 @@ from fastapi.middleware.gzip import GZipMiddleware
 from .database import init_db, get_app_counter
 from .legal_operator import render_legal_template
 from .market_cache import start_market_cache_worker, status as market_cache_status
-from .routes import analysis, watchlist, paper_trading, ai_explain, backtest, patterns, auth, dev_tools, pro, intelligence, quant, portfolio_lab, debug_access, cqc_entitlements
+from .phase4_scheduler import start_phase4_scheduler
+from .routes import analysis, watchlist, paper_trading, ai_explain, backtest, patterns, auth, dev_tools, pro, intelligence, quant, portfolio_lab, debug_access, cqc_entitlements, control_plane
 from .routes import universal
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
 LEGAL_DIR = os.path.join(FRONTEND_DIR, "legal")
 
-APP_VERSION = "1.0.0"
-PUBLIC_ENGINE = "official"
-PUBLIC_ENGINE_LABEL = "V1.0 Official Momentum with server-side derived analysis"
+APP_VERSION = "1.2.0"
+PUBLIC_ENGINE = "v8"
+PUBLIC_ENGINE_LABEL = "V8 evidence engine"
 
 NO_CACHE_HEADERS = {
     "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
@@ -32,7 +31,7 @@ NO_CACHE_HEADERS = {
 
 # These headers are deliberately baseline protections that do not require an
 # application-specific CSP. A CSP needs a separate review because the browser
-# client uses third-party charts and optional advertising.
+# client embeds third-party charts.
 SECURITY_HEADERS = {
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",
@@ -40,86 +39,14 @@ SECURITY_HEADERS = {
     "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
 }
 
-AD_PLACEMENTS = [
-    {"key": "home_top", "label": "Home top banner", "web_format": "horizontal", "flutter_format": "banner"},
-    {"key": "scanner_top", "label": "Scanner top banner", "web_format": "horizontal", "flutter_format": "banner"},
-    {"key": "results_side", "label": "Desktop result rectangle", "web_format": "rectangle", "flutter_format": "medium_rectangle"},
-    {"key": "results_inline", "label": "Inline result banner", "web_format": "horizontal", "flutter_format": "banner"},
-    {"key": "watchlist_inline", "label": "Watchlist banner", "web_format": "horizontal", "flutter_format": "banner"},
-    {"key": "paper_bottom", "label": "Paper trading footer banner", "web_format": "horizontal", "flutter_format": "banner"},
-    {"key": "mobile_bottom", "label": "Mobile bottom banner", "web_format": "mobile_anchor", "flutter_format": "anchored_adaptive_banner"},
-]
-
 def env_bool(name: str, default: bool = False) -> bool:
     value = os.getenv(name)
     if value is None or value == "":
         return default
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
-def ad_slot_env(prefix: str) -> dict:
-    return {item["key"]: os.getenv(f"{prefix}_{item['key'].upper()}", "").strip() for item in AD_PLACEMENTS}
-
-DEFAULT_ADSENSE_CLIENT_ID = "ca-pub-7922098561896578"
-
-def adsense_client_id() -> str:
-    raw = os.getenv("ADSENSE_CLIENT_ID", DEFAULT_ADSENSE_CLIENT_ID).strip()
-    if re.fullmatch(r"ca-pub-\d{16}", raw):
-        return raw
-    return DEFAULT_ADSENSE_CLIENT_ID
-
-def adsense_publisher_id() -> str:
-    raw = os.getenv("ADSENSE_PUBLISHER_ID", "").strip()
-    if re.fullmatch(r"pub-\d{16}", raw):
-        return raw
-    client = adsense_client_id()
-    return client.removeprefix("ca-") if client else ""
-
 def public_site_url() -> str:
-    return os.getenv("ADSENSE_SITE_URL", os.getenv("PUBLIC_BASE_URL", "")).strip().rstrip("/")
-
-def adsense_head_markup() -> str:
-    client = adsense_client_id()
-    # Advertising is opt-in.  Keep the public site ad-free until its operator
-    # explicitly enables web ads after configuring the approved placement IDs.
-    if not env_bool("WEB_ADS_ENABLED", False) or not env_bool("ADSENSE_VERIFY_ENABLED", False):
-        return ""
-    meta = f'<meta name="google-adsense-account" content="{escape(client)}">'
-    script = (
-        '<script async src="https://pagead2.googlesyndication.com/pagead/js/'
-        f'adsbygoogle.js?client={escape(client)}" crossorigin="anonymous"></script>'
-    )
-    return meta + "\n  " + script
-
-def inject_adsense_head(html: str) -> str:
-    markup = adsense_head_markup()
-    if not markup or "pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=" in html:
-        return html
-    if "<!-- ADSENSE_HEAD -->" in html:
-        return html.replace("<!-- ADSENSE_HEAD -->", markup, 1)
-    return html.replace("</head>", f"  {markup}\n</head>", 1)
-
-def ads_diagnostics() -> dict:
-    client = adsense_client_id()
-    publisher = adsense_publisher_id()
-    slots = ad_slot_env("ADSENSE_SLOT")
-    configured = [key for key, value in slots.items() if value]
-    missing = [key for key, value in slots.items() if not value]
-    preview = env_bool("ADS_PREVIEW_MODE", False)
-    web_enabled = env_bool("WEB_ADS_ENABLED", False)
-    return {
-        "site_url": public_site_url(),
-        "client_id_valid": bool(client),
-        "publisher_id_valid": bool(publisher),
-        "verification_enabled": env_bool("ADSENSE_VERIFY_ENABLED", False),
-        "verification_ready": bool(client and web_enabled and env_bool("ADSENSE_VERIFY_ENABLED", False)),
-        "preview_mode": preview,
-        "web_ads_enabled": web_enabled,
-        "auto_ads_enabled": env_bool("ADSENSE_AUTO_ADS_ENABLED", False),
-        "configured_slots": configured,
-        "missing_slots": missing,
-        "manual_ads_ready": bool(client and web_enabled and not preview and configured),
-        "ads_txt_ready": bool(publisher),
-    }
+    return os.getenv("PUBLIC_BASE_URL", "").strip().rstrip("/")
 
 
 @asynccontextmanager
@@ -127,9 +54,12 @@ async def lifespan(app: FastAPI):
     init_db()
     print("✅ Oryntra DB initialized")
     market_worker = start_market_cache_worker() if env_bool("ORYNTRA_PRIVATE_RESEARCH_ROUTES", False) else None
+    phase4_scheduler = start_phase4_scheduler() if env_bool("ORYNTRA_PRIVATE_RESEARCH_ROUTES", False) else None
     try:
         yield
     finally:
+        if phase4_scheduler is not None:
+            phase4_scheduler.stop()
         if market_worker is not None:
             market_worker.stop()
         print("🔴 Oryntra shutting down")
@@ -206,6 +136,7 @@ else:
 if _private_research:
     app.include_router(universal.router, prefix="/api/universal", tags=["Universal Research"])
     app.include_router(quant.router, prefix="/api/quant", tags=["Quant Lab"])
+    app.include_router(control_plane.router, prefix="/api/control", tags=["CQC Private Control"])
 
 # The public API exposes only frozen historical demonstrations. Full custom
 # Quant Lab controls are always an internal, server-authorized capability.
@@ -216,6 +147,20 @@ app.mount(
     StaticFiles(directory=os.path.join(FRONTEND_DIR, "static")),
     name="static",
 )
+if _private_research:
+    app.mount(
+        "/control-static",
+        StaticFiles(directory=os.path.join(FRONTEND_DIR, "control", "static")),
+        name="control-static",
+    )
+
+
+@app.get("/control", include_in_schema=False)
+async def serve_control_plane():
+    if not _private_research:
+        raise HTTPException(status_code=404, detail="Not found")
+    path = os.path.join(FRONTEND_DIR, "control", "index.html")
+    return FileResponse(path, headers=NO_CACHE_HEADERS)
 
 
 @app.get("/", include_in_schema=False)
@@ -233,7 +178,7 @@ async def serve_frontend():
         )
     path = os.path.join(FRONTEND_DIR, "index.html")
     with open(path, "r", encoding="utf-8") as handle:
-        html = inject_adsense_head(render_legal_template(handle.read()))
+        html = render_legal_template(handle.read())
     return HTMLResponse(html, headers=NO_CACHE_HEADERS)
 
 
@@ -254,7 +199,7 @@ async def serve_legal_page(page_name: str):
     if not os.path.exists(path):
         raise HTTPException(status_code=404, detail="Legal page not found")
     with open(path, "r", encoding="utf-8") as handle:
-        html = inject_adsense_head(render_legal_template(handle.read()))
+        html = render_legal_template(handle.read())
     return HTMLResponse(html, headers=NO_CACHE_HEADERS)
 
 
@@ -265,6 +210,8 @@ async def health_check():
 
 @app.get("/api/app/version")
 async def app_version():
+    turnstile_site_key = os.getenv("ORYNTRA_TURNSTILE_SITE_KEY", "").strip()
+    turnstile_enabled = bool(turnstile_site_key and os.getenv("ORYNTRA_TURNSTILE_SECRET_KEY", "").strip())
     return {
         "version": APP_VERSION,
         "public_engine": PUBLIC_ENGINE,
@@ -275,6 +222,19 @@ async def app_version():
         "market_data_provider": "server_side_configured_provider",
         "public_raw_market_data": False,
         "chart_provider": "TradingView",
+        "partner_ads": {
+            "enabled": env_bool("ORYNTRA_PARTNER_ADS_ENABLED", False),
+            "placements": {
+                "native": env_bool("ORYNTRA_PARTNER_AD_NATIVE_ENABLED", True),
+                "desktop": env_bool("ORYNTRA_PARTNER_AD_DESKTOP_ENABLED", True),
+                "mobile": env_bool("ORYNTRA_PARTNER_AD_MOBILE_ENABLED", True),
+            },
+        },
+        "subscription_offers_enabled": env_bool("ORYNTRA_SUBSCRIPTION_OFFERS_ENABLED", True),
+        "turnstile": {
+            "enabled": turnstile_enabled,
+            "site_key": turnstile_site_key if turnstile_enabled else "",
+        },
     }
 
 
@@ -288,46 +248,6 @@ async def app_market_cache_status():
     if not env_bool("ORYNTRA_PRIVATE_RESEARCH_ROUTES", False):
         raise HTTPException(status_code=404, detail="Not found")
     return market_cache_status()
-
-@app.get("/api/app/ads")
-async def app_ads():
-    web_slots = ad_slot_env("ADSENSE_SLOT")
-    android_slots = ad_slot_env("ADMOB_ANDROID")
-    ios_slots = ad_slot_env("ADMOB_IOS")
-    diagnostics = ads_diagnostics()
-    return {
-        "ads_enabled": env_bool("ADS_ENABLED", False),
-        "placements": AD_PLACEMENTS,
-        "web": {
-            "provider": "adsense",
-            "enabled": diagnostics["web_ads_enabled"],
-            "client": adsense_client_id(),
-            "preview_mode": diagnostics["preview_mode"],
-            "auto_ads_enabled": diagnostics["auto_ads_enabled"],
-            "slots": web_slots,
-        },
-        "flutter": {
-            "provider": "admob",
-            "enabled": env_bool("FLUTTER_ADS_ENABLED", False),
-            "android_app_id": os.getenv("ADMOB_ANDROID_APP_ID", "").strip(),
-            "ios_app_id": os.getenv("ADMOB_IOS_APP_ID", "").strip(),
-            "android_units": android_slots,
-            "ios_units": ios_slots,
-        },
-        "diagnostics": diagnostics,
-    }
-
-@app.get("/api/app/ads/diagnostics")
-async def app_ads_diagnostics():
-    return ads_diagnostics()
-
-@app.get("/ads.txt", include_in_schema=False)
-async def ads_txt():
-    publisher = adsense_publisher_id()
-    if not publisher:
-        raise HTTPException(status_code=404, detail="AdSense publisher ID is not configured")
-    line = f"google.com, {publisher}, DIRECT, f08c47fec0942fa0\n"
-    return PlainTextResponse(line, headers={"Cache-Control": "public, max-age=3600"})
 
 @app.get("/robots.txt", include_in_schema=False)
 async def robots_txt():

@@ -15,13 +15,10 @@ from .universal_learning import walk_forward_ridge_scores
 from .universal_institutional_decision import InstitutionalDecisionConfig, constrain_institutional_weights
 from .universal_risk_supervisor import RiskSupervisorConfig, supervise_cross_sectional_weights
 from .universal_risk_v202 import V202PredictiveConfig, build_systemic_risk_panel, predict_systemic_risk
-from .universal_factor_model import FactorModelConfig, build_factor_snapshot, portfolio_factor_diagnostics
-from .universal_optimizer import PortfolioOptimizerConfig, optimize_portfolio
-from .universal_phase3 import Phase3Config, build_phase3_snapshot
 
 
 ENGINE_ID = "universal_v2"
-ENGINE_VERSION = "2.2.0-research"
+ENGINE_VERSION = "2.0.2-research"
 
 
 @dataclass(frozen=True)
@@ -74,19 +71,16 @@ class UniversalConfig:
     peer_shock: PeerShockConfig = PeerShockConfig()
     risk_supervisor: RiskSupervisorConfig = RiskSupervisorConfig()
     institutional_decision: InstitutionalDecisionConfig = InstitutionalDecisionConfig()
-    factor_model: FactorModelConfig = FactorModelConfig()
-    portfolio_optimizer: PortfolioOptimizerConfig = PortfolioOptimizerConfig()
-    phase3: Phase3Config = Phase3Config()
 
     def __post_init__(self):
-        for name, cls in (("position_policy", PositionPolicyConfig), ("market_context", MarketContextConfig), ("peer_shock", PeerShockConfig), ("risk_supervisor", RiskSupervisorConfig), ("institutional_decision", InstitutionalDecisionConfig), ("factor_model", FactorModelConfig), ("portfolio_optimizer", PortfolioOptimizerConfig), ("phase3", Phase3Config)):
+        for name, cls in (("position_policy", PositionPolicyConfig), ("market_context", MarketContextConfig), ("peer_shock", PeerShockConfig), ("risk_supervisor", RiskSupervisorConfig), ("institutional_decision", InstitutionalDecisionConfig)):
             value = getattr(self, name)
             if isinstance(value, dict):
                 object.__setattr__(self, name, cls(**value))
             elif not isinstance(value, cls):
                 raise ValueError(f"{name} must be a validated configuration")
         for key, value in asdict(self).items():
-            if key not in {"rebalance", "selection_mode", "alpha_model", "research_profile", "maximum_asset_annual_volatility", "maximum_portfolio_market_beta", "position_policy", "market_context", "peer_shock", "risk_supervisor", "institutional_decision", "factor_model", "portfolio_optimizer", "phase3"} and not np.isfinite(value):
+            if key not in {"rebalance", "selection_mode", "alpha_model", "research_profile", "maximum_asset_annual_volatility", "maximum_portfolio_market_beta", "position_policy", "market_context", "peer_shock", "risk_supervisor", "institutional_decision"} and not np.isfinite(value):
                 raise ValueError(f"{key} must be finite")
         weights = self.weights
         if min(weights) < 0 or not np.isclose(sum(weights), 1):
@@ -95,7 +89,7 @@ class UniversalConfig:
             raise ValueError("Invalid threshold or volatility target")
         if self.alpha_model not in {"handcrafted", "walk_forward_ridge"}:
             raise ValueError("alpha_model must be handcrafted or walk_forward_ridge")
-        if self.research_profile not in {"universal_v2", "minerva_v1", "tba9_integrity", "phase2_factor_optimizer", "phase15_v203", "phase15_phase3", "phase15_phase2_phase3", "control_plane"}:
+        if self.research_profile not in {"universal_v2", "minerva_v1", "tba9_integrity"}:
             raise ValueError("Unknown research profile")
         if not all(isinstance(value, bool) for value in (self.ridge_include_residual_momentum,
                                                           self.ridge_residual_momentum_21,
@@ -143,8 +137,6 @@ class UniversalConfig:
             raise ValueError("Invalid buffer or participation ceiling")
         if not (0 <= self.cost_bps <= 250 and 0 <= self.impact_bps <= 500 and self.initial_equity >= 100):
             raise ValueError("Invalid cost or capital assumption")
-        if self.portfolio_optimizer.enabled and not self.factor_model.enabled:
-            raise ValueError("Phase 2 portfolio optimizer requires the factor model")
 
     @property
     def weights(self):
@@ -235,7 +227,7 @@ def signal_panel(prices: pd.DataFrame, config: UniversalConfig = UniversalConfig
         need_prediction_diagnostics = (
             config.institutional_decision.enabled
             or (config.risk_supervisor.enabled
-                and (config.risk_supervisor.v201_enabled or config.risk_supervisor.v202_enabled or config.risk_supervisor.v203_enabled)
+                and (config.risk_supervisor.v201_enabled or config.risk_supervisor.v202_enabled)
                 and config.risk_supervisor.alpha_preservation_enabled)
         )
         learned_output = walk_forward_ridge_scores(source_closes, source_opens, source_volumes,
@@ -315,17 +307,14 @@ def portfolio_targets(prices: pd.DataFrame, config: UniversalConfig = UniversalC
                       learning_volumes: pd.DataFrame | None = None,
                       learning_highs: pd.DataFrame | None = None, learning_lows: pd.DataFrame | None = None,
                       fundamental_acceleration_scores: pd.DataFrame | None = None,
-                      factor_sector_labels: pd.DataFrame | None = None,
-                      factor_size_scores: pd.DataFrame | None = None,
-                      factor_value_scores: pd.DataFrame | None = None,
-                      factor_quality_scores: pd.DataFrame | None = None,
                       precomputed_panel: dict[str, pd.DataFrame] | None = None) -> pd.DataFrame:
-    """Create causal targets with risk decisions on the configured rebalance schedule.
+    """Create causal targets with an optional daily V2 risk overlay.
 
-    Alpha, institutional proposal weights, V1 supervision and V2 research overlays
-    are evaluated only on explicit portfolio decision events.  This preserves the
-    original V1 timing and makes V2 persistence unambiguously count rebalance
-    decisions rather than daily bars.  Resulting target changes still execute next open.
+    Alpha / institutional proposal weights are refreshed only on the configured
+    rebalance schedule. When a V2 supervisor is active, the risk layer re-evaluates that
+    frozen proposal every completed close so diversification fragility can
+    de-risk before the next alpha rebalance without silently changing the alpha
+    model itself. All resulting target changes still execute next open.
     """
     panel = precomputed_panel if precomputed_panel is not None else signal_panel(
         prices, config, benchmark_returns, fundamental_scores, opens, volumes,
@@ -341,15 +330,15 @@ def portfolio_targets(prices: pd.DataFrame, config: UniversalConfig = UniversalC
 
     returns = prices.pct_change(fill_method=None)
 
-    # V2.0.2/V2.0.3 precompute causal universe-level structural features once. Future
+    # V2.0.2 precomputes causal universe-level structural features once. Future
     # labels are availability-gated inside predict_systemic_risk, so historical
     # decisions can only train on outcomes already completed by that session.
     v202_predictive_panel = None
     v202_predictive_config = None
-    if config.risk_supervisor.enabled and (config.risk_supervisor.v202_enabled or config.risk_supervisor.v203_enabled):
+    if config.risk_supervisor.enabled and config.risk_supervisor.v202_enabled:
         clean_returns = returns.iloc[1:].to_numpy(dtype=float)
         if not np.isfinite(clean_returns).all():
-            raise ValueError("V2 predictive risk requires complete finite price returns")
+            raise ValueError("V2.0.2 predictive risk requires complete finite price returns")
         v202_predictive_config = V202PredictiveConfig(
             feature_window=config.risk_supervisor.v201_topology_window,
             compare_window=config.risk_supervisor.v201_topology_compare_window,
@@ -388,11 +377,7 @@ def portfolio_targets(prices: pd.DataFrame, config: UniversalConfig = UniversalC
 
     result = pd.DataFrame(0.0, index=prices.index, columns=prices.columns)
     raw_targets = pd.DataFrame(0.0, index=prices.index, columns=prices.columns)
-    pre_optimizer_targets = pd.DataFrame(0.0, index=prices.index, columns=prices.columns)
     institutional_audit: list[dict[str, object]] = []
-    factor_model_audit: list[dict[str, object]] = []
-    portfolio_optimizer_audit: list[dict[str, object]] = []
-    phase3_audit: list[dict[str, object]] = []
     risk_target_audit: list[dict[str, object]] = []
     previous_risk_state: str | None = None
     previous_risk_persistence_count = 0
@@ -402,10 +387,8 @@ def portfolio_targets(prices: pd.DataFrame, config: UniversalConfig = UniversalC
 
     need_dollar_volume = (
         config.institutional_decision.enabled
-        or config.portfolio_optimizer.enabled
-        or config.phase3.enabled
         or (config.risk_supervisor.enabled
-            and (config.risk_supervisor.v201_enabled or config.risk_supervisor.v202_enabled or config.risk_supervisor.v203_enabled)
+            and (config.risk_supervisor.v201_enabled or config.risk_supervisor.v202_enabled)
             and config.risk_supervisor.liquidity_enabled)
     )
     prior_median_dollar_volume = None
@@ -423,14 +406,17 @@ def portfolio_targets(prices: pd.DataFrame, config: UniversalConfig = UniversalC
             or periods[i] != periods[i - 1]
         )
 
-        # Preserve the original portfolio/risk decision cadence.  V2.0.2's first
-        # integration accidentally recomputed V1 every day; V2.0.3 makes the
-        # decision unit explicit and carries the last approved target between
-        # scheduled rebalances.
-        if not scheduled_rebalance:
-            raw_targets.iloc[i] = raw_targets.iloc[i - 1]
-            pre_optimizer_targets.iloc[i] = pre_optimizer_targets.iloc[i - 1]
+        # Frozen V1 profiles retain their original rebalance-only risk timing.
+        # V2.0.1 is a rejected reproducible branch which retains its former
+        # daily diagnostic path. V2.0.2 instead acts on the exact V1-approved
+        # scheduled proposal, so it cannot silently redefine that baseline.
+        daily_v2_overlay = (
+            config.risk_supervisor.enabled
+            and config.risk_supervisor.v201_enabled
+        )
+        if not scheduled_rebalance and not daily_v2_overlay:
             result.iloc[i] = result.iloc[i - 1]
+            raw_targets.iloc[i] = raw_targets.iloc[i - 1]
             continue
 
         if scheduled_rebalance:
@@ -498,6 +484,7 @@ def portfolio_targets(prices: pd.DataFrame, config: UniversalConfig = UniversalC
                     if shocked >= config.peer_shock.minimum_shocked_peers:
                         weights[j] *= config.peer_shock.exposure_multiplier
 
+            raw_targets.iloc[i] = weights
             if "predicted_return" in panel:
                 last_expected_alpha = panel["predicted_return"].iloc[i].to_numpy(dtype=float)
             else:
@@ -507,51 +494,8 @@ def portfolio_targets(prices: pd.DataFrame, config: UniversalConfig = UniversalC
             else:
                 last_prediction_error = None
             last_priority = panel["score"].iloc[i].to_numpy(dtype=float)
-
-            # Phase 2 sits between alpha construction and independent risk
-            # supervision. The factor model explains the proposed portfolio; the
-            # optimizer may reshape it, but cannot bypass V2.0.3 or the final vol cap.
-            pre_optimizer_targets.iloc[i] = weights
-            factor_snapshot = {"enabled": False, "available": False, "reason": "factor_model_disabled"}
-            if config.factor_model.enabled and weights.sum() > 0:
-                factor_snapshot = build_factor_snapshot(
-                    returns, as_of=i, benchmark_returns=benchmark_returns, config=config.factor_model,
-                    sector_labels=factor_sector_labels, size_scores=factor_size_scores,
-                    value_scores=factor_value_scores, quality_scores=factor_quality_scores,
-                )
-                factor_entry: dict[str, object] = {
-                    "date": str(prices.index[i].date()),
-                    "available": bool(factor_snapshot.get("available")),
-                    "reason": factor_snapshot.get("reason"),
-                    "factor_names": list(factor_snapshot.get("factor_names", [])),
-                    "factor_availability": factor_snapshot.get("factor_availability", {}),
-                    "observations": factor_snapshot.get("observations"),
-                }
-                if factor_snapshot.get("available"):
-                    factor_entry["proposal"] = portfolio_factor_diagnostics(weights, factor_snapshot)
-                factor_model_audit.append(factor_entry)
-
-            if config.portfolio_optimizer.enabled and weights.sum() > 0:
-                optimizer_adv = None
-                if prior_median_dollar_volume is not None:
-                    row = prior_median_dollar_volume.iloc[i].to_numpy(dtype=float)
-                    if np.isfinite(row).any():
-                        optimizer_adv = row
-                weights, optimizer_audit = optimize_portfolio(
-                    weights, factor_snapshot=factor_snapshot, expected_alpha=last_expected_alpha,
-                    prediction_error=last_prediction_error, fallback_priority=last_priority,
-                    current_weights=result.iloc[i - 1].to_numpy(dtype=float) if i > 0 else None,
-                    gross_cap=config.gross_cap, name_cap=config.name_cap,
-                    maximum_market_beta=config.maximum_portfolio_market_beta, adv_dollars=optimizer_adv,
-                    capital=config.initial_equity, participation=config.participation,
-                    config=config.portfolio_optimizer,
-                )
-                optimizer_entry = {"date": str(prices.index[i].date()), **optimizer_audit}
-                if factor_snapshot.get("available"):
-                    optimizer_entry["factor_risk_after"] = portfolio_factor_diagnostics(weights, factor_snapshot)
-                portfolio_optimizer_audit.append(optimizer_entry)
-
-            raw_targets.iloc[i] = weights
+        else:
+            raw_targets.iloc[i] = raw_targets.iloc[i - 1]
 
         weights = raw_targets.iloc[i].to_numpy(dtype=float)
         if weights.sum() <= 0:
@@ -560,7 +504,7 @@ def portfolio_targets(prices: pd.DataFrame, config: UniversalConfig = UniversalC
 
         risk_lookback = config.risk_window
         if (config.risk_supervisor.enabled
-                and (config.risk_supervisor.v201_enabled or config.risk_supervisor.v202_enabled or config.risk_supervisor.v203_enabled)):
+                and (config.risk_supervisor.v201_enabled or config.risk_supervisor.v202_enabled)):
             risk_lookback = max(risk_lookback, config.risk_supervisor.v201_long_window,
                                 config.risk_supervisor.v201_tail_window,
                                 config.risk_supervisor.v201_topology_window + config.risk_supervisor.v201_topology_compare_window)
@@ -575,15 +519,6 @@ def portfolio_targets(prices: pd.DataFrame, config: UniversalConfig = UniversalC
         marginal = np.sqrt(np.maximum(np.diag(covariance), 0))
         stressed = (1 - config.correlation_stress) * covariance + config.correlation_stress * np.outer(marginal, marginal)
 
-        # Phase 2 research may give the supervisor a factor-reconstructed asset
-        # covariance. The same correlation-stress transform is applied so V1/V2
-        # semantics remain comparable; disabled Phase 2 profiles are unchanged.
-        if (config.factor_model.enabled and config.factor_model.feed_supervisor_covariance
-                and 'factor_snapshot' in locals() and factor_snapshot.get("available")):
-            factor_covariance = np.asarray(factor_snapshot["asset_covariance"], dtype=float)
-            factor_marginal = np.sqrt(np.maximum(np.diag(factor_covariance), 0.0))
-            stressed = (1 - config.correlation_stress) * factor_covariance + config.correlation_stress * np.outer(factor_marginal, factor_marginal)
-
         adv = None
         if prior_median_dollar_volume is not None:
             adv_row = prior_median_dollar_volume.iloc[i].to_numpy(dtype=float)
@@ -591,7 +526,7 @@ def portfolio_targets(prices: pd.DataFrame, config: UniversalConfig = UniversalC
                 adv = adv_row
 
         predictive_forecast = None
-        if (config.risk_supervisor.v202_enabled or config.risk_supervisor.v203_enabled) and v202_predictive_panel is not None:
+        if config.risk_supervisor.v202_enabled and v202_predictive_panel is not None:
             predictive_forecast = predict_systemic_risk(
                 v202_predictive_panel,
                 as_of=i - 1,  # predictive panel begins at price session 1
@@ -614,49 +549,17 @@ def portfolio_targets(prices: pd.DataFrame, config: UniversalConfig = UniversalC
         )
         if config.risk_supervisor.v201_enabled:
             previous_risk_state = str(risk_audit.get("state", previous_risk_state or "normal"))
-        if config.risk_supervisor.v202_enabled or config.risk_supervisor.v203_enabled:
-            previous_risk_persistence_count = int(risk_audit.get("persistence_rebalances", risk_audit.get("persistence_count", 0)))
+        if config.risk_supervisor.v202_enabled:
+            previous_risk_persistence_count = int(risk_audit.get("persistence_count", 0))
         risk_target_audit.append({"date": str(prices.index[i].date()), **risk_audit})
 
-        # Preserve Universal's independent ex-ante volatility ceiling. V2
+        # Preserve Universal's independent ex-ante volatility ceiling. V2.0.2
         # may remove additional risk after V1; this ceiling remains the final absolute
         # portfolio-volatility budget used by every Universal profile.
         risk = float(np.sqrt(max(0, weights @ stressed @ weights) * 252))
-        final_weights = weights * min(1.0, config.vol_target / max(risk, 1e-12))
-        result.iloc[i] = final_weights
-
-        # Phase 3 is deliberately non-binding. It observes the final approved
-        # target after optimizer + supervisor + absolute vol ceiling, so enabling
-        # Phase 3 cannot change P&L and can be studied independently of Phase 2.
-        if config.phase3.enabled and final_weights.sum() > 0:
-            phase3_start = max(1, i - config.phase3.historical_lookback_sessions + 1)
-            phase3_frame = returns.iloc[phase3_start:i + 1]
-            phase3_benchmark = None
-            if benchmark_returns is not None:
-                aligned_benchmark = benchmark_returns.reindex(phase3_frame.index).to_numpy(dtype=float)
-                if np.isfinite(aligned_benchmark).all():
-                    phase3_benchmark = aligned_benchmark
-            phase3_factor = factor_snapshot if ('factor_snapshot' in locals() and factor_snapshot.get("available")) else None
-            phase3_snapshot = build_phase3_snapshot(
-                final_weights,
-                phase3_frame.to_numpy(dtype=float),
-                stressed,
-                symbols=[str(symbol) for symbol in prices.columns],
-                config=config.phase3,
-                dates=[str(day.date()) for day in phase3_frame.index],
-                benchmark_history=phase3_benchmark,
-                expected_alpha=last_expected_alpha,
-                adv_dollars=adv,
-                capital=config.initial_equity,
-                factor_snapshot=phase3_factor,
-            )
-            phase3_audit.append({"date": str(prices.index[i].date()), **phase3_snapshot})
+        result.iloc[i] = weights * min(1.0, config.vol_target / max(risk, 1e-12))
 
     result.attrs["institutional_decision_audit"] = institutional_audit
-    result.attrs["factor_model_audit"] = factor_model_audit
-    result.attrs["portfolio_optimizer_audit"] = portfolio_optimizer_audit
-    result.attrs["phase3_audit"] = phase3_audit
     result.attrs["risk_supervisor_target_audit"] = risk_target_audit
-    result.attrs["pre_optimizer_targets"] = pre_optimizer_targets
     result.attrs["raw_proposal_targets"] = raw_targets
     return result
