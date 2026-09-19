@@ -128,7 +128,7 @@ function initThemeSettings() {
   }
 }
 
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.1.1';
 const APP_RELEASE_KEY = 'oryntra_client_release';
 const PUBLIC_ANALYSIS_ENGINE = 'v8';
 
@@ -140,6 +140,7 @@ function applyReleaseClientReset() {
       keys.forEach((key) => {
         if (
           key === 'oryntra_pattern_engine_mode' ||
+          key === 'oryntra_workspace_model' ||
           key === 'oryntra_total_stock_searches' ||
           key.startsWith('oryntra_paper_cache_')
         ) {
@@ -644,17 +645,17 @@ function mountSubscriptionStructure() {
   modal.setAttribute('aria-labelledby', 'subscriptionTitle');
   const features = [
     ['V8 scanner & evidence cards', 'Included', 'Included', 'Included'],
-    ['Minerva research preview', '✕', 'Included', 'Included'],
+    ['Minerva candidate updates', '—', 'Validation-gated', 'Validation-gated'],
     ['Daily scanner reviews', '10 / day', '200 / day', 'Unlimited'],
     ['Watchlist & paper journal', '20 symbols', 'Unlimited', 'Unlimited'],
     ['Historical research demonstrations', 'Included', 'Included', 'Included'],
     ['Frozen public Quant profile', 'Included', 'Included', 'Included'],
-    ['Personalized portfolio construction', 'Not offered', 'Not offered', 'Not offered'],
+    ['Portfolio Lab research ledger', '—', 'Included', 'Included'],
     ['Saved research presets & exports', '✕', 'Included', 'Included'],
     ['Rule Mirror Pro', '✕', '✕', 'Included'],
   ];
   const rows = features.map(([feature, base, pro, max]) => `<tr><th scope="row">${escapeHtml(feature)}</th><td>${escapeHtml(base)}</td><td>${escapeHtml(pro)}</td><td>${escapeHtml(max)}</td></tr>`).join('');
-  modal.innerHTML = `<div class="modal-box subscription-shell"><button class="oryntra-auth-close" id="subscriptionClose" type="button" aria-label="Close subscription page">×</button><p class="eyebrow">Oryntra membership</p><h2 id="subscriptionTitle">Research software access.</h2><p id="subscriptionCopy" class="auth-modal-subtitle">Subscriptions are temporarily unavailable while checkout is under maintenance. Any future subscription provides software access only—not CQC equity, profits, trading participation, or a managed strategy.</p><button class="button button-primary subscription-free-continue" id="subscriptionFreeContinue" type="button">Continue with free V8</button><div class="subscription-plan-headings"><section><span>BASE</span><b>Research essentials</b><small>V8 scanner and bounded historical research.</small><strong class="subscription-current-plan">Current free workspace</strong></section><section><span>PRO</span><b>Oryntra Pro</b><small>Expanded workspace capacity and validated paid previews.</small><button class="button button-primary subscription-buy" data-subscription-maintenance type="button">Choose Pro</button></section><section><span>MAX BUNDLE</span><b>Oryntra Pro + Rule Mirror Pro</b><small>Expanded software access across both products.</small><button class="button button-secondary subscription-buy" data-subscription-maintenance type="button">Choose Max Bundle</button></section></div><div class="subscription-compare-scroll"><table class="subscription-compare"><thead><tr><th>Feature</th><th>Base</th><th>Pro</th><th>Max bundle</th></tr></thead><tbody>${rows}</tbody></table></div><p class="subscription-footnote">Research candidates remain gated by validation and are never unlocked merely by payment.</p></div>`;
+  modal.innerHTML = `<div class="modal-box subscription-shell"><button class="oryntra-auth-close" id="subscriptionClose" type="button" aria-label="Close subscription page">×</button><p class="eyebrow">Oryntra membership</p><h2 id="subscriptionTitle">Research software access.</h2><p id="subscriptionCopy" class="auth-modal-subtitle">Subscriptions are temporarily unavailable while checkout is under maintenance. Any future subscription provides software access only—not CQC equity, profits, trading participation, or a managed strategy.</p><button class="button button-primary subscription-free-continue" id="subscriptionFreeContinue" type="button">Continue with free V8</button><div class="subscription-plan-headings"><section><span>BASE</span><b>Research essentials</b><small>V8 scanner and bounded historical research.</small><strong class="subscription-current-plan">Current free workspace</strong></section><section><span>PRO</span><b>Oryntra Pro</b><small>Expanded workspace capacity and validation-gated candidate updates.</small><strong class="subscription-price">$6.99 / month</strong><button class="button button-primary subscription-buy" data-subscription-maintenance type="button">Buy Pro</button></section><section><span>MAX BUNDLE</span><b>Oryntra Pro + Rule Mirror Pro</b><small>Expanded access across both products.</small><strong class="subscription-price">$10.99 / month</strong><button class="button button-secondary subscription-buy" data-subscription-maintenance type="button">Buy Max Bundle</button></section></div><p class="subscription-appstore-note">$1 cheaper per month if bought through App Store.</p><div class="subscription-compare-scroll"><table class="subscription-compare"><thead><tr><th>Feature</th><th>Base</th><th>Pro</th><th>Max bundle</th></tr></thead><tbody>${rows}</tbody></table></div><p class="subscription-footnote">Research candidates remain gated by validation and are never unlocked merely by payment.</p></div>`;
 }
 
 function estCalendarDate() {
@@ -711,7 +712,9 @@ const WORKSPACE_MODELS = [
 
 function workspaceModel() {
   const value = safeStorageGet(WORKSPACE_MODEL_KEY) || 'v8';
-  return WORKSPACE_MODELS.some(([id]) => id === value) ? value : 'v8';
+  // No paid candidate is currently released to the scanner. A stale browser
+  // selection must never turn a normal V8 scan into an invalid API request.
+  return value === 'v8' ? value : 'v8';
 }
 
 function syncWorkspaceModelControls(value) {
