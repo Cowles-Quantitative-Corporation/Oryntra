@@ -80,7 +80,7 @@ def run_candidate_cycle(candidate_id: int, user_id: int) -> dict:
         raise ValueError("Frozen candidate benchmark identifier no longer matches its manifest")
 
     symbols = sorted(set(candidate["universe"]) | set(components))
-    minimum = max(800, config.ridge_training_sessions + 30 if config.alpha_model == "walk_forward_ridge" else 300)
+    minimum = max(800, config.ridge_training_sessions + 30 if config.alpha_model == "walk_forward_ridge" else (config.alpha_v12.anchor_training_sessions + config.alpha_v12.horizon_sessions + 30 if config.alpha_model == "alpha_v12" and config.alpha_v12.include_tba_anchor else 300))
     repository = get_market_repository()
     histories: dict[str, pd.DataFrame] = {}
     metadata: dict[str, dict] = {}
@@ -135,7 +135,7 @@ def run_candidate_cycle(candidate_id: int, user_id: int) -> dict:
     decision = None
     quality_panel = None
     fundamental_metadata = {"status": "not_requested", "coverage_pct": 0.0, "facts_used": 0}
-    if getattr(config, "alpha_model", "") == "alpha_v1" or getattr(getattr(config, "factor_model", None), "enabled", False):
+    if getattr(config, "alpha_model", "") in {"alpha_v1", "alpha_v12"} or getattr(getattr(config, "factor_model", None), "enabled", False):
         quality_panel, metadata_quality = get_corporate_repository().factor_panel(candidate["universe"], common)
         fundamental_metadata = {"status": "point_in_time_local_repository", **metadata_quality}
     if not existing:

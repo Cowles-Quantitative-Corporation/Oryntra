@@ -16,6 +16,7 @@ from .universal_factor_model import FactorModelConfig
 from .universal_optimizer import PortfolioOptimizerConfig
 from .universal_phase3 import Phase3Config
 from .alpha_v1 import AlphaV1Config
+from .alpha_v12 import AlphaV12Config
 
 
 MINERVA_ID = "minerva_v1_research"
@@ -196,6 +197,31 @@ def alpha_v11_candidate(**overrides: object) -> UniversalConfig:
         ridge_residual_momentum_21=False, ridge_residual_momentum_63=False,
         ridge_include_residual_momentum=False, **values,
     )
+
+
+ALPHA_V12_ID = "alpha_v12_research"
+ALPHA_V12_ALT_ID = "alpha_v12_alt_research"
+ALPHA_V12_STATUS = "candidate_not_release_approved"
+
+
+def alpha_v12_candidate(**overrides: object) -> UniversalConfig:
+    """Private V1.2 hybrid: fixed TBA8 rank anchor plus Alpha-family rank."""
+    base, values = tba8_institutional_risk_candidate(), dict(overrides)
+    alpha_cfg = values.pop("alpha_v12", AlphaV12Config(enabled=True, include_tba_anchor=True, anchor_prior_weight=.55))
+    return replace(base, alpha_model="alpha_v12", research_profile="alpha_v12", alpha_v12=alpha_cfg,
+                   selection_mode="relative_rank", minimum_relative_rank=.60, entry_threshold=0.0,
+                   ridge_residual_momentum_21=False, ridge_residual_momentum_63=False,
+                   ridge_include_residual_momentum=False, **values)
+
+
+def alpha_v12_alt_candidate(**overrides: object) -> UniversalConfig:
+    """Private V1.2 control: the same architecture with no TBA forecast anchor."""
+    base, values = tba8_institutional_risk_candidate(), dict(overrides)
+    alpha_cfg = values.pop("alpha_v12", AlphaV12Config(enabled=True, include_tba_anchor=False, anchor_prior_weight=0.0))
+    return replace(base, alpha_model="alpha_v12", research_profile="alpha_v12", alpha_v12=alpha_cfg,
+                   selection_mode="relative_rank", minimum_relative_rank=.60, entry_threshold=0.0,
+                   ridge_residual_momentum_21=False, ridge_residual_momentum_63=False,
+                   ridge_include_residual_momentum=False, **values)
 
 def phase2_factor_optimizer_candidate(**overrides: object) -> UniversalConfig:
     """Phase 2A/B: TBA8 alpha path + factor risk + constrained optimizer + V1.

@@ -12,6 +12,8 @@ from typing import Callable
 from ..minerva import (
     alpha_v1_candidate,
     alpha_v11_candidate,
+    alpha_v12_candidate,
+    alpha_v12_alt_candidate,
     minerva_baseline,
     minerva_economic_interactions_candidate,
     minerva_residual_momentum_candidate,
@@ -85,4 +87,6 @@ MODEL_SPECS = (
         "Alpha V1 economic sleeves with overlap-aware IC evidence and robust daily cross-sectional calibration.",
         alpha_v11_candidate, generation="alpha", status="review_candidate",
     ),
+    AdapterSpec("alpha_v12", "Alpha V1.2 hybrid", "Stabilized Alpha-family rank blended with a fixed TBA8 rank anchor; disagreement is passed as uncertainty.", alpha_v12_candidate, generation="alpha", status="review_candidate"),
+    AdapterSpec("alpha_v12_alt", "Alpha V1.2 alt — no TBA anchor", "The stabilized V1.2 cross-sectional architecture without a TBA8/TBA9 forecast input.", alpha_v12_alt_candidate, generation="alpha", status="review_candidate"),
 )
