@@ -89,8 +89,10 @@ class InteractiveResearchRequest(BaseModel):
     comparison_benchmarks: list[str] = Field(default_factory=lambda: ["SPY", "QQQ", "SPY/QQQ"], min_length=1, max_length=12)
     provider: str = "auto"
     evaluation_period: str = "1y"
+    risk_free_mode: str = "fred_dgs3mo"
     risk_free_annual_pct: float = 0.0
     force_refresh: bool = False
+    force_refresh_risk_free: bool = False
     timeout_seconds: int = Field(default=7200, ge=60, le=21600)
 
 

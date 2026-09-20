@@ -141,25 +141,61 @@ def risk_v203_candidate(**overrides: object) -> UniversalConfig:
     return replace(base, risk_supervisor=supervisor, **values)
 
 
+
 ALPHA_V1_ID = "alpha_v1_research"
 ALPHA_V1_STATUS = "candidate_not_release_approved"
 
 
 def alpha_v1_candidate(**overrides: object) -> UniversalConfig:
-    """Separate Alpha V1 family under the same TBA8 construction/risk stack.
+    """Separate cross-sectional Alpha V1 model family.
 
-    Paired studies isolate the alpha path: this is private research only and
-    does not change Minerva, TBA8, or any public product model.
+    The outer trading assumptions intentionally mirror TBA8 so paired tests
+    isolate the alpha model. Construction/risk/Phase 3 remain independently
+    selectable through the private control plane.
     """
     base = tba8_institutional_risk_candidate()
     values = dict(overrides)
     alpha_cfg = values.pop("alpha_v1", AlphaV1Config(enabled=True))
-    return replace(base, alpha_model="alpha_v1", research_profile="alpha_v1",
-                   alpha_v1=alpha_cfg, selection_mode="relative_rank",
-                   minimum_relative_rank=.60, entry_threshold=0.0,
-                   ridge_residual_momentum_21=False, ridge_residual_momentum_63=False,
-                   ridge_include_residual_momentum=False, **values)
+    return replace(
+        base, alpha_model="alpha_v1", research_profile="alpha_v1",
+        alpha_v1=alpha_cfg, selection_mode="relative_rank",
+        minimum_relative_rank=.60, entry_threshold=0.0,
+        ridge_residual_momentum_21=False, ridge_residual_momentum_63=False,
+        ridge_include_residual_momentum=False, **values,
+    )
 
+
+
+ALPHA_V11_ID = "alpha_v11_research"
+ALPHA_V11_STATUS = "candidate_not_release_approved"
+
+
+def alpha_v11_candidate(**overrides: object) -> UniversalConfig:
+    """Methodologically tightened Alpha V1.1 research candidate.
+
+    V1.1 preserves Alpha V1's economic sleeves and outer portfolio assumptions,
+    but uses overlap-aware HAC IC evidence, exact completed-label timing, and
+    robust daily cross-sectional forecast calibration.  It is intentionally a
+    separate registry candidate so Alpha V1 remains reproducible.
+    """
+    base = tba8_institutional_risk_candidate()
+    values = dict(overrides)
+    alpha_cfg = values.pop(
+        "alpha_v1",
+        AlphaV1Config(
+            enabled=True,
+            overlap_robust_ic=True,
+            robust_daily_calibration=True,
+            exact_label_completion=True,
+        ),
+    )
+    return replace(
+        base, alpha_model="alpha_v1", research_profile="alpha_v1",
+        alpha_v1=alpha_cfg, selection_mode="relative_rank",
+        minimum_relative_rank=.60, entry_threshold=0.0,
+        ridge_residual_momentum_21=False, ridge_residual_momentum_63=False,
+        ridge_include_residual_momentum=False, **values,
+    )
 
 def phase2_factor_optimizer_candidate(**overrides: object) -> UniversalConfig:
     """Phase 2A/B: TBA8 alpha path + factor risk + constrained optimizer + V1.
