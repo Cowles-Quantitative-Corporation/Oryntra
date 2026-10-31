@@ -54,5 +54,17 @@
   "server/tests/research/delta/test_projector.py": {
     "source": "delta-v15-native-artifact-feature-projector-v34/test_projector.py",
     "adaptation": "package imports; exclude private historical-file diff test, retain behavioral negatives"
+  },
+  "server/backend/delta/journal/surprise_journal.py": {
+    "source": "delta-v15-disabled-adapter-v2/surprise_journal.py",
+    "source_sha256": "5bf88f26f1f061b89d115cb0cf5dd383f2aab263ef02cf8875a5fe54e07f04af"
+  },
+  "server/tests/research/delta/test_transactional_journal.py": {
+    "source": "delta-v15-disabled-adapter-v2/test_transactional_journal.py",
+    "source_sha256": "2cdfc41f6dc06ed499e7a73f4e32bd4825d7f0258d2e1950f97c4ba261885339"
+  },
+  "server/tests/research/delta/test_durability.py": {
+    "source": "delta-v15-disabled-adapter-v2/test_durability.py",
+    "source_sha256": "9228268168191f9c5073c4e1e718d155e4cc59b3afeb9e98c58917cf5e464134"
   }
 }

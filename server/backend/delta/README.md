@@ -9,3 +9,5 @@ Native source currently targets macOS CommonCrypto with C++17 and ASan/UBSan. Bu
 Portability changes replace dated-directory import bootstraps with explicit package imports and isolate the fixed oracle caps from raw-runner profiles. The test that compared bytes to a private historical v32 copy is excluded; repaired-clock, future-lineage, incomplete-result, tampering, disabled-default and unknown-mass behavior tests remain. `source_origins.json` records source identities without absolute machine paths.
 
 Raw vendor files, price/model/prediction caches, raw-source launchers and private audit records remain local. The archive reader/process supervisor is not yet a portable canonical runtime and is intentionally not exposed by this package. Source packaging and synthetic checks do not establish improved forecasts, Sharpe, live readiness or licensed redistribution rights.
+
+The `journal` package retains synthetic-only durable, deduplicated reconciliation evidence. It has no broker integration and does not migrate legacy journals implicitly. Concurrency, post-commit failure and recovery tests use temporary invented journals.
