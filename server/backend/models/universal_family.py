@@ -87,6 +87,15 @@ MODEL_SPECS = (
         "Alpha V1 economic sleeves with overlap-aware IC evidence and robust daily cross-sectional calibration.",
         alpha_v11_candidate, generation="alpha", status="review_candidate",
     ),
-    AdapterSpec("alpha_v12", "Alpha V1.2 hybrid", "Stabilized Alpha-family rank blended with a fixed TBA8 rank anchor; disagreement is passed as uncertainty.", alpha_v12_candidate, generation="alpha", status="review_candidate"),
-    AdapterSpec("alpha_v12_alt", "Alpha V1.2 alt — no TBA anchor", "The stabilized V1.2 cross-sectional architecture without a TBA8/TBA9 forecast input.", alpha_v12_alt_candidate, generation="alpha", status="review_candidate"),
+
+    AdapterSpec(
+        "alpha_v12", "Alpha V1.2 hybrid",
+        "Stabilized robust Alpha-family cross-sectional forecast blended with a fixed TBA8 residual/ridge rank anchor; uncertainty carries model disagreement downstream.",
+        alpha_v12_candidate, generation="alpha", status="review_candidate",
+    ),
+    AdapterSpec(
+        "alpha_v12_alt", "Alpha V1.2 alt — no TBA anchor",
+        "Same stabilized V1.2 cross-sectional/HAC/calibration architecture with no TBA8/TBA9 forecast input.",
+        alpha_v12_alt_candidate, generation="alpha", status="review_candidate",
+    ),
 )

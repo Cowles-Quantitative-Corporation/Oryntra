@@ -1,0 +1,19 @@
+{
+  "provider": "IBM Quantum",
+  "verified_at": "2026-09-26",
+  "sources": {
+    "processors": "https://quantum.cloud.ibm.com/docs/en/guides/processor-types",
+    "pricing": "https://www.ibm.com/quantum/products"
+  },
+  "backends": {
+    "nighthawk_r2": {"programmable_qubits": 120, "family": "Nighthawk r2"},
+    "heron": {"programmable_qubits": 156, "family": "Heron"}
+  },
+  "pricing_usd_per_second": {
+    "payg": 1.60,
+    "flex": 1.20,
+    "premium": 0.80
+  },
+  "open_plan_qpu_seconds_per_28_days": 600,
+  "note": "Verified public planning snapshot. Runtime backend properties are refreshed from IBM Runtime when credentials and qiskit-ibm-runtime are available. Pricing must be reverified before paid execution; paid execution is locked."
+}

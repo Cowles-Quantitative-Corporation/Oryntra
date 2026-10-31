@@ -240,22 +240,36 @@ def signal_panel(prices: pd.DataFrame, config: UniversalConfig = UniversalConfig
     components = dict(trend=trend, momentum=momentum, breakout=breakout, pullback=pullback,
                       residual=residual, fundamental=fundamental, fundamental_acceleration=fundamental_acceleration)
     if config.alpha_model == "alpha_v1":
-        alpha_output = alpha_v1_scores(prices, benchmark_returns=benchmark_returns, sector_labels=alpha_sector_labels, value_scores=alpha_value_scores, quality_scores=alpha_quality_scores, config=config.alpha_v1)
+        alpha_output = alpha_v1_scores(
+            prices, benchmark_returns=benchmark_returns,
+            sector_labels=alpha_sector_labels, value_scores=alpha_value_scores,
+            quality_scores=alpha_quality_scores, config=config.alpha_v1,
+        )
         score = alpha_output["score"].reindex(index=prices.index, columns=prices.columns)
         ready = alpha_output["ready"].reindex(index=prices.index, columns=prices.columns).fillna(False)
-        components.update(predicted_return=alpha_output["predicted_return"].reindex_like(prices), prediction_error=alpha_output["prediction_error"].reindex_like(prices), alpha_v1_score=score)
+        components["predicted_return"] = alpha_output["predicted_return"].reindex(index=prices.index, columns=prices.columns)
+        components["prediction_error"] = alpha_output["prediction_error"].reindex(index=prices.index, columns=prices.columns)
+        components["alpha_v1_score"] = score
     elif config.alpha_model == "alpha_v12":
         if opens is None or volumes is None:
             raise ValueError("Alpha V1.2 requires aligned open and volume panels")
         supplied = (learning_closes, learning_opens, learning_volumes)
         if any(item is not None for item in supplied) and not all(item is not None for item in supplied):
             raise ValueError("Alpha V1.2 learning inputs require close, open and volume panels together")
-        source_closes, source_opens, source_volumes = supplied if all(item is not None for item in supplied) else (prices, opens, volumes)
-        alpha_output = alpha_v12_scores(source_closes, source_opens, source_volumes, benchmark_returns=benchmark_returns, sector_labels=alpha_sector_labels, value_scores=alpha_value_scores, quality_scores=alpha_quality_scores, config=config.alpha_v12)
+        source_closes, source_opens, source_volumes = (supplied if all(item is not None for item in supplied)
+                                                        else (prices, opens, volumes))
+        alpha_output = alpha_v12_scores(
+            source_closes, source_opens, source_volumes, benchmark_returns=benchmark_returns,
+            sector_labels=alpha_sector_labels, value_scores=alpha_value_scores,
+            quality_scores=alpha_quality_scores, config=config.alpha_v12,
+        )
         score = alpha_output["score"].reindex(index=prices.index, columns=prices.columns)
         ready = alpha_output["ready"].reindex(index=prices.index, columns=prices.columns).fillna(False)
-        components.update(predicted_return=alpha_output["predicted_return"].reindex_like(prices), prediction_error=alpha_output["prediction_error"].reindex_like(prices), alpha_v12_score=score,
-                          alpha_v12_anchor_score=alpha_output["anchor_score"].reindex_like(prices), alpha_v12_cross_score=alpha_output["cross_score"].reindex_like(prices))
+        components["predicted_return"] = alpha_output["predicted_return"].reindex(index=prices.index, columns=prices.columns)
+        components["prediction_error"] = alpha_output["prediction_error"].reindex(index=prices.index, columns=prices.columns)
+        components["alpha_v12_score"] = score
+        components["alpha_v12_anchor_score"] = alpha_output["anchor_score"].reindex(index=prices.index, columns=prices.columns)
+        components["alpha_v12_cross_score"] = alpha_output["cross_score"].reindex(index=prices.index, columns=prices.columns)
     elif config.alpha_model == "walk_forward_ridge":
         if opens is None or volumes is None:
             raise ValueError("Walk-forward ridge research requires aligned open and volume panels")
@@ -267,7 +281,7 @@ def signal_panel(prices: pd.DataFrame, config: UniversalConfig = UniversalConfig
         need_prediction_diagnostics = (
             config.institutional_decision.enabled
             or (config.risk_supervisor.enabled
-                and (config.risk_supervisor.v201_enabled or config.risk_supervisor.v202_enabled or config.risk_supervisor.v203_enabled)
+                and (config.risk_supervisor.v201_enabled or config.risk_supervisor.v202_enabled or config.risk_supervisor.v203_enabled or config.risk_supervisor.v204_enabled or config.risk_supervisor.v205_enabled)
                 and config.risk_supervisor.alpha_preservation_enabled)
         )
         learned_output = walk_forward_ridge_scores(source_closes, source_opens, source_volumes,
@@ -317,6 +331,14 @@ def scan_snapshot(history: pd.DataFrame, config: UniversalConfig = UniversalConf
         return {"engine": ENGINE_ID, "version": ENGINE_VERSION, "status": "benchmark_required_for_residual_strength", "score": 0.0,
                 "eligible": False, "config_fingerprint": config.fingerprint,
                 "score_meaning": "Residual-strength research needs a dated SPY/QQQ benchmark series and is not a standalone scanner mode."}
+    if config.alpha_model == "alpha_v1":
+        return {"engine": ENGINE_ID, "version": ENGINE_VERSION, "status": "universe_required_for_alpha_v1", "score": 0.0,
+                "eligible": False, "config_fingerprint": config.fingerprint,
+                "score_meaning": "Alpha V1 is a cross-sectional relative-return model and requires a dated multi-stock universe."}
+    if config.alpha_model == "alpha_v12":
+        return {"engine": ENGINE_ID, "version": ENGINE_VERSION, "status": "universe_required_for_alpha_v12", "score": 0.0,
+                "eligible": False, "config_fingerprint": config.fingerprint,
+                "score_meaning": "Alpha V1.2 is a cross-sectional research model and requires aligned dated universe OHLCV plus an explicit benchmark."}
     if config.alpha_model == "walk_forward_ridge":
         return {"engine": ENGINE_ID, "version": ENGINE_VERSION, "status": "universe_required_for_walk_forward_ridge", "score": 0.0,
                 "eligible": False, "config_fingerprint": config.fingerprint,
@@ -354,7 +376,9 @@ def portfolio_targets(prices: pd.DataFrame, config: UniversalConfig = UniversalC
                       alpha_sector_labels: pd.DataFrame | None = None,
                       alpha_value_scores: pd.DataFrame | None = None,
                       alpha_quality_scores: pd.DataFrame | None = None,
-                      precomputed_panel: dict[str, pd.DataFrame] | None = None) -> pd.DataFrame:
+                      precomputed_panel: dict[str, pd.DataFrame] | None = None,
+                      beta_states: pd.DataFrame | None = None,
+                      v1a_artifact_schedule: list[dict[str, Any]] | None = None) -> pd.DataFrame:
     """Create causal targets with risk decisions on the configured rebalance schedule.
 
     Alpha, institutional proposal weights, V1 supervision and V2 research overlays
@@ -366,7 +390,8 @@ def portfolio_targets(prices: pd.DataFrame, config: UniversalConfig = UniversalC
         prices, config, benchmark_returns, fundamental_scores, opens, volumes,
         learning_closes, learning_opens, learning_volumes, learning_highs, learning_lows,
         fundamental_acceleration_scores=fundamental_acceleration_scores,
-        alpha_sector_labels=alpha_sector_labels, alpha_value_scores=alpha_value_scores, alpha_quality_scores=alpha_quality_scores,
+        alpha_sector_labels=alpha_sector_labels, alpha_value_scores=alpha_value_scores,
+        alpha_quality_scores=alpha_quality_scores,
     )
     required_panel = {"score", "volatility"}
     if not required_panel.issubset(panel):
@@ -375,6 +400,12 @@ def portfolio_targets(prices: pd.DataFrame, config: UniversalConfig = UniversalC
             and panel["volatility"].index.equals(prices.index) and panel["volatility"].columns.equals(prices.columns)):
         raise ValueError("Precomputed signal panel must exactly align with prices")
 
+    beta_frame = None
+    if beta_states is not None:
+        beta_frame = beta_states.copy()
+        beta_frame.index = pd.DatetimeIndex(pd.to_datetime(beta_frame.index)).tz_localize(None).normalize()
+        beta_frame = beta_frame[~beta_frame.index.duplicated(keep="last")].sort_index()
+
     returns = prices.pct_change(fill_method=None)
 
     # V2.0.2/V2.0.3 precompute causal universe-level structural features once. Future
@@ -382,7 +413,7 @@ def portfolio_targets(prices: pd.DataFrame, config: UniversalConfig = UniversalC
     # decisions can only train on outcomes already completed by that session.
     v202_predictive_panel = None
     v202_predictive_config = None
-    if config.risk_supervisor.enabled and (config.risk_supervisor.v202_enabled or config.risk_supervisor.v203_enabled):
+    if config.risk_supervisor.enabled and (config.risk_supervisor.v202_enabled or config.risk_supervisor.v203_enabled or config.risk_supervisor.v204_enabled or config.risk_supervisor.v205_enabled):
         clean_returns = returns.iloc[1:].to_numpy(dtype=float)
         if not np.isfinite(clean_returns).all():
             raise ValueError("V2 predictive risk requires complete finite price returns")
@@ -430,8 +461,11 @@ def portfolio_targets(prices: pd.DataFrame, config: UniversalConfig = UniversalC
     portfolio_optimizer_audit: list[dict[str, object]] = []
     phase3_audit: list[dict[str, object]] = []
     risk_target_audit: list[dict[str, object]] = []
+    qoptima_forecast_decision_dates: list[pd.Timestamp] = []
     previous_risk_state: str | None = None
     previous_risk_persistence_count = 0
+    previous_beta_persistence_count = 0
+    previous_v1a_persistence_count = 0
     last_expected_alpha: np.ndarray | None = None
     last_prediction_error: np.ndarray | None = None
     last_priority: np.ndarray | None = None
@@ -441,7 +475,7 @@ def portfolio_targets(prices: pd.DataFrame, config: UniversalConfig = UniversalC
         or config.portfolio_optimizer.enabled
         or config.phase3.enabled
         or (config.risk_supervisor.enabled
-            and (config.risk_supervisor.v201_enabled or config.risk_supervisor.v202_enabled or config.risk_supervisor.v203_enabled)
+            and (config.risk_supervisor.v201_enabled or config.risk_supervisor.v202_enabled or config.risk_supervisor.v203_enabled or config.risk_supervisor.v204_enabled or config.risk_supervisor.v205_enabled)
             and config.risk_supervisor.liquidity_enabled)
     )
     prior_median_dollar_volume = None
@@ -470,6 +504,8 @@ def portfolio_targets(prices: pd.DataFrame, config: UniversalConfig = UniversalC
             continue
 
         if scheduled_rebalance:
+            if "predicted_return" in panel:
+                qoptima_forecast_decision_dates.append(pd.Timestamp(prices.index[i]))
             score = panel["score"].iloc[i]
             if config.selection_mode == "relative_rank":
                 relative_rank = score.rank(pct=True, method="first")
@@ -596,7 +632,7 @@ def portfolio_targets(prices: pd.DataFrame, config: UniversalConfig = UniversalC
 
         risk_lookback = config.risk_window
         if (config.risk_supervisor.enabled
-                and (config.risk_supervisor.v201_enabled or config.risk_supervisor.v202_enabled or config.risk_supervisor.v203_enabled)):
+                and (config.risk_supervisor.v201_enabled or config.risk_supervisor.v202_enabled or config.risk_supervisor.v203_enabled or config.risk_supervisor.v204_enabled or config.risk_supervisor.v205_enabled)):
             risk_lookback = max(risk_lookback, config.risk_supervisor.v201_long_window,
                                 config.risk_supervisor.v201_tail_window,
                                 config.risk_supervisor.v201_topology_window + config.risk_supervisor.v201_topology_compare_window)
@@ -627,12 +663,45 @@ def portfolio_targets(prices: pd.DataFrame, config: UniversalConfig = UniversalC
                 adv = adv_row
 
         predictive_forecast = None
-        if (config.risk_supervisor.v202_enabled or config.risk_supervisor.v203_enabled) and v202_predictive_panel is not None:
+        if (config.risk_supervisor.v202_enabled or config.risk_supervisor.v203_enabled or config.risk_supervisor.v204_enabled or config.risk_supervisor.v205_enabled) and v202_predictive_panel is not None:
             predictive_forecast = predict_systemic_risk(
                 v202_predictive_panel,
                 as_of=i - 1,  # predictive panel begins at price session 1
                 config=v202_predictive_config,
             )
+
+        beta_state = None
+        if (config.risk_supervisor.v204_enabled or config.risk_supervisor.v205_enabled) and beta_frame is not None:
+            available_beta = beta_frame.loc[beta_frame.index <= prices.index[i]]
+            if not available_beta.empty:
+                beta_state = available_beta.iloc[-1].to_dict()
+                beta_state["as_of_session"] = str(available_beta.index[-1].date())
+                for key, value in (beta_frame.attrs or {}).items():
+                    beta_state.setdefault(key, value)
+
+        v1a_state = None
+        if config.risk_supervisor.v205_enabled and v1a_artifact_schedule:
+            try:
+                from .qoptima.v1a import select_causal_artifact, infer_v1a_snapshot
+                artifact_path, artifact_meta = select_causal_artifact(
+                    list(v1a_artifact_schedule or []), str(prices.index[i])
+                )
+                if artifact_path is not None:
+                    state_returns = returns.iloc[1:i + 1].copy()
+                    state_returns = state_returns.replace([np.inf, -np.inf], np.nan).dropna(how="any")
+                    if len(state_returns) >= 63:
+                        snapshot = infer_v1a_snapshot(
+                            artifact_path, state_returns, information_cutoff=str(prices.index[i])
+                        )
+                        v1a_state = snapshot.as_dict()
+                        v1a_state["artifact_information_cutoff"] = artifact_meta.get("artifact_information_cutoff")
+                        v1a_state["artifact_selection_status"] = artifact_meta.get("status")
+            except Exception as exc:
+                v1a_state = {
+                    "available": False,
+                    "inference_error": f"{type(exc).__name__}: {exc}",
+                    "information_cutoff": str(prices.index[i]),
+                }
 
         weights, risk_audit = supervise_cross_sectional_weights(
             weights, stressed, config.risk_supervisor,
@@ -647,10 +716,22 @@ def portfolio_targets(prices: pd.DataFrame, config: UniversalConfig = UniversalC
             predictive_forecast=predictive_forecast,
             previous_persistence_count=previous_risk_persistence_count,
             current_weights=result.iloc[i - 1].to_numpy(dtype=float) if i > 0 else None,
+            beta_state=beta_state,
+            previous_beta_persistence_count=previous_beta_persistence_count,
+            v1a_state=v1a_state,
+            previous_v1a_persistence_count=previous_v1a_persistence_count,
+            current_session=prices.index[i],
         )
+        if config.risk_supervisor.v204_enabled or config.risk_supervisor.v205_enabled:
+            previous_beta_persistence_count = int(risk_audit.get("beta_persistence_rebalances", 0) or 0)
+        if config.risk_supervisor.v205_enabled:
+            previous_v1a_persistence_count = int(risk_audit.get("v1a_persistence_rebalances", 0) or 0)
         if config.risk_supervisor.v201_enabled:
             previous_risk_state = str(risk_audit.get("state", previous_risk_state or "normal"))
-        if config.risk_supervisor.v202_enabled or config.risk_supervisor.v203_enabled:
+        if config.risk_supervisor.v202_enabled or config.risk_supervisor.v203_enabled or config.risk_supervisor.v204_enabled or config.risk_supervisor.v205_enabled:
+            # V2.0.4 is V2.0.3 plus the downstream Beta overlay. Preserve the
+            # V2.0.3 predictive persistence state across rebalance decisions so
+            # selecting V2.0.4 does not accidentally reset its baseline sleeve.
             previous_risk_persistence_count = int(risk_audit.get("persistence_rebalances", risk_audit.get("persistence_count", 0)))
         risk_target_audit.append({"date": str(prices.index[i].date()), **risk_audit})
 
@@ -695,4 +776,61 @@ def portfolio_targets(prices: pd.DataFrame, config: UniversalConfig = UniversalC
     result.attrs["risk_supervisor_target_audit"] = risk_target_audit
     result.attrs["pre_optimizer_targets"] = pre_optimizer_targets
     result.attrs["raw_proposal_targets"] = raw_targets
+
+    # Expose calibrated Oryntra return forecasts through QOptima's explicit
+    # point-in-time contract. Generic rank/signal scores are intentionally not
+    # converted into expected returns. This is in-memory provenance; persistence
+    # of a historical forecast ledger remains a separate Control responsibility.
+    if "predicted_return" in panel:
+        try:
+            from .qoptima.oryntra_forecast_adapter import records_from_predicted_return_panel
+            if config.alpha_model == "alpha_v1":
+                from .alpha_v1 import alpha_v1_contract
+                contract = alpha_v1_contract(config.alpha_v1)
+                forecast_model_id = str(contract["id"])
+                forecast_model_version = str(contract["version"])
+                forecast_horizon = int(config.alpha_v1.horizon_sessions)
+            elif config.alpha_model == "alpha_v12":
+                from .alpha_v12 import ALPHA_V12_VERSION
+                forecast_model_id = str(config.alpha_v12.model_id)
+                forecast_model_version = str(ALPHA_V12_VERSION)
+                forecast_horizon = int(config.alpha_v12.horizon_sessions)
+            elif config.alpha_model == "walk_forward_ridge":
+                forecast_model_id = "universal_walk_forward_ridge"
+                forecast_model_version = str(ENGINE_VERSION)
+                forecast_horizon = int(config.ridge_horizon_sessions)
+            else:
+                forecast_model_id = ""
+                forecast_model_version = ""
+                forecast_horizon = 0
+            if forecast_model_id:
+                records = records_from_predicted_return_panel(
+                    panel["predicted_return"],
+                    model_id=forecast_model_id,
+                    model_version=forecast_model_version,
+                    horizon_sessions=forecast_horizon,
+                    ready=panel.get("ready"),
+                    decision_dates=qoptima_forecast_decision_dates,
+                    metadata={
+                        "oryntra_engine_id": ENGINE_ID,
+                        "oryntra_engine_version": ENGINE_VERSION,
+                        "config_fingerprint": config.fingerprint,
+                        "target": "calibrated model predicted return",
+                    },
+                )
+                result.attrs["qoptima_forecast_records"] = records
+                result.attrs["qoptima_forecast_contract"] = {
+                    "model_id": forecast_model_id,
+                    "model_version": forecast_model_version,
+                    "horizon_sessions": forecast_horizon,
+                    "units": "period_return",
+                    "records": len(records),
+                    "information_policy": "records are created only from calibrated predicted_return rows at scheduled portfolio decision sessions",
+                }
+        except Exception as exc:
+            result.attrs["qoptima_forecast_contract"] = {
+                "available": False,
+                "error": str(exc),
+                "warning": "Oryntra forecast adapter failed; QOptima must not silently substitute generic model scores.",
+            }
     return result

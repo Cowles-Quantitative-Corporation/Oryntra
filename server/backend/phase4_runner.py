@@ -11,7 +11,10 @@ import pandas as pd
 
 from .database import get_connection
 from .corporate_repository import get_corporate_repository
+from .control_beta import frozen_beta_state_panel
+from .sec_pit import cached_factor_panels
 from .market_repository import get_market_repository
+from .provider_credentials import decrypted_credentials
 from .phase4_control import code_fingerprint
 from .phase4_ledger import (
     get_candidate,
@@ -82,10 +85,16 @@ def run_candidate_cycle(candidate_id: int, user_id: int) -> dict:
     symbols = sorted(set(candidate["universe"]) | set(components))
     minimum = max(800, config.ridge_training_sessions + 30 if config.alpha_model == "walk_forward_ridge" else (config.alpha_v12.anchor_training_sessions + config.alpha_v12.horizon_sessions + 30 if config.alpha_model == "alpha_v12" and config.alpha_v12.include_tba_anchor else 300))
     repository = get_market_repository()
+    provider = str(manifest.get("provider") or "auto").strip().lower()
+    provider_keys = {} if provider == "yfinance" else decrypted_credentials(user_id)
     histories: dict[str, pd.DataFrame] = {}
     metadata: dict[str, dict] = {}
     for symbol in symbols:
-        item = repository.get_history(symbol, period="all", minimum_bars=minimum, allow_api=True, provider_preference="auto")
+        item = repository.get_history(
+            symbol, period="all", minimum_bars=minimum, allow_api=provider != "cache_only",
+            provider_preference=provider, provider_api_keys=provider_keys,
+            allow_platform_provider_keys=False,
+        )
         histories[symbol] = item.history.copy()
         metadata[symbol] = item.metadata.__dict__
 
@@ -132,12 +141,31 @@ def run_candidate_cycle(candidate_id: int, user_id: int) -> dict:
     finally:
         conn.close()
 
-    decision = None
+    # Optional fundamentals are explicitly mode-controlled and point-in-time.
     quality_panel = None
-    fundamental_metadata = {"status": "not_requested", "coverage_pct": 0.0, "facts_used": 0}
-    if getattr(config, "alpha_model", "") in {"alpha_v1", "alpha_v12"} or getattr(getattr(config, "factor_model", None), "enabled", False):
-        quality_panel, metadata_quality = get_corporate_repository().factor_panel(candidate["universe"], common)
-        fundamental_metadata = {"status": "point_in_time_local_repository", **metadata_quality}
+    fundamentals_mode = str(manifest.get("fundamentals_mode") or "sec_pit").strip().lower()
+    fundamental_metadata = {"mode": fundamentals_mode, "coverage_pct": 0.0, "facts_used": 0}
+    needs_quality = bool(
+        getattr(config, "alpha_model", "") in {"alpha_v1", "alpha_v12"}
+        or getattr(getattr(config, "factor_model", None), "enabled", False)
+    )
+    if needs_quality and fundamentals_mode == "sec_pit":
+        sec_result = cached_factor_panels(candidate["universe"], common, histories={s: histories[s] for s in candidate["universe"]})
+        quality_panel = sec_result["quality"] if sec_result["quality"].notna().any().any() else None
+        fundamental_metadata = sec_result["metadata"]
+    elif needs_quality and fundamentals_mode == "local_pit":
+        quality_panel, fundamental_metadata = get_corporate_repository().factor_panel(candidate["universe"], common, fill_missing=False)
+        fundamental_metadata = {"mode": "local_pit", **fundamental_metadata}
+    elif fundamentals_mode == "off":
+        fundamental_metadata = {"mode": "off", "coverage_pct": 0.0, "facts_used": 0}
+
+    beta_states = None
+    beta_metadata = {"requested": False}
+    if str(candidate.get("risk_model_id") or "").lower() == "v204":
+        beta_states, beta_metadata = frozen_beta_state_panel(common)
+        beta_metadata = {"requested": True, **beta_metadata}
+
+    decision = None
     if not existing:
         research_histories = {symbol: histories[symbol].reindex(common) for symbol in candidate["universe"]}
         decision_result = run_completed_close_decision(
@@ -146,6 +174,7 @@ def run_candidate_cycle(candidate_id: int, user_id: int) -> dict:
             histories=research_histories,
             benchmark_returns=benchmark_returns,
             factor_quality_scores=quality_panel,
+            beta_states=beta_states,
         )
         decision = decision_result["decision"]
 
@@ -154,11 +183,12 @@ def run_candidate_cycle(candidate_id: int, user_id: int) -> dict:
         "latest_completed_session": latest_date,
         "data": metadata,
         "fundamentals": fundamental_metadata,
+        "beta": beta_metadata,
         "fills_recorded": fills,
         "mark": mark,
         "reconciliation": reconciliation,
         "new_decision": decision,
         "decision_already_recorded": bool(existing),
         "frozen_code_verified": True,
-        "execution_boundary": "simulated next-open paper fills only; no broker order submitted",
+        "execution_boundary": "immutable simulated paper ledger; broker mirroring is handled separately by the gated automation adapter",
     }

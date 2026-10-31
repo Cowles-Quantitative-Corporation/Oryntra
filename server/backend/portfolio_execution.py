@@ -58,7 +58,7 @@ def simulate_book(histories: dict[str, pd.DataFrame], targets: pd.DataFrame,
         raise ValueError("Cash returns must cover every session with finite returns greater than -1")
     shares = np.zeros(len(names))
     cash = nav = config.initial_equity
-    equity, costs, turnovers, exposures, net = [], [], [], [], []
+    equity, costs, turnovers, exposures, net, open_to_close_net = [], [], [], [], [], []
     trades, episodes, closed = [], {}, []
     policy_states: dict[str, PositionState] = {}
     pending: dict[str, PositionDirective] = {}
@@ -215,6 +215,11 @@ def simulate_book(histories: dict[str, pd.DataFrame], targets: pd.DataFrame,
             raise ArithmeticError("Book NAV is invalid")
         equity.append(nav)
         net.append(nav / previous_nav - 1)
+        # Causal return interval for an overlay whose decision is known at this
+        # session's open. The denominator is marked at the current open before
+        # any open transactions, so prior-close -> current-open overnight P&L is
+        # excluded while current-open transaction costs and intraday P&L remain.
+        open_to_close_net.append(nav / start_equity - 1)
         costs.append(day_cost / previous_nav)
         turnovers.append(day_turnover)
         weights = shares * closing[i] / nav
@@ -238,7 +243,7 @@ def simulate_book(histories: dict[str, pd.DataFrame], targets: pd.DataFrame,
                     policy_states[symbol] = directive.state
                     if directive.action != "hold":
                         pending[symbol] = directive
-    return {"net": pd.Series(net, index=dates), "equity": pd.Series(equity, index=dates),
+    return {"net": pd.Series(net, index=dates), "open_to_close_net": pd.Series(open_to_close_net, index=dates), "equity": pd.Series(equity, index=dates),
             "costs": pd.Series(costs, index=dates), "turnover": pd.Series(turnovers, index=dates),
             "held": pd.DataFrame(held_rows, index=dates, columns=names), "fills": trades,
             "closed_episodes": closed, "open_episodes": list(episodes.values()),

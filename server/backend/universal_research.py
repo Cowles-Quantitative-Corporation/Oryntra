@@ -37,7 +37,9 @@ def run_universal(histories: dict[str, pd.DataFrame], config: UniversalConfig = 
                   factor_sector_labels: pd.DataFrame | None = None,
                   factor_size_scores: pd.DataFrame | None = None,
                   factor_value_scores: pd.DataFrame | None = None,
-                  factor_quality_scores: pd.DataFrame | None = None) -> dict:
+                  factor_quality_scores: pd.DataFrame | None = None,
+                  beta_states: pd.DataFrame | None = None,
+                  v1a_artifact_schedule: list[dict[str, object]] | None = None) -> dict:
     from .quant_research import _summary, _performance_diagnostics, _correlation_stress_report
     if not histories:
         raise ValueError("Supply at least one history")
@@ -78,10 +80,12 @@ def run_universal(histories: dict[str, pd.DataFrame], config: UniversalConfig = 
         if values.dtype != bool:
             raise ValueError("fundamental_observed must be boolean, not inferred from zero scores")
     learning = (None, None, None) if learning_panels is None else learning_panels
-    panel = signal_panel(prices, config, benchmark_returns, fundamental_scores, opens, volumes, *learning, highs, lows,
-                         fundamental_acceleration_scores=fundamental_acceleration_scores,
-                         alpha_sector_labels=factor_sector_labels, alpha_value_scores=factor_value_scores,
-                         alpha_quality_scores=factor_quality_scores)
+    panel = signal_panel(
+        prices, config, benchmark_returns, fundamental_scores, opens, volumes, *learning, highs, lows,
+        fundamental_acceleration_scores=fundamental_acceleration_scores,
+        alpha_sector_labels=factor_sector_labels, alpha_value_scores=factor_value_scores,
+        alpha_quality_scores=factor_quality_scores,
+    )
     target = portfolio_targets(
         prices, config, benchmark_returns, fundamental_scores, opens, volumes, *learning, highs, lows,
         fundamental_acceleration_scores=fundamental_acceleration_scores,
@@ -89,6 +93,8 @@ def run_universal(histories: dict[str, pd.DataFrame], config: UniversalConfig = 
         factor_value_scores=factor_value_scores, factor_quality_scores=factor_quality_scores,
         alpha_sector_labels=factor_sector_labels, alpha_value_scores=factor_value_scores,
         alpha_quality_scores=factor_quality_scores, precomputed_panel=panel,
+        beta_states=beta_states,
+        v1a_artifact_schedule=v1a_artifact_schedule,
     )
     institutional_audit = list(target.attrs.get("institutional_decision_audit", []))
     factor_model_audit = list(target.attrs.get("factor_model_audit", []))
@@ -133,9 +139,30 @@ def run_universal(histories: dict[str, pd.DataFrame], config: UniversalConfig = 
         cash_series.loc[cash_series.index < evaluation_index[0]] = 0
     simulation = simulate_book(histories, target, config, cash_series, entry_gate, panel["score"], panel["volatility"])
     net = simulation["net"].reindex(evaluation_index)
+    causal_open_to_close = simulation["open_to_close_net"].reindex(evaluation_index)
     turnover = simulation["turnover"].reindex(evaluation_index)
     held = simulation["held"].reindex(evaluation_index)
     report_summary = _summary(net, turnover, held)
+    gross_series = held.abs().sum(axis=1).reindex(evaluation_index).fillna(0.0)
+    gross_cap = max(float(getattr(config, "max_gross_exposure", 1.0) or 1.0), 1e-9)
+    average_gross = float(gross_series.mean()) if len(gross_series) else 0.0
+    annualized_return = report_summary.get("annualized_return_pct")
+    exposure_efficiency = {
+        "average_gross_exposure": average_gross,
+        "median_gross_exposure": float(gross_series.median()) if len(gross_series) else 0.0,
+        "p10_gross_exposure": float(gross_series.quantile(0.10)) if len(gross_series) else 0.0,
+        "p90_gross_exposure": float(gross_series.quantile(0.90)) if len(gross_series) else 0.0,
+        "gross_cap": gross_cap,
+        "average_risk_budget_utilization": average_gross / gross_cap,
+        "pct_sessions_below_25pct_of_cap": float((gross_series < 0.25 * gross_cap).mean() * 100) if len(gross_series) else 0.0,
+        "pct_sessions_below_50pct_of_cap": float((gross_series < 0.50 * gross_cap).mean() * 100) if len(gross_series) else 0.0,
+        "pct_sessions_below_75pct_of_cap": float((gross_series < 0.75 * gross_cap).mean() * 100) if len(gross_series) else 0.0,
+        "annualized_return_pct_per_unit_average_gross": (
+            float(annualized_return) / average_gross
+            if annualized_return is not None and average_gross > 1e-9 else None
+        ),
+        "interpretation": "Descriptive utilization diagnostic only; not a recommendation to lever or rescale the strategy.",
+    }
     source_hash = hashlib.sha256()
     for symbol in prices.columns:
         source_hash.update(symbol.encode())
@@ -165,6 +192,15 @@ def run_universal(histories: dict[str, pd.DataFrame], config: UniversalConfig = 
         if factor_panel is not None:
             source_hash.update(name.encode())
             source_hash.update(pd.util.hash_pandas_object(factor_panel.reindex(index=prices.index, columns=prices.columns), index=True).values.tobytes())
+    if beta_states is not None:
+        source_hash.update(b"beta-v1-pit-state-panel")
+        source_hash.update(pd.util.hash_pandas_object(beta_states.reindex(prices.index), index=True).values.tobytes())
+    if v1a_artifact_schedule:
+        source_hash.update(b"risk-v205-v1a-artifact-schedule")
+        for row in v1a_artifact_schedule:
+            source_hash.update(str(row.get("artifact_information_cutoff") or "").encode())
+            source_hash.update(str(row.get("spec_hash") or "").encode())
+            source_hash.update(str(row.get("artifact_path") or "").encode())
     if universe_eligibility is not None:
         source_hash.update(b"point-in-time-universe-eligibility-v1")
         source_hash.update(pd.util.hash_pandas_object(universe_eligibility, index=True).values.tobytes())
@@ -172,12 +208,16 @@ def run_universal(histories: dict[str, pd.DataFrame], config: UniversalConfig = 
     exposure = held.iloc[-1]
     scorecard = consistency_scorecard(net, benchmark_returns, risk_free, prior_strategy=prior_net)
     code_hash = hashlib.sha256()
-    for module in ("universal_engine.py", "universal_learning.py", "universal_fundamentals.py", "portfolio_execution.py", "alpha_evaluation.py", "alpha_consistency.py", "universal_position_policy.py", "universal_risk_supervisor.py", "universal_risk_v201.py", "universal_risk_v202.py", "universal_risk_v203.py", "universal_factor_model.py", "universal_optimizer.py", "universal_phase3.py", "alpha_v1.py", "alpha_v12.py", "universal_institutional_decision.py", "universal_yearly_protocol.py", "universal_market_context.py", "universal_taxonomy.py", "universe_selection.py", "universal_research_blueprint.py", "universal_research.py", "minerva.py", "minerva_corporate.py", "quant_research.py"):
+    for module in ("universal_engine.py", "universal_learning.py", "universal_fundamentals.py", "portfolio_execution.py", "alpha_evaluation.py", "alpha_consistency.py", "universal_position_policy.py", "universal_risk_supervisor.py", "universal_risk_v201.py", "universal_risk_v202.py", "universal_risk_v203.py", "universal_risk_v204.py", "universal_risk_v205.py", "beta_v1.py", "universal_factor_model.py", "universal_optimizer.py", "universal_phase3.py", "alpha_v1.py", "alpha_v12.py", "universal_institutional_decision.py", "universal_yearly_protocol.py", "universal_market_context.py", "universal_taxonomy.py", "universe_selection.py", "universal_research_blueprint.py", "universal_research.py", "minerva.py", "minerva_corporate.py", "quant_research.py"):
         code_hash.update(module.encode())
         code_hash.update(Path(__file__).with_name(module).read_bytes())
     return {"engine": ENGINE_ID, "engine_version": ENGINE_VERSION, "code_fingerprint": code_hash.hexdigest(), "configuration": asdict(config), "engine_configuration": asdict(config),
             "config_fingerprint": config.fingerprint, "dataset_fingerprint": source_hash.hexdigest(),
-            "alpha_model": (alpha_v1_contract(config.alpha_v1) if config.alpha_model == "alpha_v1" else alpha_v12_contract(config.alpha_v12) if config.alpha_model == "alpha_v12" else {"id": config.alpha_model, "status": "existing_research_path"}),
+            "alpha_model": (
+                alpha_v1_contract(config.alpha_v1) if config.alpha_model == "alpha_v1"
+                else alpha_v12_contract(config.alpha_v12) if config.alpha_model == "alpha_v12"
+                else {"id": config.alpha_model, "status": "existing_research_path"}
+            ),
             "universe": {"symbols": list(prices.columns), "start": str(evaluation_index[0].date()), "end": str(evaluation_index[-1].date()), "sessions": len(net),
                          "eligibility": {"mode": "point_in_time_mask" if universe_eligibility is not None else "static_input_unverified",
                                          "eligible_name_observations": int(universe_eligibility.reindex(evaluation_index).to_numpy().sum()) if universe_eligibility is not None else None,
@@ -220,8 +260,10 @@ def run_universal(histories: dict[str, pd.DataFrame], config: UniversalConfig = 
             "trade_outcomes": {"definition": "Cash-flow P&L of flat-to-flat position episodes, including partial fills and costs; open episodes excluded", "closed": simulation["closed_episodes"], "open_count": len(simulation["open_episodes"]), "win_rate_pct": simulation["win_rate_pct"]},
             "latest_signals": {symbol: scan_snapshot(histories[symbol].reindex(prices.index), config) for symbol in prices.columns},
             "portfolio_risk": {"latest_positions": [{"symbol": str(name), "weight_pct": float(weight * 100)} for name, weight in exposure.items() if weight > 0]},
+            "exposure_efficiency": exposure_efficiency,
             "visual_diagnostics": {"performance": _performance_diagnostics(net), "correlation_stress": _correlation_stress_report(held, prices.pct_change(fill_method=None))},
             "corporate_data": {"status": "availability_dated_fundamental_panel" if (needs_fundamental or config.fundamental_acceleration_overlay_weight) else "not_used",
                                "signal_coverage_pct": round(observed_fraction * 100, 2) if observed_fraction is not None else 0}, "macro_data": {"status": "not_used", "signal_coverage_pct": 0},
-            "methodology": {"execution_timing": "t close signal -> t+1 open transaction -> mark at close", "cash_rate": "explicit daily risk-free series" if risk_free is not None else "zero; alpha unavailable without risk-free input", "warnings": ["Long-only research candidate; no validated alpha claim.", "Adjusted OHLC must use consistent corporate-action adjustments; complete data required."] + ([] if universe_eligibility is not None else ["Current-survivor baskets are exploratory and may contain selection bias."])},
-            "daily_returns": [{"date": str(day.date()), "net_return": float(value)} for day, value in net.items()]}
+            "methodology": {"execution_timing": "t close signal -> t+1 open transaction -> mark at close", "beta_causal_return_interval": "current session open mark -> current session close mark; excludes prior-close/current-open overnight P&L and includes open transaction costs", "cash_rate": "explicit daily risk-free series" if risk_free is not None else "zero; alpha unavailable without risk-free input", "warnings": ["Long-only research candidate; no validated alpha claim.", "Adjusted OHLC must use consistent corporate-action adjustments; complete data required."] + ([] if universe_eligibility is not None else ["Current-survivor baskets are exploratory and may contain selection bias."])},
+            "daily_returns": [{"date": str(day.date()), "net_return": float(value)} for day, value in net.items()],
+            "causal_open_to_close_returns": [{"date": str(day.date()), "net_return": float(value)} for day, value in causal_open_to_close.items()]}

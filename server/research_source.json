@@ -1,0 +1,17 @@
+{
+  "library_file_id": "libfile_70ba5d6c3ee881918ec2317f0501361c",
+  "archive": "Gamma_V1_Research_Candidate_Code_20261003_Final.zip",
+  "archive_sha256": "9fc2a0d57dfaa63331566aaa8dbf165d5b6706109d97aea2080b3ee64abed3ef",
+  "original_source_identity": "356d09cf59cf01aa5e76d19519bf9a55e52f701c219fa63326a1fb0a9c417a92",
+  "integration": "Research source merged into shared server/backend; website files retained. This merged edition has a new source identity; frozen research trials must use their original source.",
+  "retained_website_files": [
+    "backend/database.py",
+    "backend/routes/auth.py",
+    "backend/model_access.py",
+    "backend/public_payload.py",
+    "backend/routes/intelligence.py"
+  ],
+  "merged_entry_point": "backend/main.py retains billing/demo/video and website version; adds private QOptima route and Control cache handling",
+  "research_module_paths": "gamma_v1 and qpo_gamma use the sibling backend instead of a duplicate vendor tree",
+  "data_boundary": "Frozen inputs, native frontend/CLI, trained artifacts and production deployment were not copied or changed."
+}

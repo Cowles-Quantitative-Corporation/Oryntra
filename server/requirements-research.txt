@@ -1,0 +1,5 @@
+# Optional private research runtime; website requirements remain unchanged.
+-r requirements.txt
+scipy==1.18.1
+joblib==1.6.0
+torch>=2.14,<2.15

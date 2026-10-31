@@ -1,0 +1,98 @@
+{
+  "study": {
+    "name": "gamma_v1_mean_shrinkage_cap20",
+    "seed": 560205,
+    "label": "exploratory"
+  },
+  "data": {
+    "universe": "expanded300",
+    "target_assets": 329,
+    "prices_file": "eligibility/prices.csv.gz",
+    "spy_file": "eligibility/spy.csv.gz",
+    "sectors_file": "inputs/current_SIC_labels.csv",
+    "start": "2016-09-09",
+    "end": "2026-09-18",
+    "require_sec": false,
+    "require_pit_membership": false,
+    "minimum_history": 252,
+    "liquidity_window": 63,
+    "minimum_dollar_volume": 1000000.0
+  },
+  "training": {
+    "artifact_mode": "gamma_v1",
+    "model_variant": "native_cold",
+    "rank_window": 504,
+    "rank_min_days": 126,
+    "rank_ridge": 0.0001,
+    "target": "native_residual"
+  },
+  "state": {
+    "v1a_policy": "native"
+  },
+  "ranking": {
+    "model": "native_shrinkage",
+    "enabled": true,
+    "strength": 0.25,
+    "maximum_horizon_delta": 0.05,
+    "include_momentum_21": true,
+    "include_momentum_63": true,
+    "include_momentum_126": true,
+    "include_residual_momentum_21": true,
+    "include_residual_momentum_63": true,
+    "include_short_reversion": true,
+    "include_low_volatility": true,
+    "nonnegative_slope": true
+  },
+  "errors": {
+    "policy": "legacy_unavailable",
+    "window_origins": 60,
+    "minimum_origins": 30,
+    "covariance_window": 60,
+    "covariance_min_history": 12,
+    "covariance_floor": 1e-08
+  },
+  "macro": {
+    "mode": "off",
+    "records_file": "",
+    "maximum_cut": 0.1,
+    "max_age_sessions": 5
+  },
+  "portfolio": {
+    "lookback": 252,
+    "rebalance": 21,
+    "max_name": 0.2,
+    "target_gross": 1.0,
+    "qscan_assets": 6,
+    "bits": 2,
+    "min_positions": 0,
+    "risk_aversion": 3.0,
+    "turnover_penalty": 0.2,
+    "resilience_alpha": 1.0,
+    "correlation_blend": 0.65,
+    "risk_budget": 0.15,
+    "scale_tolerance": 0.03,
+    "full_qrs_beta": 0.1,
+    "quantile_confidence": 0.9
+  },
+  "execution": {
+    "initial_usd": 1000.0,
+    "cost_bps": 5.0,
+    "cash_annual": 0.0,
+    "borrow_annual": 0.04,
+    "metric_rf": 0.04,
+    "fee_convention": "legacy_pre_cost_weight_L1"
+  },
+  "evidence": {
+    "minimum_supporting_stocks": 4,
+    "minimum_improving_fraction": 0.5,
+    "minimum_sectors": 3,
+    "time_blocks": 5,
+    "minimum_positive_blocks": 3,
+    "top1_max_positive_share": 0.35,
+    "top3_max_positive_share": 0.65,
+    "bootstrap_block_sessions": 126,
+    "bootstrap_replications": 1000,
+    "family_alpha": 0.05,
+    "future_holdout_start": "2026-10-05"
+  }
+}

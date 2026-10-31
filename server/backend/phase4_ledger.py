@@ -51,7 +51,9 @@ def _next_business_day(value: str | pd.Timestamp) -> str:
 def create_candidate(*, user_id: int, label: str, alpha_model: str, construction: str,
                      risk_model: str, phase3_enabled: bool, benchmark: str,
                      universe: Iterable[str], initial_nav: float = 1_000_000.0,
-                     overrides: dict[str, Any] | None = None, status: str = "SHADOW") -> dict[str, Any]:
+                     fundamentals_mode: str = "sec_pit",
+                     overrides: dict[str, Any] | None = None, status: str = "SHADOW",
+                     provider: str = "auto", comparison_benchmarks: Iterable[str] | None = None) -> dict[str, Any]:
     clean_status = str(status).upper().strip()
     if clean_status not in CANDIDATE_STATUSES:
         raise ValueError("Unknown Phase 4 candidate status")
@@ -63,9 +65,15 @@ def create_candidate(*, user_id: int, label: str, alpha_model: str, construction
     manifest = control_manifest(
         alpha_model=alpha_model, construction=construction, risk_model=risk_model,
         phase3_enabled=phase3_enabled, benchmark=benchmark, overrides=overrides,
+        comparison_benchmarks=list(comparison_benchmarks or []),
     )
     manifest["universe"] = symbols
     manifest["initial_nav"] = float(initial_nav)
+    clean_fundamentals = str(fundamentals_mode or "sec_pit").strip().lower()
+    if clean_fundamentals not in {"off", "sec_pit", "local_pit"}:
+        raise ValueError("fundamentals_mode must be off, sec_pit, or local_pit")
+    manifest["fundamentals_mode"] = clean_fundamentals
+    manifest["provider"] = str(provider or "auto").strip().lower()
     manifest["code_fingerprint"] = code_fingerprint()
     conn = get_connection()
     try:
@@ -470,7 +478,8 @@ def reconcile_latest(*, candidate_id: int, tolerance: float = 0.0025) -> dict[st
 def run_completed_close_decision(*, candidate_id: int, user_id: int, histories: dict[str, pd.DataFrame],
                                  benchmark_returns: pd.Series | None = None,
                                  risk_free: pd.Series | None = None,
-                                 factor_quality_scores: pd.DataFrame | None = None) -> dict[str, Any]:
+                                 factor_quality_scores: pd.DataFrame | None = None,
+                                 beta_states: pd.DataFrame | None = None) -> dict[str, Any]:
     """Run the frozen candidate on completed bars and record the next-open intent."""
     candidate = get_candidate(candidate_id, user_id=user_id)
     # Prospective evidence is valid only while the frozen code fingerprint is
@@ -485,8 +494,11 @@ def run_completed_close_decision(*, candidate_id: int, user_id: int, histories: 
     configuration = UniversalConfig(**manifest["configuration"])
     if configuration.fingerprint != str(candidate.get("config_fingerprint") or ""):
         raise ValueError("Frozen candidate configuration fingerprint mismatch")
-    report = run_universal(histories, configuration, benchmark_returns, risk_free,
-                           factor_quality_scores=factor_quality_scores)
+    report = run_universal(
+        histories, configuration, benchmark_returns, risk_free,
+        factor_quality_scores=factor_quality_scores,
+        beta_states=beta_states,
+    )
     common = None
     for frame in histories.values():
         common = frame.index if common is None else common.intersection(frame.index)
@@ -498,10 +510,13 @@ def run_completed_close_decision(*, candidate_id: int, user_id: int, histories: 
     highs = pd.DataFrame({symbol: histories[symbol].reindex(common)["High"] for symbol in candidate["universe"]}, index=common)
     lows = pd.DataFrame({symbol: histories[symbol].reindex(common)["Low"] for symbol in candidate["universe"]}, index=common)
     volumes = pd.DataFrame({symbol: histories[symbol].reindex(common)["Volume"] for symbol in candidate["universe"]}, index=common)
-    target = portfolio_targets(prices, configuration, benchmark_returns=benchmark_returns, opens=opens, volumes=volumes,
-                               learning_highs=highs, learning_lows=lows,
-                               factor_quality_scores=factor_quality_scores,
-                               alpha_quality_scores=factor_quality_scores)
+    target = portfolio_targets(
+        prices, configuration, benchmark_returns=benchmark_returns, opens=opens, volumes=volumes,
+        learning_highs=highs, learning_lows=lows,
+        factor_quality_scores=factor_quality_scores,
+        alpha_quality_scores=factor_quality_scores,
+        beta_states=beta_states,
+    )
     latest = {str(k): float(v) for k, v in target.iloc[-1].items() if float(v) > 1e-12}
     as_of = str(common[-1].date())
     closes = {symbol: float(prices.loc[common[-1], symbol]) for symbol in candidate["universe"]}

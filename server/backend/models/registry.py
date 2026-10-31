@@ -1,4 +1,10 @@
-"""Dynamic private model registry used by Oryntra Control."""
+"""Dynamic private model registry used by Oryntra Control.
+
+A model is Control-testable only when a module in ``backend.models`` exports a
+``MODEL_SPECS`` iterable whose members expose an id and a builder.  This avoids
+mistaking every backend helper module for a tradable model while making future
+models appear in Control without a UI code change.
+"""
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
@@ -22,12 +28,13 @@ class ModelSpec:
     supports_phase2: bool = True
     supports_phase3: bool = True
     supports_phase4: bool = True
+    role: str = "portfolio"
     source_module: str = ""
 
     def public_dict(self) -> dict[str, Any]:
-        value = asdict(self)
-        value.pop("builder", None)
-        return value
+        out = asdict(self)
+        out.pop("builder", None)
+        return out
 
 
 _CACHE: dict[str, ModelSpec] | None = None
@@ -38,28 +45,36 @@ def _coerce(raw: Any, module_name: str) -> ModelSpec:
         return ModelSpec(**{**raw.__dict__, "source_module": raw.source_module or module_name})
     values = raw.__dict__ if hasattr(raw, "__dict__") else dict(raw)
     return ModelSpec(
-        id=str(values["id"]).strip().lower(), label=str(values["label"]),
-        description=str(values.get("description") or ""), builder=values["builder"],
-        family=str(values.get("family") or "universal"), status=str(values.get("status") or "research"),
-        generation=str(values.get("generation") or "unknown"), default=bool(values.get("default", False)),
+        id=str(values["id"]).strip().lower(),
+        label=str(values["label"]),
+        description=str(values.get("description") or ""),
+        builder=values["builder"],
+        family=str(values.get("family") or "universal"),
+        status=str(values.get("status") or "research"),
+        generation=str(values.get("generation") or "unknown"),
+        default=bool(values.get("default", False)),
         supports_phase2=bool(values.get("supports_phase2", True)),
         supports_phase3=bool(values.get("supports_phase3", True)),
-        supports_phase4=bool(values.get("supports_phase4", True)), source_module=module_name,
+        supports_phase4=bool(values.get("supports_phase4", True)),
+        role=str(values.get("role") or "portfolio"),
+        source_module=module_name,
     )
 
 
 def _discover() -> dict[str, ModelSpec]:
     package = importlib.import_module(__package__)
     found: dict[str, ModelSpec] = {}
-    for item in pkgutil.iter_modules(package.__path__):
-        if item.name.startswith("_") or item.name == "registry":
+    for module_info in pkgutil.iter_modules(package.__path__):
+        if module_info.name.startswith("_") or module_info.name in {"registry"}:
             continue
-        module_name = f"{__package__}.{item.name}"
+        module_name = f"{__package__}.{module_info.name}"
         module = importlib.import_module(module_name)
         for raw in getattr(module, "MODEL_SPECS", ()):
             spec = _coerce(raw, module_name)
-            if not spec.id or spec.id in found or not callable(spec.builder):
-                raise RuntimeError(f"Invalid or duplicate Control model: {spec.id!r}")
+            if not spec.id or spec.id in found:
+                raise RuntimeError(f"Duplicate/invalid Control model id: {spec.id!r}")
+            if not callable(spec.builder):
+                raise RuntimeError(f"Model {spec.id} has no callable builder")
             found[spec.id] = spec
     if not found:
         raise RuntimeError("No Oryntra Control models were discovered")
@@ -74,7 +89,8 @@ def _models(refresh: bool = False) -> dict[str, ModelSpec]:
 
 
 def list_model_specs(*, refresh: bool = False) -> list[ModelSpec]:
-    return sorted(_models(refresh).values(), key=lambda item: (0 if item.default else 1, item.generation, item.label.lower()))
+    values = list(_models(refresh).values())
+    return sorted(values, key=lambda x: (0 if x.default else 1, x.generation, x.label.lower()))
 
 
 def get_model_spec(model_id: str) -> ModelSpec:
@@ -86,12 +102,14 @@ def get_model_spec(model_id: str) -> ModelSpec:
 
 
 def build_model_config(model_id: str, **overrides: Any) -> Any:
-    return get_model_spec(model_id).builder(**overrides)
+    spec = get_model_spec(model_id)
+    return spec.builder(**overrides)
 
 
 def registry_fingerprint() -> str:
+    root = Path(__file__).resolve().parent
     digest = hashlib.sha256()
-    for path in sorted(Path(__file__).resolve().parent.glob("*.py")):
+    for path in sorted(root.glob("*.py")):
         digest.update(path.name.encode())
         digest.update(path.read_bytes())
     return digest.hexdigest()

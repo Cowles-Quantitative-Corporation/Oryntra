@@ -132,11 +132,24 @@ def _safe_volatility(returns: pd.DataFrame, window: int) -> pd.DataFrame:
     return returns.rolling(window, min_periods=window).std(ddof=0).clip(lower=0.002)
 
 
-def _point_in_time_numeric(panel: pd.DataFrame | None, index: pd.DatetimeIndex, columns: pd.Index) -> pd.DataFrame | None:
+def _point_in_time_numeric(panel: pd.DataFrame | None, index: pd.DatetimeIndex, columns: pd.Index,
+                           *, policy: str = "legacy_ffill") -> pd.DataFrame | None:
+    if policy not in {"legacy_ffill", "resolved_dense_v1"}:
+        raise ValueError("Unknown Alpha external numeric panel policy")
     if panel is None:
         return None
     if not isinstance(panel.index, pd.DatetimeIndex) or panel.index.has_duplicates:
         raise ValueError("Alpha V1 point-in-time numeric panels require unique dated observations")
+    if policy == "resolved_dense_v1":
+        if panel.columns.has_duplicates or index.has_duplicates or columns.has_duplicates:
+            raise ValueError("Resolved SEC panels require unique dates and symbols")
+        if not panel.index.is_monotonic_increasing or not index.isin(panel.index).all() or not columns.isin(panel.columns).all():
+            raise ValueError("Resolved SEC panels must explicitly cover every requested date and symbol")
+        aligned = panel.reindex(index=index, columns=columns)
+        values = aligned.to_numpy(dtype=float)
+        if np.isinf(values).any():
+            raise ValueError("Resolved SEC panels cannot contain infinite values")
+        return aligned.astype(float)  # NaN is a resolved absence; never fill it before ranks.
     aligned = panel.reindex(index=index, columns=columns).ffill()
     return aligned.astype(float)
 
@@ -271,6 +284,7 @@ def _build_features(
     sector_labels: pd.DataFrame | None,
     value_scores: pd.DataFrame | None,
     quality_scores: pd.DataFrame | None,
+    external_panel_policy: str = "legacy_ffill",
 ) -> dict[str, pd.DataFrame]:
     returns = closes.pct_change(fill_method=None)
     vol = _safe_volatility(returns, config.volatility_window_sessions)
@@ -315,10 +329,10 @@ def _build_features(
         if sector_feature is not None:
             features["sector_relative"] = sector_feature
 
-    value = _point_in_time_numeric(value_scores, closes.index, closes.columns)
+    value = _point_in_time_numeric(value_scores, closes.index, closes.columns, policy=external_panel_policy)
     if config.include_value and value is not None:
         features["value"] = _cross_sectional_rank(value)
-    quality = _point_in_time_numeric(quality_scores, closes.index, closes.columns)
+    quality = _point_in_time_numeric(quality_scores, closes.index, closes.columns, policy=external_panel_policy)
     if config.include_quality and quality is not None:
         features["quality"] = _cross_sectional_rank(quality)
 

@@ -1,29 +1,34 @@
-"""Private Oryntra Control API for CQC research operations.
-
-All API endpoints require server-provisioned internal-operator access.  The
-control plane never grants product entitlements and never submits broker orders.
-"""
+"""Private Oryntra Control API for CQC research and automation operations."""
 from __future__ import annotations
 
 import asyncio
 import json
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import APIRouter, HTTPException, Request
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ..database import get_connection
+from ..automation_orchestrator import acknowledge_alert, list_alerts, recent_automation_runs, run_candidate_automation
 from ..control_settings import load_settings, save_settings
+from ..database import get_connection
+from ..ibkr_adapter import (
+    LIVE_CONFIRMATION,
+    ibkr_audit_log,
+    ibkr_connection_status,
+    ibkr_settings,
+    latest_ibkr_links,
+    reconcile_ibkr_target,
+    save_ibkr_settings,
+    sync_ibkr_account,
+)
 from ..internal_access import require_control_operator
 from ..models.registry import get_model_spec
 from ..phase4_control import registry_payload
 from ..phase4_jobs import get_job, list_jobs, submit_job
-from ..automation_orchestrator import run_candidate_automation, list_alerts, acknowledge_alert, recent_automation_runs
-from ..ibkr_adapter import ibkr_settings, save_ibkr_settings, ibkr_connection_status, ibkr_audit_log, LIVE_CONFIRMATION
-from ..phase4_scheduler import run_automation_sweep, scheduler_status
-from ..phase4_ledger import (
-    create_candidate, get_candidate, list_candidates, record_simulated_fill, set_candidate_status,
-)
+from ..phase4_ledger import create_candidate, get_candidate, list_candidates, record_simulated_fill, set_candidate_status
+from ..phase4_scheduler import run_automation_sweep, run_ibkr_keepalive, scheduler_status
+from ..provider_credentials import credential_status, delete_credential, save_credential
+from ..qoptima.portfolio import export_active_portfolio_payload
 
 router = APIRouter()
 _cycle_lock = asyncio.Lock()
@@ -36,9 +41,13 @@ class CandidateCreateRequest(BaseModel):
     construction: str = "phase15"
     risk_model: str = "v203"
     phase3_enabled: bool = True
-    benchmark: str = "spy_qqq_equal"
-    universe: list[str] = Field(min_length=2, max_length=60)
+    benchmark: str = "balanced_global_equal"
+    comparison_benchmarks: list[str] = Field(default_factory=lambda: ["SPY", "QQQ", "IWM", "VXUS", "SPY/QQQ/IWM/VXUS"], max_length=12)
+    universe: list[str] = Field(min_length=2)
     initial_nav: float = Field(default=1_000_000.0, ge=100)
+    fundamentals_mode: str = "sec_pit"
+    status: str = "SHADOW"
+    provider: str = "auto"
 
 
 class CandidateStatusRequest(BaseModel):
@@ -57,12 +66,58 @@ class JobRequest(BaseModel):
     construction: str = "phase15"
     risk_model: str = "v203"
     phase3_enabled: bool = True
-    benchmark: str = "spy_qqq_equal"
+    benchmark: str = "balanced_global_equal"
     timeout_seconds: int = Field(default=7200, ge=60, le=21600)
 
 
+class InteractiveResearchRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    universe: list[str] = Field(min_length=2)
+    models: list[str] = Field(default_factory=lambda: ["tba8"], min_length=1, max_length=12)
+    alpha_model: str | None = None  # compatibility with 4.x clients
+    include_equal_weight_ensemble: bool = True
+    construction: str = "phase15"
+    risk_model: str = "v203"
+    phase3_enabled: bool = True
+    model_benchmark: str = "SPY/QQQ/IWM/VXUS"
+    comparison_benchmarks: list[str] = Field(default_factory=lambda: ["SPY", "QQQ", "IWM", "VXUS", "SPY/QQQ/IWM/VXUS"], min_length=1, max_length=12)
+    provider: str = "auto"
+    evaluation_period: str = "1y"
+    risk_free_mode: str = "fred_dgs3mo"
+    risk_free_annual_pct: float = 0.0
+    fundamentals_mode: str = "sec_pit"
+    portfolio_budget: float = Field(default=100_000.0, ge=100)
+    force_refresh: bool = False
+    force_refresh_risk_free: bool = False
+    timeout_seconds: int = Field(default=7200, ge=60, le=21600)
+    pre_gamma_config: dict[str, Any] = Field(default_factory=dict)
+    pre_gamma_beta_records: list[dict[str, Any]] = Field(default_factory=list, max_length=100000)
+    pre_gamma_rejection_policy: Literal["abort", "cash_on_qrm_rejection"] = "abort"
+    pre_gamma_beta_source: Literal["supplied", "causal_research"] = "supplied"
+
+    @model_validator(mode="after")
+    def validate_pre_gamma_beta_source(self):
+        if self.pre_gamma_beta_source == "causal_research" and self.pre_gamma_beta_records:
+            raise ValueError("Choose causal_research generation or supplied Pre-Gamma Beta records, not both")
+        return self
+
+    @field_validator("pre_gamma_config")
+    @classmethod
+    def validate_pre_gamma_config(cls, value):
+        from ..qoptima.gamma_integration import validate_gamma_config
+        return validate_gamma_config(value)
+
+    @field_validator("pre_gamma_beta_records")
+    @classmethod
+    def validate_pre_gamma_beta_records(cls, value):
+        from ..qoptima.gamma_forecast import _validated_beta_records
+        _accepted, rejected = _validated_beta_records(value)
+        if rejected:
+            raise ValueError(f"Pre-Gamma Beta input lacks valid causal provenance: {rejected[:3]}")
+        return value
+
+
 class ControlSettingsRequest(BaseModel):
-    """Non-secret desktop defaults; provider keys remain outside this payload."""
     model_config = ConfigDict(extra="forbid")
     provider: str | None = None
     automation_enabled: bool | None = None
@@ -76,24 +131,10 @@ class ControlSettingsRequest(BaseModel):
     default_comparison_benchmarks: list[str] | None = Field(default=None, max_length=12)
 
 
-class InteractiveResearchRequest(BaseModel):
+class ProviderKeyRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    universe: list[str] = Field(min_length=2, max_length=60)
-    models: list[str] = Field(default_factory=lambda: ["tba8"], min_length=1, max_length=12)
-    alpha_model: str | None = None
-    include_equal_weight_ensemble: bool = True
-    construction: str = "phase15"
-    risk_model: str = "v203"
-    phase3_enabled: bool = True
-    model_benchmark: str = "SPY/QQQ"
-    comparison_benchmarks: list[str] = Field(default_factory=lambda: ["SPY", "QQQ", "SPY/QQQ"], min_length=1, max_length=12)
-    provider: str = "auto"
-    evaluation_period: str = "1y"
-    risk_free_mode: str = "fred_dgs3mo"
-    risk_free_annual_pct: float = 0.0
-    force_refresh: bool = False
-    force_refresh_risk_free: bool = False
-    timeout_seconds: int = Field(default=7200, ge=60, le=21600)
+    provider: str
+    api_key: str = Field(min_length=8, max_length=512)
 
 
 class ManualFillRequest(BaseModel):
@@ -109,6 +150,9 @@ class IBKRSettingsRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     mode: str = "DISABLED"
     account_id: str | None = None
+    gateway_host: str = "localhost"
+    gateway_port: int = Field(default=5000, ge=1, le=65535)
+    client_id: int = Field(default=0, ge=0, le=999999)
     base_url: str = "https://localhost:5000/v1/api"
     verify_ssl: bool = False
     paper_transmit_enabled: bool = False
@@ -144,7 +188,6 @@ def _candidate_snapshot(candidate_id: int, user_id: int) -> dict[str, Any]:
     }
 
 
-
 @router.get("/registry")
 def registry(request: Request):
     require_control_operator(request)
@@ -160,16 +203,20 @@ def overview(request: Request):
         "jobs": list_jobs(user["id"], 20),
         "automation": scheduler_status(),
         "settings": load_settings(),
+        "providers": credential_status(user["id"]),
+        "ibkr": ibkr_settings(user["id"]),
         "alerts": list_alerts(user["id"], 20),
         "automation_runs": recent_automation_runs(user["id"], 10),
-        "ibkr": ibkr_settings(user["id"]),
     }
 
 
 @router.get("/settings")
 def settings(request: Request):
-    require_control_operator(request)
-    return {"settings": load_settings(), "automation": scheduler_status()}
+    user = require_control_operator(request)
+    return {
+        "settings": load_settings(), "automation": scheduler_status(),
+        "providers": credential_status(user["id"]), "ibkr": ibkr_settings(user["id"]),
+    }
 
 
 @router.post("/settings")
@@ -181,18 +228,29 @@ def update_settings(payload: ControlSettingsRequest, request: Request):
     return {"settings": save_settings(changes), "automation": scheduler_status()}
 
 
-def _interactive_spec(payload: InteractiveResearchRequest) -> dict[str, Any]:
-    spec = payload.model_dump()
-    if payload.alpha_model and payload.models == ["tba8"]:
-        spec["models"] = [payload.alpha_model]
-    return spec
+@router.post("/providers")
+def provider_key(payload: ProviderKeyRequest, request: Request):
+    user = require_control_operator(request)
+    try:
+        return save_credential(user["id"], payload.provider, payload.api_key)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.delete("/providers/{provider}")
+def remove_provider_key(provider: str, request: Request):
+    user = require_control_operator(request)
+    return delete_credential(user["id"], provider)
 
 
 @router.post("/backtests")
 def interactive_backtest(payload: InteractiveResearchRequest, request: Request):
     user = require_control_operator(request)
+    spec = payload.model_dump()
+    if payload.alpha_model and payload.models == ["tba8"]:
+        spec["models"] = [payload.alpha_model]
     try:
-        return submit_job(user["id"], "interactive_backtest", _interactive_spec(payload))
+        return submit_job(user["id"], "interactive_backtest", spec)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -200,8 +258,11 @@ def interactive_backtest(payload: InteractiveResearchRequest, request: Request):
 @router.post("/market-snapshots")
 def current_market(payload: InteractiveResearchRequest, request: Request):
     user = require_control_operator(request)
-    spec = _interactive_spec(payload)
-    spec["evaluation_period"] = "3mo"
+    spec = payload.model_dump()
+    if payload.alpha_model and payload.models == ["tba8"]:
+        spec["models"] = [payload.alpha_model]
+    if spec.get("evaluation_period") not in {"3mo", "6mo"}:
+        spec["evaluation_period"] = "3mo"
     try:
         return submit_job(user["id"], "current_market", spec)
     except ValueError as exc:
@@ -243,7 +304,9 @@ async def candidate_cycle(candidate_id: int, request: Request):
     user = require_control_operator(request)
     try:
         async with _cycle_lock:
-            return await asyncio.to_thread(run_candidate_automation, candidate_id, user["id"])
+            result = await asyncio.to_thread(run_candidate_automation, candidate_id, user["id"])
+            cycle = result.get("cycle") or {}
+            return {**result, "new_decision": cycle.get("new_decision"), "reconciliation": cycle.get("reconciliation"), "data": cycle.get("data")}
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -269,6 +332,25 @@ async def automation_sweep(request: Request):
     return await asyncio.to_thread(run_automation_sweep, force=True)
 
 
+@router.get("/automation/runs")
+def automation_runs(request: Request):
+    user = require_control_operator(request)
+    return {"runs": recent_automation_runs(user["id"], 100)}
+
+
+@router.get("/alerts")
+def automation_alerts(request: Request):
+    user = require_control_operator(request)
+    return {"alerts": list_alerts(user["id"], 200)}
+
+
+@router.post("/alerts/{alert_id}/ack")
+def automation_alert_ack(alert_id: int, request: Request):
+    user = require_control_operator(request)
+    acknowledge_alert(user["id"], alert_id)
+    return {"ok": True}
+
+
 @router.get("/ibkr/settings")
 def get_ibkr_settings(request: Request):
     user = require_control_operator(request)
@@ -290,29 +372,46 @@ def get_ibkr_status(request: Request):
     return ibkr_connection_status(user["id"])
 
 
+@router.post("/ibkr/sync")
+async def sync_ibkr(request: Request):
+    user = require_control_operator(request)
+    try:
+        return await asyncio.to_thread(sync_ibkr_account, user["id"])
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.get("/ibkr/export-current-portfolio")
+def export_ibkr_current_portfolio(request: Request):
+    user = require_control_operator(request)
+    return export_active_portfolio_payload(user["id"])
+
+
+@router.post("/ibkr/keepalive")
+def ibkr_keepalive(request: Request):
+    require_control_operator(request)
+    return run_ibkr_keepalive()
+
+
+@router.get("/ibkr/reconcile/{candidate_id}")
+async def ibkr_reconcile(candidate_id: int, request: Request):
+    user = require_control_operator(request)
+    try:
+        return await asyncio.to_thread(reconcile_ibkr_target, user["id"], candidate_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
 @router.get("/ibkr/audit")
-def get_ibkr_audit(request: Request):
+def ibkr_audit(request: Request):
     user = require_control_operator(request)
     return {"rows": ibkr_audit_log(user["id"]), "live_confirmation_phrase": LIVE_CONFIRMATION}
 
 
-@router.get("/alerts")
-def automation_alerts(request: Request):
+@router.get("/ibkr/orders")
+def ibkr_orders(request: Request):
     user = require_control_operator(request)
-    return {"alerts": list_alerts(user["id"], 200)}
-
-
-@router.post("/alerts/{alert_id}/ack")
-def automation_alert_ack(alert_id: int, request: Request):
-    user = require_control_operator(request)
-    acknowledge_alert(user["id"], alert_id)
-    return {"ok": True}
-
-
-@router.get("/automation/runs")
-def automation_runs(request: Request):
-    user = require_control_operator(request)
-    return {"runs": recent_automation_runs(user["id"], 100)}
+    return {"rows": latest_ibkr_links(user["id"])}
 
 
 @router.post("/jobs")

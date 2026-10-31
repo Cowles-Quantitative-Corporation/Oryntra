@@ -1,9 +1,11 @@
-"""Private Oryntra Control model-discovery adapters.
+"""Private Oryntra model registry.
 
-The frozen model implementations remain in their historical modules.  This
-package is intentionally only a registry layer used by the private Control UI.
+New research models should register through this package instead of being hard-coded
+into the desktop UI. Frozen historical implementation files are intentionally left
+in their original locations so old fingerprints/import paths remain reproducible.
 """
+from .registry import ModelSpec, build_model_config, get_model_spec, list_model_specs, registry_payload
 
-from .registry import ModelSpec, build_model_config, get_model_spec, list_model_specs
-
-__all__ = ["ModelSpec", "build_model_config", "get_model_spec", "list_model_specs"]
+__all__ = [
+    "ModelSpec", "build_model_config", "get_model_spec", "list_model_specs", "registry_payload",
+]

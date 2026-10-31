@@ -1,8 +1,8 @@
 """Small local scheduler for Phase 4 prospective shadow/paper candidates.
 
-The scheduler is enabled only by the private desktop/runtime environment.  It
-never sends broker orders; it advances the same simulated cycle available from
-the dashboard.
+The scheduler is enabled only by the private desktop/runtime environment. It
+advances the immutable research/paper cycle and may mirror approved orders to
+IBKR only when the separately configured broker transmission gates allow it.
 """
 from __future__ import annotations
 
@@ -14,7 +14,11 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from .database import get_connection
-from .automation_orchestrator import run_candidate_automation as run_candidate_cycle
+from .automation_orchestrator import run_candidate_automation as _run_candidate_automation
+from .ibkr_adapter import ibkr_keepalive_sweep
+
+# Compatibility alias retained for existing scheduler tests and callers.
+run_candidate_cycle = _run_candidate_automation
 
 _ET = ZoneInfo("America/New_York")
 _STATUS: dict[str, Any] = {
@@ -23,6 +27,9 @@ _STATUS: dict[str, Any] = {
     "last_success_count": 0,
     "last_error_count": 0,
     "last_errors": [],
+    "ibkr_last_keepalive_at": None,
+    "ibkr_keepalive_success_count": 0,
+    "ibkr_keepalive_error_count": 0,
 }
 _LOCK = threading.Lock()
 
@@ -41,7 +48,9 @@ def scheduler_status() -> dict[str, Any]:
         "enabled": _env_bool("ORYNTRA_PHASE4_AUTO_CYCLE", False),
         "interval_seconds": max(300, int(os.getenv("ORYNTRA_PHASE4_AUTO_INTERVAL_SECONDS", "3600"))),
         "earliest_hour_et": max(0, min(23, int(os.getenv("ORYNTRA_PHASE4_AUTO_HOUR_ET", "18")))),
-        "execution_boundary": "paper/shadow only",
+        "execution_boundary": "immutable Phase 4 paper ledger plus optional separately gated IBKR mirroring",
+        "ibkr_keepalive_enabled": _env_bool("ORYNTRA_IBKR_KEEPALIVE", True),
+        "ibkr_keepalive_seconds": max(30, int(os.getenv("ORYNTRA_IBKR_KEEPALIVE_SECONDS", "60"))),
     })
     return out
 
@@ -85,6 +94,19 @@ def run_automation_sweep(*, force: bool = False) -> dict[str, Any]:
     return {**scheduler_status(), "skipped": False}
 
 
+def run_ibkr_keepalive() -> dict[str, Any]:
+    if not scheduler_status()["ibkr_keepalive_enabled"]:
+        return {"skipped": True, "reason": "keepalive_disabled"}
+    result = ibkr_keepalive_sweep()
+    with _LOCK:
+        _STATUS.update({
+            "ibkr_last_keepalive_at": result.get("at"),
+            "ibkr_keepalive_success_count": int(result.get("success_count", 0)),
+            "ibkr_keepalive_error_count": int(result.get("error_count", 0)),
+        })
+    return {**result, "skipped": False}
+
+
 class Phase4Scheduler:
     def __init__(self, interval_seconds: int | None = None):
         self.interval = max(300, int(interval_seconds or os.getenv("ORYNTRA_PHASE4_AUTO_INTERVAL_SECONDS", "3600")))
@@ -105,21 +127,41 @@ class Phase4Scheduler:
             _STATUS["running"] = False
 
     def _loop(self):
-        # Short initial delay lets database/startup work finish before the first sweep.
+        # Short initial delay lets database/startup work finish before the first broker/session check.
         if self._stop.wait(10):
             return
+        next_sweep = 0.0
+        next_keepalive = 0.0
         while not self._stop.is_set():
-            try:
-                run_automation_sweep(force=False)
-            except Exception as exc:
-                with _LOCK:
-                    _STATUS["last_errors"] = [{"type": type(exc).__name__, "error": str(exc)}]
-                    _STATUS["last_error_count"] = 1
-            if self._stop.wait(self.interval):
+            now = time.monotonic()
+            if scheduler_status()["ibkr_keepalive_enabled"] and now >= next_keepalive:
+                try:
+                    run_ibkr_keepalive()
+                except Exception as exc:
+                    with _LOCK:
+                        _STATUS["ibkr_keepalive_error_count"] = 1
+                        _STATUS["last_errors"] = [{"type": type(exc).__name__, "error": str(exc), "source": "ibkr_keepalive"}]
+                next_keepalive = now + scheduler_status()["ibkr_keepalive_seconds"]
+            if _env_bool("ORYNTRA_PHASE4_AUTO_CYCLE", False) and now >= next_sweep:
+                try:
+                    run_automation_sweep(force=False)
+                except Exception as exc:
+                    with _LOCK:
+                        _STATUS["last_errors"] = [{"type": type(exc).__name__, "error": str(exc), "source": "phase4_sweep"}]
+                        _STATUS["last_error_count"] = 1
+                next_sweep = now + self.interval
+            waits = [5.0]
+            if scheduler_status()["ibkr_keepalive_enabled"]:
+                waits.append(max(1.0, next_keepalive - time.monotonic()))
+            if _env_bool("ORYNTRA_PHASE4_AUTO_CYCLE", False):
+                waits.append(max(1.0, next_sweep - time.monotonic()))
+            if self._stop.wait(min(waits)):
                 return
 
 
 def start_phase4_scheduler() -> Phase4Scheduler | None:
-    if not _env_bool("ORYNTRA_PHASE4_AUTO_CYCLE", False):
+    # The private runtime may need an IBKR keepalive even when automatic model
+    # cycles are disabled.  With no configured broker session this thread is idle.
+    if not _env_bool("ORYNTRA_PHASE4_AUTO_CYCLE", False) and not _env_bool("ORYNTRA_IBKR_KEEPALIVE", True):
         return None
     return Phase4Scheduler().start()

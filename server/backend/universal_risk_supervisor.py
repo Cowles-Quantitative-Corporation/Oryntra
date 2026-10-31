@@ -53,6 +53,11 @@ from .universal_risk_v203 import (
     predictive_modifier_v203,
     soft_structural_sleeve,
 )
+from .universal_risk_v204 import RISK_MODEL_V204_ID, V204BetaControlConfig, apply_beta_overlay_v204, beta_regime_modifier_v204
+from .universal_risk_v205 import (
+    RISK_MODEL_V205_ID, V205V1AControlConfig, apply_state_overlay_v205,
+    combine_state_modifiers_v205, v1a_regime_modifier_v205,
+)
 
 
 RISK_MODEL_ID = "universal_stock_risk_supervisor_v2_0_1"
@@ -169,6 +174,42 @@ class RiskSupervisorConfig:
     v203_minimum_structural_risk_improvement: float = .01
     v203_maximum_structural_priority_loss_fraction: float = .02
     v203_maximum_structural_incremental_turnover: float = .02
+    v204_enabled: bool = False
+    v204_beta_enabled: bool = True
+    v204_require_production_frozen_beta: bool = True
+    v204_require_calibrated_beta: bool = True
+    v204_maximum_beta_state_age_sessions: int = 5
+    v204_minimum_beta_data_quality: float = .60
+    v204_maximum_beta_uncertainty: float = .70
+    v204_beta_minimum_stress_score: float = .55
+    v204_beta_standalone_stress_threshold: float = .70
+    v204_beta_persistence_rebalances: int = 2
+    v204_beta_maximum_additional_gross_reduction: float = .10
+    v204_beta_minimum_additional_gross_change: float = .015
+    v204_beta_maximum_incremental_turnover: float = .10
+    v204_beta_disagreement_guard_enabled: bool = True
+    v204_research_candidate_mode: bool = False
+
+    # V2.0.5: V2.0.3 baseline plus independent Beta and QOptima V1A state
+    # overlays.  The state cuts combine by max(), never by addition.
+    v205_enabled: bool = False
+    v205_v1a_enabled: bool = True
+    v205_v1a_require_positive_definite: bool = True
+    v205_v1a_reject_signed_control: bool = True
+    v205_v1a_maximum_state_age_sessions: int = 5
+    v205_v1a_minimum_gamma: float = .05
+    v205_v1a_stress_premium_trigger: float = .10
+    v205_v1a_maximum_additional_gross_reduction: float = .12
+    v205_v1a_minimum_additional_gross_change: float = .01
+    v205_v1a_maximum_incremental_turnover: float = .12
+    v205_v1a_persistence_rebalances: int = 1
+    v205_v1a_reliability_rho: float = .50
+    v205_v1a_additive_floor_epsilon: float = 1e-8
+    v205_v1a_downside_quantile: float = .20
+    v205_v1a_high_vol_quantile: float = .80
+    v205_v1a_correlation_collapse_blend: float = .65
+    v205_maximum_combined_state_reduction: float = .15
+    v205_research_candidate_mode: bool = False
 
     def __post_init__(self) -> None:
         switches = [
@@ -182,11 +223,11 @@ class RiskSupervisorConfig:
             self.stress_testing_enabled, self.risk_radar_enabled,
             self.v202_enabled, self.v202_predictive_risk_enabled,
             self.v202_structural_intervention_enabled, self.v202_liquidity_intervention_enabled,
-            self.v203_enabled, self.v203_structural_intervention_enabled,
+            self.v203_enabled, self.v203_structural_intervention_enabled, self.v204_enabled, self.v204_beta_enabled, self.v204_require_production_frozen_beta, self.v204_require_calibrated_beta, self.v204_beta_disagreement_guard_enabled, self.v204_research_candidate_mode, self.v205_enabled, self.v205_v1a_enabled, self.v205_v1a_require_positive_definite, self.v205_v1a_reject_signed_control, self.v205_research_candidate_mode,
         ]
         if not all(isinstance(value, bool) for value in switches):
             raise ValueError("Risk supervisor switches must be boolean")
-        if sum(int(value) for value in (self.v201_enabled, self.v202_enabled, self.v203_enabled)) > 1:
+        if sum(int(value) for value in (self.v201_enabled, self.v202_enabled, self.v203_enabled, self.v204_enabled, self.v205_enabled)) > 1:
             raise ValueError("Only one explicit risk-supervisor research version may be enabled")
         numeric_values = [
             value for value in asdict(self).values()
@@ -369,6 +410,51 @@ def v203_risk_config(**overrides: object) -> RiskSupervisorConfig:
     )
     return replace(base, **overrides)
 
+
+
+def v204_risk_config(**overrides: object) -> RiskSupervisorConfig:
+    base=v203_risk_config()
+    base=replace(base,v203_enabled=False,v204_enabled=True,v204_beta_enabled=True)
+    return replace(base,**overrides)
+
+def _v204_control_config(config: RiskSupervisorConfig) -> V204BetaControlConfig:
+    return V204BetaControlConfig(beta_enabled=config.v204_beta_enabled,require_production_frozen=config.v204_require_production_frozen_beta,require_calibrated=config.v204_require_calibrated_beta,maximum_state_age_sessions=config.v204_maximum_beta_state_age_sessions,minimum_data_quality=config.v204_minimum_beta_data_quality,maximum_uncertainty=config.v204_maximum_beta_uncertainty,minimum_stress_score=config.v204_beta_minimum_stress_score,persistence_rebalances=config.v204_beta_persistence_rebalances,maximum_additional_gross_reduction=config.v204_beta_maximum_additional_gross_reduction,minimum_additional_gross_change=config.v204_beta_minimum_additional_gross_change,maximum_incremental_turnover=config.v204_beta_maximum_incremental_turnover,disagreement_guard_enabled=config.v204_beta_disagreement_guard_enabled,standalone_beta_stress_threshold=config.v204_beta_standalone_stress_threshold,research_candidate_mode=config.v204_research_candidate_mode)
+
+
+def v205_risk_config(**overrides: object) -> RiskSupervisorConfig:
+    """V2.0.5 research profile: V2.0.3 + Beta + QOptima V1A risk state."""
+    base = v203_risk_config()
+    base = replace(
+        base,
+        v203_enabled=False,
+        v204_enabled=False,
+        v205_enabled=True,
+        v204_beta_enabled=True,
+        v205_v1a_enabled=True,
+    )
+    return replace(base, **overrides)
+
+
+def _v205_control_config(config: RiskSupervisorConfig) -> V205V1AControlConfig:
+    return V205V1AControlConfig(
+        v1a_enabled=config.v205_v1a_enabled,
+        require_positive_definite=config.v205_v1a_require_positive_definite,
+        reject_signed_control=config.v205_v1a_reject_signed_control,
+        maximum_state_age_sessions=config.v205_v1a_maximum_state_age_sessions,
+        minimum_gamma=config.v205_v1a_minimum_gamma,
+        stress_premium_trigger=config.v205_v1a_stress_premium_trigger,
+        maximum_additional_gross_reduction=config.v205_v1a_maximum_additional_gross_reduction,
+        minimum_additional_gross_change=config.v205_v1a_minimum_additional_gross_change,
+        maximum_incremental_turnover=config.v205_v1a_maximum_incremental_turnover,
+        persistence_rebalances=config.v205_v1a_persistence_rebalances,
+        reliability_rho=config.v205_v1a_reliability_rho,
+        additive_floor_epsilon=config.v205_v1a_additive_floor_epsilon,
+        downside_quantile=config.v205_v1a_downside_quantile,
+        high_vol_quantile=config.v205_v1a_high_vol_quantile,
+        correlation_collapse_blend=config.v205_v1a_correlation_collapse_blend,
+        maximum_combined_state_reduction=config.v205_maximum_combined_state_reduction,
+        research_candidate_mode=config.v205_research_candidate_mode,
+    )
 
 def _correlation_clusters(covariance: np.ndarray, active: np.ndarray, threshold: float) -> list[list[int]]:
     correlation = covariance_to_correlation(covariance)
@@ -1217,6 +1303,11 @@ def supervise_cross_sectional_weights(
     predictive_forecast: dict[str, Any] | None = None,
     previous_persistence_count: int = 0,
     current_weights: np.ndarray | None = None,
+    beta_state: Any | None = None,
+    previous_beta_persistence_count: int = 0,
+    v1a_state: Any | None = None,
+    previous_v1a_persistence_count: int = 0,
+    current_session: Any | None = None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
     """Supervise proposed stock weights while preserving frozen V1 behavior.
 
@@ -1225,6 +1316,60 @@ def supervise_cross_sectional_weights(
     - V2.0.2 remains reproducible as the neutral/rejected predictive branch.
     - V2.0.3 is the active research challenger with a soft structural sleeve.
     """
+    if config.v205_enabled:
+        if returns_history is None:
+            return _legacy_supervise(weights, covariance, config)
+        v203_config = replace(config, v205_enabled=False, v204_enabled=False, v203_enabled=True)
+        baseline, audit = _supervise_v203(
+            weights, covariance, v203_config,
+            returns_history=returns_history, expected_alpha=expected_alpha,
+            prediction_error=prediction_error, fallback_priority=fallback_priority,
+            adv_dollars=adv_dollars, capital=capital, symbols=symbols,
+            predictive_forecast=predictive_forecast,
+            previous_persistence_count=previous_persistence_count,
+            current_weights=current_weights,
+        )
+        beta_control = _v204_control_config(replace(config, v204_research_candidate_mode=config.v205_research_candidate_mode))
+        beta_modifier = beta_regime_modifier_v204(
+            beta_state, control=beta_control,
+            previous_persistence_rebalances=previous_beta_persistence_count,
+            current_session=current_session,
+            v203_predictive_triggered=bool((audit.get("predictive_modifier") or {}).get("triggered", False)),
+        )
+        v205_control = _v205_control_config(config)
+        v1a_modifier = v1a_regime_modifier_v205(
+            v1a_state, weights=baseline, covariance=covariance, returns_history=returns_history,
+            control=v205_control, previous_persistence_rebalances=previous_v1a_persistence_count,
+            current_session=current_session,
+        )
+        combined = combine_state_modifiers_v205(beta_modifier, v1a_modifier, control=v205_control)
+        adjusted, state_audit = apply_state_overlay_v205(
+            baseline, combined, current_weights=current_weights, control=v205_control
+        )
+        return adjusted, {
+            **audit,
+            "model": RISK_MODEL_V205_ID,
+            "gross_after_v203": float(baseline.sum()),
+            "gross_after": float(adjusted.sum()),
+            "beta_modifier": beta_modifier,
+            "v1a_modifier": v1a_modifier,
+            "state_combination": combined,
+            "state_overlay": state_audit,
+            "beta_persistence_rebalances": int(beta_modifier.get("persistence_rebalances", 0) or 0),
+            "v1a_persistence_rebalances": int(v1a_modifier.get("persistence_rebalances", 0) or 0),
+            "v1a_feedback_into_predictive_model": False,
+            "qpo_or_qaoa_inside_risk": False,
+        }
+
+    if config.v204_enabled:
+        if returns_history is None:
+            return _legacy_supervise(weights, covariance, config)
+        v203_config=replace(config,v204_enabled=False,v203_enabled=True)
+        baseline,audit=_supervise_v203(weights,covariance,v203_config,returns_history=returns_history,expected_alpha=expected_alpha,prediction_error=prediction_error,fallback_priority=fallback_priority,adv_dollars=adv_dollars,capital=capital,symbols=symbols,predictive_forecast=predictive_forecast,previous_persistence_count=previous_persistence_count,current_weights=current_weights)
+        control=_v204_control_config(config)
+        modifier=beta_regime_modifier_v204(beta_state,control=control,previous_persistence_rebalances=previous_beta_persistence_count,current_session=current_session,v203_predictive_triggered=bool((audit.get("predictive_modifier") or {}).get("triggered",False)))
+        adjusted,beta_audit=apply_beta_overlay_v204(baseline,modifier,current_weights=current_weights,control=control)
+        return adjusted,{**audit,"model":RISK_MODEL_V204_ID,"gross_after_v203":float(baseline.sum()),"gross_after":float(adjusted.sum()),"beta_overlay":beta_audit,"beta_modifier":modifier,"beta_persistence_rebalances":int(modifier.get("persistence_rebalances",0)),"beta_feedback_into_model_c":False}
     if config.v203_enabled:
         if returns_history is None:
             return _legacy_supervise(weights, covariance, config)
@@ -1351,7 +1496,7 @@ def risk_supervisor_contract(config: RiskSupervisorConfig) -> dict[str, Any]:
         "rolling drawdown exposure circuit breaker",
         "gradual exposure recovery after de-risking",
     ]
-    if config.v201_enabled or config.v202_enabled or config.v203_enabled:
+    if config.v201_enabled or config.v202_enabled or config.v203_enabled or config.v204_enabled or config.v205_enabled:
         controls.extend([
             "adaptive long/short/downside covariance ensemble",
             "complete-linkage correlation topology",
@@ -1392,14 +1537,26 @@ def risk_supervisor_contract(config: RiskSupervisorConfig) -> dict[str, Any]:
             "proportional de-risking fallback unless optimizer dominates",
             "V2.0.1 fragility, factor, liquidity, stress, what-if and Risk Radar diagnostics retained",
         ])
+    if config.v205_enabled:
+        controls.extend([
+            "V2.0.3 structural/predictive baseline preserved before state overlay",
+            "Beta macro-state bounded de-risking",
+            "QOptima V1A v1.6 calibrated ES/gamma state input",
+            "QOptima V1A soft-RMT downside/high-vol/correlation-collapse stress diagnostics",
+            "Beta/V1A state cuts combine by max rather than addition",
+            "state overlay may only preserve or reduce exposure",
+            "QPO/QAOA search remains outside the independent risk supervisor",
+        ])
     return {
-        "id": RISK_MODEL_V203_ID if config.v203_enabled else (RISK_MODEL_V202_ID if config.v202_enabled else (RISK_MODEL_ID if config.v201_enabled else "universal_tba_risk_supervisor_v1")),
+        "id": RISK_MODEL_V205_ID if config.v205_enabled else (RISK_MODEL_V204_ID if config.v204_enabled else (RISK_MODEL_V203_ID if config.v203_enabled else (RISK_MODEL_V202_ID if config.v202_enabled else (RISK_MODEL_ID if config.v201_enabled else "universal_tba_risk_supervisor_v1")))),
         "status": "active_research" if config.enabled else "disabled",
         "configuration": asdict(config),
         "controls": controls,
         "timing": "All cross-sectional controls use data available no later than the completed close; execution remains next-open.",
         "scope": "Shared Universal stock-risk layer; frozen Minerva remains disabled unless explicitly overridden.",
         "research_warning": (
+            "V2.0.5 Beta/V1A state-overlay settings are research hypotheses until paired, ablation, sensitivity and fresh point-in-time holdout validation are completed."
+            if config.v205_enabled else
             "V2.0.3 structural/predictive settings remain predeclared research hypotheses until paired, "
             "one-factor sensitivity and fresh point-in-time holdout validation are completed."
             if config.v203_enabled else
