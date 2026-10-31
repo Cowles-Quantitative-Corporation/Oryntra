@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
-import '../widgets/adaptive_banner.dart';
 import '../widgets/common.dart';
 import '../widgets/glass.dart';
 
@@ -342,10 +341,6 @@ class PaperScreenState extends State<PaperScreen> {
                 ),
               );
             }),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            child: AdaptiveBanner(),
-          ),
         ],
       ),
     );

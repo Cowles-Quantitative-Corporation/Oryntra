@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:oryntra_ai/app_config.dart';
@@ -19,26 +18,6 @@ void main() {
   test('account traffic defaults to the main Oryntra domain', () {
     expect(AppConfig.authBaseUrl, 'https://oryntraai.com');
     expect(AppConfig.apiBaseUrl, 'https://oryntraai.com');
-  });
-
-  test('iOS ad mode keeps banner and interstitial inventory aligned', () {
-    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
-    try {
-      expect(
-        AppConfig.bannerAdUnitId,
-        AppConfig.useTestAds
-            ? AppConfig.iosTestBannerAdUnitId
-            : AppConfig.iosBannerAdUnitId,
-      );
-      expect(
-        AppConfig.interstitialAdUnitId,
-        AppConfig.useTestAds
-            ? AppConfig.iosTestInterstitialAdUnitId
-            : AppConfig.iosInterstitialAdUnitId,
-      );
-    } finally {
-      debugDefaultTargetPlatformOverride = null;
-    }
   });
 
   testWidgets('section labels retain institutional hierarchy', (tester) async {
@@ -78,17 +57,16 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Quant Lab uses stable portfolio control chips', (tester) async {
+  testWidgets('public Quant Lab keeps the published profile fixed', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(body: QuantLabScreen(api: ApiService())),
       ),
     );
 
-    await tester.drag(find.byType(ListView), const Offset(0, -700));
-    await tester.pump();
-    expect(find.text('Target annual volatility'), findsOneWidget);
-    expect(find.text('Conservative · 8%'), findsOneWidget);
+    expect(find.text('Published research profile'), findsOneWidget);
+    expect(find.textContaining('Fixed profile: V1.0'), findsOneWidget);
+    expect(find.text('Target annual volatility'), findsNothing);
     expect(find.byType(Slider), findsNothing);
     expect(tester.takeException(), isNull);
   });

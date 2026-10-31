@@ -127,8 +127,9 @@ class ApiService {
     String email,
     String password,
     String displayName,
-    bool acceptLegal,
-  ) async {
+    bool acceptLegal, {
+    String captchaToken = '',
+  }) async {
     if (AppConfig.previewMode) {
       await _previewPause();
       _previewSignedIn = true;
@@ -144,6 +145,7 @@ class ApiService {
             'password': password,
             'display_name': displayName,
             'accept_legal': acceptLegal,
+            'captcha_token': captchaToken,
           }),
         )
         .timeout(const Duration(seconds: 20));
@@ -171,7 +173,11 @@ class ApiService {
     await _sessionStore.clear();
   }
 
-  Future<Map<String, dynamic>> login(String email, String password) async {
+  Future<Map<String, dynamic>> login(
+    String email,
+    String password, {
+    String captchaToken = '',
+  }) async {
     if (AppConfig.previewMode) {
       await _previewPause();
       _previewSignedIn = true;
@@ -182,7 +188,11 @@ class ApiService {
         .post(
           _authUri('/api/auth/login'),
           headers: await _headers(jsonBody: true),
-          body: jsonEncode({'email': email, 'password': password}),
+          body: jsonEncode({
+            'email': email,
+            'password': password,
+            'captcha_token': captchaToken,
+          }),
         )
         .timeout(const Duration(seconds: 20));
     final data = Map<String, dynamic>.from(_decode(response) as Map);

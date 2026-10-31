@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../app_config.dart';
 import '../services/api_service.dart';
-import '../services/interstitial_ad_service.dart';
 import '../services/notification_service.dart';
 import '../services/widget_service.dart';
-import '../widgets/adaptive_banner.dart';
 import '../widgets/common.dart';
 import '../widgets/glass.dart';
 import '../widgets/tradingview_chart.dart';
@@ -36,7 +34,6 @@ class ScannerScreen extends StatefulWidget {
 
 class ScannerScreenState extends State<ScannerScreen> {
   final _ticker = TextEditingController(text: 'AAPL');
-  final _interstitialAds = InterstitialAdService();
   String _period = '6mo';
   bool _loading = false;
   bool _openingPaperTrade = false;
@@ -47,13 +44,11 @@ class ScannerScreenState extends State<ScannerScreen> {
   @override
   void initState() {
     super.initState();
-    _interstitialAds.initialize();
     _loadMarketAlerts();
   }
 
   @override
   void dispose() {
-    _interstitialAds.dispose();
     _ticker.dispose();
     super.dispose();
   }
@@ -91,7 +86,6 @@ class ScannerScreenState extends State<ScannerScreen> {
       );
       if (mounted) {
         setState(() => _result = result);
-        await _interstitialAds.recordSuccessfulScan();
       }
     } on ApiException catch (error) {
       if (error.statusCode == 401 && mounted) {
@@ -587,10 +581,6 @@ class ScannerScreenState extends State<ScannerScreen> {
               ),
             ],
           ),
-        ),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: AdaptiveBanner(),
         ),
         if (_error != null)
           AppCard(

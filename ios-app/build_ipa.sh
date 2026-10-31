@@ -10,6 +10,5 @@ flutter test
 flutter build ipa --release \
   --dart-define=ORYNTRA_API_URL="$API_URL" \
   --dart-define=ORYNTRA_PREVIEW_MODE=false \
-  --dart-define=ADMOB_TEST_MODE=false
 
 echo "IPA built for API: $API_URL"

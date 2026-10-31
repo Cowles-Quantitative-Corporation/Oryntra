@@ -8,7 +8,6 @@ import 'screens/quant_lab_screen.dart';
 import 'screens/scanner_screen.dart';
 import 'screens/watchlist_screen.dart';
 import 'services/api_service.dart';
-import 'services/consent_service.dart';
 import 'services/notification_service.dart';
 import 'services/provider_key_store.dart';
 import 'services/widget_service.dart';
@@ -17,14 +16,11 @@ import 'widgets/glass.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  final consent = ConsentService();
-  await consent.gatherConsentAndInitializeAds();
-  runApp(OryntraApp(consent: consent));
+  runApp(const OryntraApp());
 }
 
 class OryntraApp extends StatefulWidget {
-  const OryntraApp({super.key, required this.consent});
-  final ConsentService consent;
+  const OryntraApp({super.key});
 
   @override
   State<OryntraApp> createState() => _OryntraAppState();
@@ -345,7 +341,6 @@ class _OryntraAppState extends State<OryntraApp> {
       AccountScreen(
         key: _accountKey,
         api: _api,
-        consent: widget.consent,
         user: _user,
         onAuthChanged: _refreshUser,
         onManageProviderConnection: _openProviderSettings,

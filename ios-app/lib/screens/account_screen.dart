@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../app_config.dart';
 import '../services/api_service.dart';
-import '../services/consent_service.dart';
+import '../services/turnstile_service.dart';
 import '../services/notification_service.dart';
 import '../services/quant_lab_store.dart';
 import '../widgets/common.dart';
@@ -13,7 +13,6 @@ class AccountScreen extends StatefulWidget {
   const AccountScreen({
     super.key,
     required this.api,
-    required this.consent,
     required this.user,
     required this.onAuthChanged,
     required this.onManageProviderConnection,
@@ -21,7 +20,6 @@ class AccountScreen extends StatefulWidget {
     required this.notifications,
   });
   final ApiService api;
-  final ConsentService consent;
   final Map<String, dynamic>? user;
   final VoidCallback onAuthChanged;
   final VoidCallback onManageProviderConnection;
@@ -630,11 +628,6 @@ class AccountScreenState extends State<AccountScreen>
           child: Column(
             children: [
               ListTile(
-                leading: const Icon(Icons.privacy_tip_outlined),
-                title: const Text('Privacy choices'),
-                onTap: widget.consent.showPrivacyOptions,
-              ),
-              ListTile(
                 leading: const Icon(Icons.policy_outlined),
                 title: const Text('Privacy policy'),
                 onTap: () => _open(AppConfig.privacyUrl),
@@ -727,15 +720,29 @@ class _AuthSheetState extends State<_AuthSheet> {
       _error = null;
     });
     try {
+      final captchaToken = AppConfig.previewMode
+          ? ''
+          : await requestTurnstileToken(context);
+      if (!AppConfig.previewMode && captchaToken == null) {
+        if (mounted) {
+          setState(() => _error = 'Complete the security check to continue.');
+        }
+        return;
+      }
       if (widget.create) {
         await widget.api.signup(
           _email.text.trim(),
           _password.text,
           _name.text.trim(),
           _acceptLegal,
+          captchaToken: captchaToken ?? '',
         );
       } else {
-        await widget.api.login(_email.text.trim(), _password.text);
+        await widget.api.login(
+          _email.text.trim(),
+          _password.text,
+          captchaToken: captchaToken ?? '',
+        );
       }
       if (mounted) Navigator.pop(context, true);
     } catch (e) {

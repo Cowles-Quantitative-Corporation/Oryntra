@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../app_config.dart';
 import '../services/api_service.dart';
 import '../services/provider_key_store.dart';
+import '../services/turnstile_service.dart';
 import '../widgets/glass.dart';
 
 class AuthGateScreen extends StatefulWidget {
@@ -49,15 +50,29 @@ class _AuthGateScreenState extends State<AuthGateScreen> {
       _error = null;
     });
     try {
+      final captchaToken = AppConfig.previewMode
+          ? ''
+          : await requestTurnstileToken(context);
+      if (!AppConfig.previewMode && captchaToken == null) {
+        if (mounted) {
+          setState(() => _error = 'Complete the security check to continue.');
+        }
+        return;
+      }
       if (_create) {
         await widget.api.signup(
           _email.text.trim(),
           _password.text,
           _name.text.trim(),
           _acceptLegal,
+          captchaToken: captchaToken ?? '',
         );
       } else {
-        await widget.api.login(_email.text.trim(), _password.text);
+        await widget.api.login(
+          _email.text.trim(),
+          _password.text,
+          captchaToken: captchaToken ?? '',
+        );
       }
       await widget.onAuthenticated();
     } catch (error) {
