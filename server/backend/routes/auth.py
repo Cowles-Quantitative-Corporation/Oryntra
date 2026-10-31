@@ -17,7 +17,7 @@ from zoneinfo import ZoneInfo
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
 from fastapi import APIRouter, Form, HTTPException, Request, Response
-from fastapi.responses import RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from pydantic import BaseModel, field_validator
 
 from ..database import get_connection, init_db
@@ -30,6 +30,7 @@ SESSION_HINT_COOKIE_NAME = "oryntra_logged_in"
 SESSION_MAX_AGE = SESSION_DAYS * 24 * 60 * 60
 LOGIN_MAX_FAILURES = max(3, min(20, int(os.getenv("ORYNTRA_LOGIN_MAX_FAILURES", "8"))))
 LOGIN_LOCK_SECONDS = max(60, min(24 * 60 * 60, int(os.getenv("ORYNTRA_LOGIN_LOCK_SECONDS", "900"))))
+TURNSTILE_VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
 _LOGIN_FAILURES: dict[str, tuple[int, float]] = {}
 OAUTH_STATE_MINUTES = 10
 OAUTH_PROVIDERS = {
@@ -67,6 +68,7 @@ class SignupRequest(BaseModel):
     password: str
     display_name: str = ""
     accept_legal: bool = False
+    captcha_token: str = ""
 
     @field_validator("email")
     @classmethod
@@ -87,6 +89,7 @@ class SignupRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: str
     password: str
+    captcha_token: str = ""
 
     @field_validator("email")
     @classmethod
@@ -124,6 +127,98 @@ class ProviderCredentialRequest(BaseModel):
         if len(clean) < 8 or len(clean) > 512:
             raise ValueError("Enter a valid provider API key.")
         return clean
+
+
+def _verify_turnstile(token: str, request: Request) -> None:
+    """Fail closed when Turnstile is configured; never log a challenge token."""
+    secret = os.getenv("ORYNTRA_TURNSTILE_SECRET_KEY", "").strip()
+    if not secret:
+        return
+    if not token.strip():
+        raise HTTPException(status_code=403, detail="Complete the security check and try again.")
+    payload = urllib.parse.urlencode({
+        "secret": secret,
+        "response": token.strip(),
+        "remoteip": request.client.host if request.client else "",
+    }).encode("utf-8")
+    try:
+        verification = urllib.request.Request(TURNSTILE_VERIFY_URL, data=payload, method="POST")
+        with urllib.request.urlopen(verification, timeout=5) as response:
+            result = json.loads(response.read().decode("utf-8"))
+    except (OSError, ValueError, urllib.error.HTTPError, urllib.error.URLError) as error:
+        raise HTTPException(status_code=503, detail="The security check is temporarily unavailable. Try again shortly.") from error
+    if result.get("success") is not True:
+        raise HTTPException(status_code=403, detail="The security check did not pass. Try again.")
+
+
+@router.get("/turnstile/mobile", response_class=HTMLResponse, include_in_schema=False)
+def mobile_turnstile_challenge() -> HTMLResponse:
+    """Serve the production-hosted Turnstile widget used by native WebViews."""
+    site_key = os.getenv("ORYNTRA_TURNSTILE_SITE_KEY", "").strip()
+    secret = os.getenv("ORYNTRA_TURNSTILE_SECRET_KEY", "").strip()
+    if not site_key or not secret:
+        raise HTTPException(status_code=503, detail="The security check is not configured.")
+    site_key_json = json.dumps(site_key)
+    html = f"""<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Oryntra security check</title>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" defer></script>
+  <style>
+    :root {{ color-scheme: light dark; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }}
+    body {{ margin:0; min-height:100vh; display:grid; place-items:center; background:#07111f; color:#f4f8fc; }}
+    main {{ width:min(360px,calc(100vw - 32px)); text-align:center; }}
+    h1 {{ margin:0 0 8px; font-size:21px; }}
+    p {{ margin:0 0 20px; color:#aebed0; font-size:14px; line-height:1.45; }}
+    #challenge {{ min-height:70px; display:grid; place-items:center; }}
+    #status {{ margin-top:14px; font-size:13px; }}
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Confirm you are human</h1>
+    <p>Complete this check once, then Oryntra will return to sign in.</p>
+    <div id="challenge"></div>
+    <div id="status" role="status">Loading secure check…</div>
+  </main>
+  <script>
+    const sitekey = {site_key_json};
+    const status = document.getElementById('status');
+    function sendToken(token) {{
+      status.textContent = 'Verified. Returning to Oryntra…';
+      if (window.TurnstileBridge && window.TurnstileBridge.postMessage) {{
+        window.TurnstileBridge.postMessage(token);
+      }} else {{
+        location.href = 'oryntra-turnstile://success?token=' + encodeURIComponent(token);
+      }}
+    }}
+    function renderChallenge() {{
+      if (!window.turnstile) return setTimeout(renderChallenge, 50);
+      turnstile.render('#challenge', {{
+        sitekey,
+        action: 'mobile_auth',
+        theme: 'dark',
+        size: 'flexible',
+        callback: sendToken,
+        'error-callback': () => {{ status.textContent = 'The check could not load. Try again.'; }},
+        'expired-callback': () => {{ status.textContent = 'The check expired. Complete it again.'; }}
+      }});
+      status.textContent = 'Complete the security check to continue.';
+    }}
+    window.addEventListener('DOMContentLoaded', renderChallenge);
+  </script>
+</body>
+</html>"""
+    return HTMLResponse(
+        html,
+        headers={
+            "Cache-Control": "no-store",
+            "Content-Security-Policy": "default-src 'none'; script-src 'self' https://challenges.cloudflare.com 'unsafe-inline'; frame-src https://challenges.cloudflare.com; connect-src https://challenges.cloudflare.com; style-src 'unsafe-inline'; img-src data: https://challenges.cloudflare.com; base-uri 'none'; form-action 'none'",
+            "Referrer-Policy": "no-referrer",
+        },
+    )
 
 
 def _utc_now() -> str:
@@ -571,6 +666,7 @@ async def oauth_callback_post(provider: str, request: Request, code: str = Form(
 
 @router.post("/signup")
 async def signup(req: SignupRequest, request: Request, response: Response):
+    _verify_turnstile(req.captcha_token, request)
     init_db()
     email = req.email.lower().strip()
     display_name = (req.display_name or email.split("@", 1)[0])[:80]
@@ -612,6 +708,7 @@ async def signup(req: SignupRequest, request: Request, response: Response):
 
 @router.post("/login")
 async def login(req: LoginRequest, request: Request, response: Response):
+    _verify_turnstile(req.captcha_token, request)
     init_db()
     email = req.email.lower().strip()
     _reject_if_login_throttled(email)
@@ -706,6 +803,18 @@ async def delete_account(req: DeleteAccountRequest, request: Request, response: 
         row = conn.execute("SELECT * FROM users WHERE id=?", (user["id"],)).fetchone()
         if not row or not _verify_password(req.password, row["password_salt"], row["password_hash"]):
             raise HTTPException(status_code=401, detail="Password confirmation failed.")
+        stripe_subscription = conn.execute(
+            "SELECT provider_ref FROM subscriptions WHERE user_id=? AND provider='stripe' AND status='ACTIVE' LIMIT 1",
+            (user["id"],),
+        ).fetchone()
+        if stripe_subscription:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "code": "ACTIVE_SUBSCRIPTION",
+                    "message": "Cancel your active Stripe subscription in Billing & subscription before deleting the account.",
+                },
+            )
         conn.execute("DELETE FROM paper_trades WHERE user_id=?", (user["id"],))
         conn.execute("DELETE FROM user_watchlist WHERE user_id=?", (user["id"],))
         conn.execute("DELETE FROM subscriptions WHERE user_id=?", (user["id"],))
