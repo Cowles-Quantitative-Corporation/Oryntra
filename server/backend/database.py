@@ -119,6 +119,38 @@ def init_db():
         )
     """)
 
+    subscription_columns = {row[1] for row in cursor.execute("PRAGMA table_info(subscriptions)").fetchall()}
+    if "provider_state" not in subscription_columns:
+        cursor.execute("ALTER TABLE subscriptions ADD COLUMN provider_state TEXT")
+    if "trial_end" not in subscription_columns:
+        cursor.execute("ALTER TABLE subscriptions ADD COLUMN trial_end TEXT")
+    if "cancel_at_period_end" not in subscription_columns:
+        cursor.execute("ALTER TABLE subscriptions ADD COLUMN cancel_at_period_end INTEGER NOT NULL DEFAULT 0")
+    if "updated_at" not in subscription_columns:
+        cursor.execute("ALTER TABLE subscriptions ADD COLUMN updated_at TEXT")
+    cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_subscriptions_provider_ref ON subscriptions(provider, provider_ref)")
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS billing_accounts (
+            user_id         INTEGER NOT NULL,
+            provider        TEXT NOT NULL,
+            customer_ref    TEXT NOT NULL,
+            created_at      TEXT DEFAULT (datetime('now')),
+            updated_at      TEXT DEFAULT (datetime('now')),
+            PRIMARY KEY (user_id, provider),
+            UNIQUE (provider, customer_ref),
+            FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS stripe_webhook_events (
+            event_id        TEXT PRIMARY KEY,
+            event_type      TEXT NOT NULL,
+            processed_at    TEXT DEFAULT (datetime('now'))
+        )
+    """)
+
     # Cross-product bundle grants are intentionally separate from users and
     # subscriptions. The subject is an opaque HMAC generated in each product;
     # Rule Mirror never sends a member's email or private records to Oryntra.
