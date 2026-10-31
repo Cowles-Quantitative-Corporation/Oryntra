@@ -13,7 +13,9 @@ import json
 from pathlib import Path
 from typing import Any
 
-from .minerva import minerva_baseline, tba8_institutional_risk_candidate, alpha_v1_candidate
+from .minerva import tba8_institutional_risk_candidate
+from .models.registry import build_model_config, get_model_spec, registry_fingerprint as model_registry_fingerprint
+from .models.registry import registry_payload as model_registry_payload
 from .universal_engine import ENGINE_ID, ENGINE_VERSION, UniversalConfig
 from .universal_factor_model import FactorModelConfig
 from .universal_optimizer import PortfolioOptimizerConfig
@@ -21,25 +23,12 @@ from .universal_phase3 import Phase3Config
 from .universal_risk_supervisor import RiskSupervisorConfig, v201_risk_config, v202_risk_config, v203_risk_config
 
 
-CONTROL_VERSION = "4.0.0-research"
+CONTROL_VERSION = "5.0.0-control"
 
-ALPHA_MODELS: dict[str, dict[str, Any]] = {
-    "minerva_v1": {
-        "label": "Minerva V1 frozen baseline",
-        "description": "Frozen walk-forward ridge baseline used as the long-run research control.",
-        "public": False,
-    },
-    "tba8": {
-        "label": "TBA8 institutional alpha path",
-        "description": "Persistent residual forecasts with causal confidence/capacity controls.",
-        "public": False,
-    },
-    "alpha_v1": {
-        "label": "Alpha V1 cross-sectional",
-        "description": "Separate causal relative-return model with evidence-weighted sleeves and forecast uncertainty.",
-        "public": False,
-    },
-}
+
+def _alpha_models_payload() -> dict[str, dict[str, Any]]:
+    """Legacy mapping derived from the dynamic private registry."""
+    return {item["id"]: item for item in model_registry_payload()["models"]}
 
 CONSTRUCTION_MODES: dict[str, dict[str, Any]] = {
     "phase15": {
@@ -142,6 +131,16 @@ DEFAULT_TEST_SUITES: dict[str, dict[str, Any]] = {
         "tool": "tools/run_control_plane_study.py",
         "requires_frozen_panel": True,
     },
+    "interactive_backtest": {
+        "label": "Interactive current-data backtest",
+        "kind": "interactive_backtest",
+        "hidden": True,
+    },
+    "current_market": {
+        "label": "Current market model snapshot",
+        "kind": "current_market",
+        "hidden": True,
+    },
 }
 
 
@@ -167,14 +166,13 @@ def build_control_config(*, alpha_model: str = "tba8", construction: str = "phas
     alpha_key = str(alpha_model).strip().lower()
     construction_key = str(construction).strip().lower()
     risk_key = str(risk_model).strip().lower()
-    if alpha_key not in ALPHA_MODELS:
-        raise ValueError(f"Unknown alpha model: {alpha_model}")
+    get_model_spec(alpha_key)
     if construction_key not in CONSTRUCTION_MODES:
         raise ValueError(f"Unknown construction mode: {construction}")
     if risk_key not in RISK_MODELS:
         raise ValueError(f"Unknown risk model: {risk_model}")
 
-    base = minerva_baseline() if alpha_key == "minerva_v1" else (alpha_v1_candidate() if alpha_key == "alpha_v1" else tba8_institutional_risk_candidate())
+    base = build_model_config(alpha_key)
     phase2 = CONSTRUCTION_MODES[construction_key]["phase2"]
     values: dict[str, Any] = {
         "research_profile": "control_plane",
@@ -236,19 +234,24 @@ def code_fingerprint() -> str:
         digest.update(name.encode("utf-8"))
         if path.exists():
             digest.update(path.read_bytes())
+    digest.update(b"backend.models")
+    digest.update(model_registry_fingerprint().encode("ascii"))
     return digest.hexdigest()
 
 
 def registry_payload() -> dict[str, Any]:
+    model_payload = model_registry_payload()
     return {
         "version": CONTROL_VERSION,
-        "alpha_models": ALPHA_MODELS,
+        "models": model_payload["models"],
+        "alpha_models": _alpha_models_payload(),
+        "model_registry_fingerprint": model_payload["registry_fingerprint"],
         "construction_modes": CONSTRUCTION_MODES,
         "risk_models": RISK_MODELS,
         "benchmarks": BENCHMARKS,
         "test_suites": DEFAULT_TEST_SUITES,
         "defaults": {
-            "alpha_model": "tba8",
+            "alpha_model": model_payload["default_model"],
             "construction": "phase15",
             "risk_model": "v203",
             "phase3_enabled": True,
