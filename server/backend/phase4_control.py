@@ -125,6 +125,17 @@ DEFAULT_TEST_SUITES: dict[str, dict[str, Any]] = {
         "tool": "tools/run_phase3_branch_study.py",
         "requires_frozen_panel": True,
     },
+    "alpha_v11": {
+        "label": "Alpha V1.1 verification",
+        "kind": "pytest",
+        "targets": ["tests/test_alpha_v1.py", "tests/test_alpha_v11.py"],
+    },
+    "alpha_v11_paired": {
+        "label": "TBA8 / Minerva / Alpha V1 / Alpha V1.1 paired study",
+        "kind": "study",
+        "tool": "tools/run_alpha_v11_paired_study.py",
+        "requires_frozen_panel": True,
+    },
     "custom_yearly": {
         "label": "Custom model / risk / benchmark yearly study",
         "kind": "custom_study",
@@ -225,6 +236,7 @@ def code_fingerprint() -> str:
         "universal_risk_v201.py", "universal_risk_v202.py", "universal_risk_v203.py",
         "universal_factor_model.py", "universal_optimizer.py", "universal_phase3.py",
         "universal_research.py", "portfolio_execution.py", "minerva.py", "alpha_v1.py",
+        "corporate_repository.py", "control_risk_free.py", "control_research.py",
         "phase4_control.py", "phase4_ledger.py", "phase4_runner.py", "phase4_scheduler.py",
         "automation_orchestrator.py", "ibkr_adapter.py",
     )

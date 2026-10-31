@@ -245,8 +245,13 @@ class CorporateRepository:
         return {"ticker": ticker.upper().strip(), "as_of": cutoff, "facts": selected,
                 "coverage": round(len(selected) / len(CORPORATE_METRICS), 3)}
 
-    def factor_panel(self, tickers: list[str], index: pd.DatetimeIndex) -> tuple[pd.DataFrame, dict[str, Any]]:
-        """Return a point-in-time composite quality panel and provenance coverage."""
+    def factor_panel(self, tickers: list[str], index: pd.DatetimeIndex, *, fill_missing: bool = True) -> tuple[pd.DataFrame, dict[str, Any]]:
+        """Return a point-in-time composite quality panel and provenance coverage.
+
+        ``fill_missing=True`` preserves the legacy neutral-zero contract.  Research
+        paths that must distinguish genuinely unavailable PIT observations use
+        ``fill_missing=False`` so downstream coverage gates can see NaNs.
+        """
         ensure_corporate_schema()
         symbols = [str(t).upper().strip() for t in tickers]
         if not symbols or len(index) == 0:
@@ -286,7 +291,13 @@ class CorporateRepository:
         ranks = raw.rank(axis=1, pct=True, method="average")
         score = (ranks - 0.5) * 2.0
         coverage = raw.notna().sum().sum() / max(1, raw.size)
-        return score.fillna(0.0), {"coverage_pct": round(float(coverage * 100), 2), "facts_used": len(rows), "source_urls": sorted({str(r["source_url"]) for r in rows})[:100]}
+        output = score.fillna(0.0) if fill_missing else score
+        return output, {
+            "coverage_pct": round(float(coverage * 100), 2),
+            "facts_used": len(rows),
+            "source_urls": sorted({str(r["source_url"]) for r in rows})[:100],
+            "missing_values_preserved": not fill_missing,
+        }
 
     def macro_snapshot(self, as_of: Any | None = None) -> dict[str, Any]:
         ensure_corporate_schema()
