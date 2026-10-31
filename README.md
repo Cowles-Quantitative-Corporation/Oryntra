@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="brand-assets/oryntra-ai-master-logo.png" width="220" alt="Oryntra AI logo">
+<img src="server/frontend/static/img/oryntra-logo.png" width="220" alt="Oryntra AI — current website and iOS app logo">
 
 # Oryntra AI
 
@@ -179,3 +179,68 @@ flowchart LR
     C --> I["Structured quantitative context"]
     I --> J["AI explanation layer<br/>plain-language interpretation"]
     J --> G
+```
+
+# Current Implementation
+
+The repository contains the browser workspace, Flutter iOS client, FastAPI backend, and experimental research modules. Publishing their source does not enable a research route, deploy a service, or qualify a model for live use.
+
+| Component | Implemented scope | Source |
+| --- | --- | --- |
+| Web workspace | Account access, watchlists, saved research, scanner analysis, membership UI, and a fixed synthetic demo | [Frontend](server/frontend/), [API composition](server/backend/main.py) |
+| iOS app | Native account flow, hosted security challenge, research screens, memberships, and local saved reports | [Flutter app](ios-app/) |
+| Billing and authentication | Hosted subscription checkout and portal requests, signed lifecycle webhooks, and Turnstile verification | [Billing](server/backend/routes/billing.py), [authentication](server/backend/routes/auth.py) |
+| Alpha and Beta | Configurable research models, point-in-time availability rules, and macro/regime context | [Model packages](server/backend/models/) |
+| QOptima, Gamma, and risk | Experimental portfolio construction, forecast/risk contracts, and causal regression tests | [QOptima](server/backend/qoptima/), [Gamma](server/gamma_v1/), [QPO/Gamma](server/qpo_gamma/), [risk](server/backend/risk/) |
+| Delta engineering | C++ reported-volume engine, exact Python oracle, disabled uncertainty projector, synthetic journal, and diagnostic math | [Delta package](server/backend/delta/README.md) |
+
+The public Quant Lab uses a fixed documented profile; its internal research controls are separate. Private research routes are disabled by default and require explicit configuration. A private integration boundary is not an enabled public brokerage service.
+
+The demo uses repeatable invented data, not live quotes. Billing configuration and provider credentials are deployment inputs; they are not included in this repository.
+
+## Research status
+
+These modules are research implementations, not established trading edge. Delta's saved single-versus-joint comparison reduced error by approximately **0.2894%**, below its preset **1%** screen. That reused April result does not demonstrate an improved Sharpe ratio or an independent holdout success. Native arithmetic and synthetic regression checks establish their tested engineering behavior, not profitability or execution readiness.
+
+The Delta model-vector bridge remains disabled. Its artifact-specific raw reader and process-custody integration remain local pending a separate portable-runtime review. See the [development map](docs/DEVELOPMENT_UPDATES.md) for package boundaries, evidence, and limitations.
+
+# Running Locally
+
+From a checkout with Python installed:
+
+```bash
+cd server
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+cp .env.example .env
+.venv/bin/python run.py
+```
+
+Review the example configuration before starting the service. The default port is `8001`; `/health` reports API health. The example enables the browser page while leaving private research routes and public Quant Lab access disabled. Provider-backed analysis, billing, and sign-in protection require their own authorized configuration. The fixed demo does not require a provider key.
+
+Optional Gamma model tests use [requirements-research.txt](server/requirements-research.txt). The iOS client uses Flutter and declares its assets and dependencies in [pubspec.yaml](ios-app/pubspec.yaml).
+
+## Verification
+
+Backend, from `server`:
+
+```bash
+PYTHONPATH=. .venv/bin/python -m pytest tests
+node --check frontend/static/js/app.js
+```
+
+iOS, from `ios-app`:
+
+```bash
+flutter pub get
+flutter analyze
+flutter test
+```
+
+Delta's native checks currently target macOS CommonCrypto with C++17, ASan, and UBSan. Build instructions and scope are in the [Delta package README](server/backend/delta/README.md). Passing these checks does not deploy or sign an app.
+
+# Data and Reproducibility
+
+Raw vendor market data, price/prediction/model caches, credentials, private company documents, the Obsidian vault, environments, and large backups remain local. A source checkout is not a bundled research dataset or permission to redistribute provider data. Some research workflows require separately supplied local artifacts and fail when their required inputs are unavailable.
+
+The owner checkout keeps an ignored data-location index under `local-artifacts/`; machine-specific paths and private payloads are not part of the public repository. Frozen experiment artifacts retain their original local paths. Public source, synthetic tests, and sanitized research summaries are organized through the [development map](docs/DEVELOPMENT_UPDATES.md).
