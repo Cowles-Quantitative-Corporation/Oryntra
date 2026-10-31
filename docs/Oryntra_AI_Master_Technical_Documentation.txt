@@ -1,7 +1,7 @@
 ORYNTRA AI — MASTER TECHNICAL MANUAL
 NARRATIVE ARCHITECTURE, OPERATIONS, AND FILE REFERENCE
-Generated: 2026-09-12 21:17 UTC
-Git base revision at generation: c280e0244f038b636d2254fdcd237ccf8dc16beb
+Generated: 2026-09-14 10:21 UTC
+Git base revision at generation: 04956f40e208b9ae63015f708aef13ef24bf11f4
 Git branch: main
 
 This manual is written for a reader who wants to understand how the checked-out Oryntra AI
@@ -210,19 +210,18 @@ strategy can be executed at the displayed price, size, or time in a live market.
 The browser client is a static workspace served by FastAPI. Its user-facing areas are Scanner,
 Watchlist, Paper trades, Backtest, Quant Lab, and Settings. The same bundle also contains
 signed-in onboarding, browser-only provider-key storage, AI explanations, theme persistence,
-optional advertising, and a hidden private Pattern Lab panel. index.html establishes the
-structure, app.js owns state and API interaction, and the two stylesheets supply the
-presentation. The maintenance site is deliberately independent, while legal pages are served
-through an explicit allowlist.
+and a hidden private Pattern Lab panel. index.html establishes the structure, app.js owns
+state and API interaction, and the two stylesheets supply the presentation. The maintenance
+site is deliberately independent, while legal pages are served through an explicit allowlist.
 
 The ios-app directory is a Flutter client plus the iOS runner and widget integration. After
 sign-in and provider setup, its five navigation destinations are Scanner, Watchlist, Paper,
 Quant Lab, and Account. Mobile-only services add secure session and provider-key storage,
-consent-gated AdMob support, scan-result notifications, daily research reminders, tracked-
-symbol alerts, background time for Quant Lab requests, local saved Quant Lab reports, a
-TradingView chart, and an iOS home-screen widget updated from the latest scan. Native Swift
-and Xcode configuration bridge these services. A successful backend test does not validate
-device permissions, widget refresh, signing, or App Store behavior.
+scan-result notifications, daily research reminders, tracked-symbol alerts, background time
+for Quant Lab requests, local saved Quant Lab reports, a TradingView chart, and an iOS home-
+screen widget updated from the latest scan. Native Swift and Xcode configuration bridge these
+services. A successful backend test does not validate device permissions, widget refresh,
+signing, or App Store behavior.
 
 Operational tools exist for cache inspection and warming, research execution, bias auditing,
 training, database-related safeguards, and local launch. These tools are intentionally
@@ -235,26 +234,26 @@ automatically healthy; check the real health response and the intended user flow
 ========================================================================================
 8. REPOSITORY COVERAGE AND READING MAP
 ========================================================================================
-Included files: 302
-  - Automated regression test: 34
-  - Backend service or research engine: 52
+Included files: 301
+  - Automated regression test: 35
+  - Backend service or research engine: 53
   - Brand asset: 1
   - Browser application structure: 1
   - Browser presentation or client behaviour: 18
   - Deterministic pattern analysis: 8
-  - Flutter mobile application: 29
+  - Flutter mobile application: 21
   - Generated documentation: 1
-  - HTTP API route: 16
+  - HTTP API route: 17
   - Legal and policy surface: 17
   - Maintenance-mode application: 11
-  - Mobile application configuration or operator asset: 13
+  - Mobile application configuration or operator asset: 12
   - Mobile or web application asset: 3
   - Native iOS integration or build configuration: 43
-  - Operator or research utility: 25
+  - Operator or research utility: 28
   - Product and operating model: 1
-  - Product or technical documentation: 10
+  - Product or technical documentation: 13
   - Repository asset: 3
-  - Server configuration or operator asset: 16
+  - Server configuration or operator asset: 15
 
 The catalogue that follows is intentionally file-by-file, but it is not a reproduction of the
 code. Each entry identifies the file's real role in the system, explains the boundaries it
@@ -266,25 +265,27 @@ described by the particular build or runtime contract they carry.
 INCLUDED FILES
 
   - .gitignore (73 lines; Repository asset)
-  - LICENSE (99 lines; Repository asset)
+  - LICENSE (101 lines; Repository asset)
   - README.md (288 lines; Product and operating model)
   - V1_RELEASE_READINESS.md (79 lines; Repository asset)
   - brand-assets/oryntra-ai-master-logo.png (167,124 bytes; Brand asset)
   - docs/ASTRA_UNIVERSAL_TUNING_PLAYBOOK.md (102 lines; Product or technical documentation)
-  - docs/DEFERRED_RESEARCH_IDEAS.md (49 lines; Product or technical documentation)
-  - docs/FEATURES_MODELS_AND_ARCHITECTURE.md (361 lines; Product or technical documentation)
+  - docs/CQC_MAX_ENTITLEMENT_AND_APP_REVIEW_NOTES.md (75 lines; Product or technical documentation)
+  - docs/DEFERRED_RESEARCH_IDEAS.md (2115 lines; Product or technical documentation)
+  - docs/FEATURES_MODELS_AND_ARCHITECTURE.md (359 lines; Product or technical documentation)
   - docs/IOS_RELEASE_AND_INTELLIGENCE_ROADMAP.md (28 lines; Product or technical documentation)
   - docs/LEGAL_AND_REGULATORY_CHANGELOG.md (135 lines; Product or technical documentation)
   - docs/MINERVA_V1_RESEARCH_RECORD.md (62 lines; Product or technical documentation)
-  - docs/ORYNTRA_RESEARCH_GOOD_FINDS.txt (534 lines; Product or technical documentation)
+  - docs/ORYNTRA_RESEARCH_GOOD_FINDS.txt (1981 lines; Product or technical documentation)
   - docs/Oryntra_AI_Master_Technical_Documentation.txt (generated output; Generated documentation)
-  - docs/QUANT_MODEL_VALIDATION_LOG.md (187 lines; Product or technical documentation)
+  - docs/QUANT_MODEL_VALIDATION_LOG.md (271 lines; Product or technical documentation)
+  - docs/TBA_RISK_PAIRED_RESULTS_2026-09-13.json (45 lines; Product or technical documentation)
+  - docs/TBA_RISK_SUPERVISOR.md (153 lines; Product or technical documentation)
   - docs/UNIVERSAL_V2_BACKEND.md (197 lines; Product or technical documentation)
   - docs/UNIVERSAL_V2_VALIDATION.json (3436 lines; Product or technical documentation)
   - ios-app/analysis_options.yaml (11 lines; Mobile application configuration or operator asset)
   - ios-app/assets/oryntra-icon.png (167,124 bytes; Mobile or web application asset)
-  - ios-app/build_ipa.sh (16 lines; Mobile application configuration or operator asset)
-  - ios-app/configure_admob.sh (39 lines; Mobile application configuration or operator asset)
+  - ios-app/build_ipa.sh (15 lines; Mobile application configuration or operator asset)
   - ios-app/configure_widget_target.rb (66 lines; Mobile application configuration or operator asset)
   - ios-app/ios/Flutter/AppFrameworkInfo.plist (17 lines; Native iOS integration or build configuration)
   - ios-app/ios/Flutter/Debug.xcconfig (4 lines; Native iOS integration or build configuration)
@@ -294,8 +295,8 @@ INCLUDED FILES
   - ios-app/ios/OryntraWidget/OryntraWidget.entitlements (11 lines; Native iOS integration or build configuration)
   - ios-app/ios/OryntraWidget/OryntraWidget.swift (110 lines; Native iOS integration or build configuration)
   - ios-app/ios/Podfile (42 lines; Native iOS integration or build configuration)
-  - ios-app/ios/Podfile.lock (62 lines; Native iOS integration or build configuration)
-  - ios-app/ios/Runner.xcodeproj/project.pbxproj (603 lines; Native iOS integration or build configuration)
+  - ios-app/ios/Podfile.lock (44 lines; Native iOS integration or build configuration)
+  - ios-app/ios/Runner.xcodeproj/project.pbxproj (588 lines; Native iOS integration or build configuration)
   - ios-app/ios/Runner.xcodeproj/project.xcworkspace/contents.xcworkspacedata (3 lines; Native iOS integration or build configuration)
   - ios-app/ios/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme (88 lines; Native iOS integration or build configuration)
   - ios-app/ios/Runner.xcworkspace/contents.xcworkspacedata (11 lines; Native iOS integration or build configuration)
@@ -324,44 +325,36 @@ INCLUDED FILES
   - ios-app/ios/Runner/Base.lproj/LaunchScreen.storyboard (30 lines; Native iOS integration or build configuration)
   - ios-app/ios/Runner/Base.lproj/Main.storyboard (20 lines; Native iOS integration or build configuration)
   - ios-app/ios/Runner/GeneratedPluginRegistrant.h (20 lines; Native iOS integration or build configuration)
-  - ios-app/ios/Runner/GeneratedPluginRegistrant.m (50 lines; Native iOS integration or build configuration)
-  - ios-app/ios/Runner/Info.plist (81 lines; Native iOS integration or build configuration)
+  - ios-app/ios/Runner/GeneratedPluginRegistrant.m (43 lines; Native iOS integration or build configuration)
+  - ios-app/ios/Runner/Info.plist (79 lines; Native iOS integration or build configuration)
   - ios-app/ios/Runner/PrivacyInfo.xcprivacy (24 lines; Native iOS integration or build configuration)
   - ios-app/ios/Runner/Runner-Bridging-Header.h (2 lines; Native iOS integration or build configuration)
   - ios-app/ios/Runner/Runner.entitlements (17 lines; Native iOS integration or build configuration)
-  - ios-app/lib/app_config.dart (82 lines; Flutter mobile application)
-  - ios-app/lib/main.dart (479 lines; Flutter mobile application)
-  - ios-app/lib/screens/account_screen.dart (838 lines; Flutter mobile application)
+  - ios-app/lib/app_config.dart (31 lines; Flutter mobile application)
+  - ios-app/lib/main.dart (474 lines; Flutter mobile application)
+  - ios-app/lib/screens/account_screen.dart (854 lines; Flutter mobile application)
   - ios-app/lib/screens/auth_gate_screen.dart (697 lines; Flutter mobile application)
-  - ios-app/lib/screens/paper_screen.dart (875 lines; Flutter mobile application)
+  - ios-app/lib/screens/paper_screen.dart (870 lines; Flutter mobile application)
   - ios-app/lib/screens/quant_lab_screen.dart (420 lines; Flutter mobile application)
-  - ios-app/lib/screens/scanner_screen.dart (1446 lines; Flutter mobile application)
-  - ios-app/lib/screens/watchlist_screen.dart (292 lines; Flutter mobile application)
+  - ios-app/lib/screens/scanner_screen.dart (1436 lines; Flutter mobile application)
+  - ios-app/lib/screens/watchlist_screen.dart (287 lines; Flutter mobile application)
   - ios-app/lib/services/api_service.dart (1006 lines; Flutter mobile application)
   - ios-app/lib/services/background_task_service.dart (25 lines; Flutter mobile application)
-  - ios-app/lib/services/consent_service.dart (3 lines; Flutter mobile application)
-  - ios-app/lib/services/consent_service_mobile.dart (53 lines; Flutter mobile application)
-  - ios-app/lib/services/consent_service_web.dart (8 lines; Flutter mobile application)
-  - ios-app/lib/services/interstitial_ad_service.dart (3 lines; Flutter mobile application)
-  - ios-app/lib/services/interstitial_ad_service_mobile.dart (75 lines; Flutter mobile application)
-  - ios-app/lib/services/interstitial_ad_service_web.dart (8 lines; Flutter mobile application)
   - ios-app/lib/services/notification_service.dart (223 lines; Flutter mobile application)
   - ios-app/lib/services/provider_key_store.dart (48 lines; Flutter mobile application)
   - ios-app/lib/services/quant_lab_store.dart (65 lines; Flutter mobile application)
   - ios-app/lib/services/session_store.dart (36 lines; Flutter mobile application)
   - ios-app/lib/services/widget_service.dart (27 lines; Flutter mobile application)
-  - ios-app/lib/widgets/adaptive_banner.dart (3 lines; Flutter mobile application)
-  - ios-app/lib/widgets/adaptive_banner_mobile.dart (72 lines; Flutter mobile application)
-  - ios-app/lib/widgets/adaptive_banner_web.dart (24 lines; Flutter mobile application)
   - ios-app/lib/widgets/common.dart (163 lines; Flutter mobile application)
   - ios-app/lib/widgets/glass.dart (201 lines; Flutter mobile application)
+  - ios-app/lib/widgets/subscription_comparison.dart (377 lines; Flutter mobile application)
   - ios-app/lib/widgets/tradingview_chart.dart (3 lines; Flutter mobile application)
   - ios-app/lib/widgets/tradingview_chart_mobile.dart (158 lines; Flutter mobile application)
   - ios-app/lib/widgets/tradingview_chart_web.dart (47 lines; Flutter mobile application)
   - ios-app/prepare_ios_project.sh (27 lines; Mobile application configuration or operator asset)
-  - ios-app/pubspec.lock (667 lines; Mobile application configuration or operator asset)
-  - ios-app/pubspec.yaml (31 lines; Mobile application configuration or operator asset)
-  - ios-app/test/oryntra_palette_test.dart (124 lines; Mobile application configuration or operator asset)
+  - ios-app/pubspec.lock (659 lines; Mobile application configuration or operator asset)
+  - ios-app/pubspec.yaml (30 lines; Mobile application configuration or operator asset)
+  - ios-app/test/oryntra_palette_test.dart (128 lines; Mobile application configuration or operator asset)
   - ios-app/test/quant_lab_store_test.dart (27 lines; Mobile application configuration or operator asset)
   - ios-app/web/favicon.png (1,684 bytes; Mobile application configuration or operator asset)
   - ios-app/web/flutter_bootstrap.js (12 lines; Mobile application configuration or operator asset)
@@ -369,7 +362,7 @@ INCLUDED FILES
   - ios-app/web/icons/Icon-512.png (192,070 bytes; Mobile or web application asset)
   - ios-app/web/index.html (55 lines; Mobile application configuration or operator asset)
   - ios-app/web/manifest.json (23 lines; Mobile application configuration or operator asset)
-  - server/.env.example (94 lines; Server configuration or operator asset)
+  - server/.env.example (104 lines; Server configuration or operator asset)
   - server/BACKFILL_MARKET_DATA_MAC.command (12 lines; Server configuration or operator asset)
   - server/CHECK_MARKET_CACHE_MAC.command (11 lines; Server configuration or operator asset)
   - server/QUANT_LAB.md (199 lines; Server configuration or operator asset)
@@ -382,17 +375,17 @@ INCLUDED FILES
   - server/backend/analysis_access.py (226 lines; Backend service or research engine)
   - server/backend/backtest.py (608 lines; Backend service or research engine)
   - server/backend/corporate_repository.py (353 lines; Backend service or research engine)
-  - server/backend/database.py (1422 lines; Backend service or research engine)
+  - server/backend/database.py (1459 lines; Backend service or research engine)
   - server/backend/documented_beta_counts.py (29 lines; Backend service or research engine)
   - server/backend/fetcher.py (65 lines; Backend service or research engine)
   - server/backend/indicators.py (480 lines; Backend service or research engine)
   - server/backend/internal_access.py (35 lines; Backend service or research engine)
   - server/backend/lab_grading.py (63 lines; Backend service or research engine)
   - server/backend/legal_operator.py (49 lines; Backend service or research engine)
-  - server/backend/main.py (348 lines; Backend service or research engine)
+  - server/backend/main.py (235 lines; Backend service or research engine)
   - server/backend/market_cache.py (559 lines; Backend service or research engine)
   - server/backend/market_repository.py (850 lines; Backend service or research engine)
-  - server/backend/minerva.py (102 lines; Backend service or research engine)
+  - server/backend/minerva.py (149 lines; Backend service or research engine)
   - server/backend/minerva_corporate.py (59 lines; Backend service or research engine)
   - server/backend/model_access.py (18 lines; Backend service or research engine)
   - server/backend/pattern_analyzer.py (1175 lines; Backend service or research engine)
@@ -408,7 +401,7 @@ INCLUDED FILES
   - server/backend/patterns/structure_patterns.py (128 lines; Deterministic pattern analysis)
   - server/backend/patterns/utils.py (128 lines; Deterministic pattern analysis)
   - server/backend/polygon_client.py (185 lines; Backend service or research engine)
-  - server/backend/portfolio_execution.py (238 lines; Backend service or research engine)
+  - server/backend/portfolio_execution.py (252 lines; Backend service or research engine)
   - server/backend/provider_credentials.py (163 lines; Backend service or research engine)
   - server/backend/public_payload.py (139 lines; Backend service or research engine)
   - server/backend/quant_experiments.py (107 lines; Backend service or research engine)
@@ -421,8 +414,9 @@ INCLUDED FILES
   - server/backend/routes/__init__.py (2 lines; HTTP API route)
   - server/backend/routes/ai_explain.py (236 lines; HTTP API route)
   - server/backend/routes/analysis.py (487 lines; HTTP API route)
-  - server/backend/routes/auth.py (744 lines; HTTP API route)
+  - server/backend/routes/auth.py (791 lines; HTTP API route)
   - server/backend/routes/backtest.py (68 lines; HTTP API route)
+  - server/backend/routes/cqc_entitlements.py (102 lines; HTTP API route)
   - server/backend/routes/debug_access.py (148 lines; HTTP API route)
   - server/backend/routes/dev_tools.py (420 lines; HTTP API route)
   - server/backend/routes/intelligence.py (210 lines; HTTP API route)
@@ -438,16 +432,17 @@ INCLUDED FILES
   - server/backend/setup_detector.py (1315 lines; Backend service or research engine)
   - server/backend/trade_scorer.py (515 lines; Backend service or research engine)
   - server/backend/twelvedata_client.py (156 lines; Backend service or research engine)
-  - server/backend/universal_engine.py (384 lines; Backend service or research engine)
+  - server/backend/universal_engine.py (412 lines; Backend service or research engine)
   - server/backend/universal_fundamentals.py (113 lines; Backend service or research engine)
-  - server/backend/universal_learning.py (251 lines; Backend service or research engine)
+  - server/backend/universal_learning.py (270 lines; Backend service or research engine)
   - server/backend/universal_market_context.py (260 lines; Backend service or research engine)
   - server/backend/universal_peer_shock.py (50 lines; Backend service or research engine)
   - server/backend/universal_position_policy.py (221 lines; Backend service or research engine)
-  - server/backend/universal_research.py (163 lines; Backend service or research engine)
+  - server/backend/universal_research.py (170 lines; Backend service or research engine)
   - server/backend/universal_research_blueprint.py (87 lines; Backend service or research engine)
+  - server/backend/universal_risk_supervisor.py (259 lines; Backend service or research engine)
   - server/backend/universal_taxonomy.py (175 lines; Backend service or research engine)
-  - server/backend/universal_yearly_protocol.py (181 lines; Backend service or research engine)
+  - server/backend/universal_yearly_protocol.py (192 lines; Backend service or research engine)
   - server/backend/universe_selection.py (158 lines; Backend service or research engine)
   - server/backend/v8_engine.py (468 lines; Backend service or research engine)
   - server/backend/vai2_model.py (641 lines; Backend service or research engine)
@@ -457,7 +452,7 @@ INCLUDED FILES
   - server/examples/minerva_v1_baseline.json (24 lines; Server configuration or operator asset)
   - server/examples/quant_strategy_manifest.example.json (27 lines; Server configuration or operator asset)
   - server/examples/universal_study_manifest.json (138 lines; Server configuration or operator asset)
-  - server/frontend/index.html (194 lines; Browser application structure)
+  - server/frontend/index.html (200 lines; Browser application structure)
   - server/frontend/legal/contact.html (11 lines; Legal and policy surface)
   - server/frontend/legal/contact_canonical.html (2 lines; Legal and policy surface)
   - server/frontend/legal/methodology.html (16 lines; Legal and policy surface)
@@ -476,7 +471,7 @@ INCLUDED FILES
   - server/frontend/legal/terms_canonical.html (2 lines; Legal and policy surface)
   - server/frontend/legal/terms_v1_1.html (2 lines; Legal and policy surface)
   - server/frontend/static/css/main.css (3720 lines; Browser presentation or client behaviour)
-  - server/frontend/static/css/refined.css (721 lines; Browser presentation or client behaviour)
+  - server/frontend/static/css/refined.css (723 lines; Browser presentation or client behaviour)
   - server/frontend/static/img/favicon.ico (64,167 bytes; Browser presentation or client behaviour)
   - server/frontend/static/img/github-pfp.jpg (33,242 bytes; Browser presentation or client behaviour)
   - server/frontend/static/img/oryntra-apple-touch-icon.png (24,412 bytes; Browser presentation or client behaviour)
@@ -491,7 +486,7 @@ INCLUDED FILES
   - server/frontend/static/img/oryntra-favicon-512.png (167,124 bytes; Browser presentation or client behaviour)
   - server/frontend/static/img/oryntra-favicon-64.png (3,977 bytes; Browser presentation or client behaviour)
   - server/frontend/static/img/oryntra-logo.png (167,124 bytes; Browser presentation or client behaviour)
-  - server/frontend/static/js/app.js (4125 lines; Browser presentation or client behaviour)
+  - server/frontend/static/js/app.js (4127 lines; Browser presentation or client behaviour)
   - server/frontend/static/js/theme-init.js (26 lines; Browser presentation or client behaviour)
   - server/maintenance_site/app.py (136 lines; Maintenance-mode application)
   - server/maintenance_site/index.html (76 lines; Maintenance-mode application)
@@ -507,14 +502,13 @@ INCLUDED FILES
   - server/oryntra.code-workspace (97 lines; Server configuration or operator asset)
   - server/requirements.txt (13 lines; Server configuration or operator asset)
   - server/run.py (55 lines; Server configuration or operator asset)
-  - server/shared/ad_slots.json (49 lines; Server configuration or operator asset)
   - server/tests/conftest.py (10 lines; Automated regression test)
-  - server/tests/test_ads_configuration.py (26 lines; Automated regression test)
   - server/tests/test_alpha_context.py (130 lines; Automated regression test)
   - server/tests/test_analysis_access_policy.py (83 lines; Automated regression test)
   - server/tests/test_auth_security.py (124 lines; Automated regression test)
   - server/tests/test_build_sec_cik_manifest.py (13 lines; Automated regression test)
   - server/tests/test_corporate_quant_system.py (84 lines; Automated regression test)
+  - server/tests/test_cqc_entitlements.py (69 lines; Automated regression test)
   - server/tests/test_debug_access.py (60 lines; Automated regression test)
   - server/tests/test_dev_tools_jobs.py (118 lines; Automated regression test)
   - server/tests/test_fetch_sec_companyfacts.py (16 lines; Automated regression test)
@@ -537,7 +531,8 @@ INCLUDED FILES
   - server/tests/test_scanner_result_rendering.py (28 lines; Automated regression test)
   - server/tests/test_sec_companyfacts.py (64 lines; Automated regression test)
   - server/tests/test_universal_engine.py (787 lines; Automated regression test)
-  - server/tests/test_universal_yearly_protocol.py (91 lines; Automated regression test)
+  - server/tests/test_universal_risk_supervisor.py (216 lines; Automated regression test)
+  - server/tests/test_universal_yearly_protocol.py (92 lines; Automated regression test)
   - server/tests/test_universe_selection.py (49 lines; Automated regression test)
   - server/tests/test_v8_engine.py (100 lines; Automated regression test)
   - server/tests/test_vai2_leakage_controls.py (42 lines; Automated regression test)
@@ -546,11 +541,12 @@ INCLUDED FILES
   - server/tools/audit_tba2_negative_drivers.py (48 lines; Operator or research utility)
   - server/tools/audit_v7_bias.py (244 lines; Operator or research utility)
   - server/tools/build_sec_cik_manifest.py (66 lines; Operator or research utility)
+  - server/tools/build_tba_paired_panel.py (118 lines; Operator or research utility)
   - server/tools/build_universal_taxonomy.py (177 lines; Operator or research utility)
   - server/tools/cache_guard.py (95 lines; Operator or research utility)
   - server/tools/check_cache_status.py (9 lines; Operator or research utility)
   - server/tools/fetch_sec_companyfacts.py (90 lines; Operator or research utility)
-  - server/tools/generate_master_docs.py (848 lines; Operator or research utility)
+  - server/tools/generate_master_docs.py (843 lines; Operator or research utility)
   - server/tools/market_cache_cli.py (92 lines; Operator or research utility)
   - server/tools/normalize_sec_companyfacts.py (32 lines; Operator or research utility)
   - server/tools/normalize_sec_companyfacts_batch.py (50 lines; Operator or research utility)
@@ -558,8 +554,10 @@ INCLUDED FILES
   - server/tools/run_pattern_lab_cli.py (101 lines; Operator or research utility)
   - server/tools/run_quant_experiment_cli.py (54 lines; Operator or research utility)
   - server/tools/run_seeded_yearly_universal_study.py (80 lines; Operator or research utility)
-  - server/tools/run_tba2_risk_ablation.py (85 lines; Operator or research utility)
+  - server/tools/run_tba2_risk_ablation.py (133 lines; Operator or research utility)
   - server/tools/run_tba2_risk_component_ablation.py (132 lines; Operator or research utility)
+  - server/tools/run_tba_paired_risk_study.py (182 lines; Operator or research utility)
+  - server/tools/run_tba_risk_component_study.py (123 lines; Operator or research utility)
   - server/tools/run_universal_study.py (149 lines; Operator or research utility)
   - server/tools/seed_app_review_account.py (56 lines; Operator or research utility)
   - server/tools/summarize_tba2_component_ablations.py (48 lines; Operator or research utility)
@@ -575,17 +573,10 @@ The following names were found in safe source/configuration files. Values are in
 omitted. Keep populated environment files and service credentials out of source control and
 out of public documentation.
 
-  - ADMOB_ANDROID_APP_ID
-  - ADMOB_IOS_APP_ID
-  - ADSENSE_AUTO_ADS_ENABLED
-  - ADSENSE_CLIENT_ID
-  - ADSENSE_HEAD
-  - ADSENSE_PUBLISHER_ID
-  - ADSENSE_SITE_URL
-  - ADSENSE_SLOT
-  - ADSENSE_VERIFY_ENABLED
   - APP_REVIEW_EMAIL
   - APP_REVIEW_PASSWORD
+  - CQC_ENTITLEMENT_MAX_CLOCK_SKEW_SECONDS
+  - CQC_ENTITLEMENT_SHARED_SECRET
   - ORYNTRA_ALLOW_MANUAL_BETA_SUBSCRIPTIONS
   - ORYNTRA_ANALYSIS_CACHE_MAX_ITEMS
   - ORYNTRA_ANALYSIS_RESULT_TTL
@@ -674,7 +665,6 @@ out of public documentation.
   - TWELVEDATA_API_KEY
   - TWELVEDATA_BASE_URL
   - TWELVE_DATA_BASE_URL
-  - WEB_ADS_ENABLED
 
 
 ========================================================================================
@@ -690,7 +680,7 @@ control. It is part of the repository's privacy and deployment-safety boundary.
 
 
 [LICENSE]
-Classification: Repository asset. Source size: 99 lines.
+Classification: Repository asset. Source size: 101 lines.
 
 The license establishes the repository's permitted reuse terms. It is a legal artifact rather
 than an application component, so any change requires a deliberate licensing decision instead
@@ -735,17 +725,32 @@ of the product's operating contract: revise it when the corresponding user-visib
 operational behaviour changes, not merely to make it sound more complete.
 
 
-[docs/DEFERRED_RESEARCH_IDEAS.md]
-Classification: Product or technical documentation. Source size: 49 lines.
+[docs/CQC_MAX_ENTITLEMENT_AND_APP_REVIEW_NOTES.md]
+Classification: Product or technical documentation. Source size: 75 lines.
 
-Its substantive sections are Deferred Research Ideas, Fundamental- and event-aware systematic
-equity sleeve, Conditions before any build, Naming. This document is part of the product's
+Its substantive sections are CQC Max entitlement boundary and App Review Notes, Product
+boundary, Current Oryntra implementation, What must happen before Rule Mirror unlocks CQC Max,
+Deployment configuration, App Review Notes — CQC Max. This document is part of the product's
 operating contract: revise it when the corresponding user-visible or operational behaviour
 changes, not merely to make it sound more complete.
 
 
+[docs/DEFERRED_RESEARCH_IDEAS.md]
+Classification: Product or technical documentation. Source size: 2115 lines.
+
+Its substantive sections are Deferred Research Ideas, Fundamental- and event-aware systematic
+equity sleeve, Conditions before any build, Naming, Institutional techniques to investigate
+next, 1. Risk-budgeted signal blending, 2. Hierarchical risk parity as a construction
+comparator, 3. Factor-neutral residual construction, 4. Forecast-combination weights with
+uncertainty penalties, 5. Liquidity-aware alpha decay, 6. Scenario-conditioned risk limits, 7.
+Tail dependence and conditional correlation, 8. Capacity-aware portfolio turnover budgets, 9.
+Online drift and model retirement triggers, and additional private helpers. This document is
+part of the product's operating contract: revise it when the corresponding user-visible or
+operational behaviour changes, not merely to make it sound more complete.
+
+
 [docs/FEATURES_MODELS_AND_ARCHITECTURE.md]
-Classification: Product or technical documentation. Source size: 361 lines.
+Classification: Product or technical documentation. Source size: 359 lines.
 
 Its substantive sections are Oryntra AI: Features, Models, and Architecture, 1. Product
 boundary, 2. Product surfaces and availability, 3. Model naming: what each model actually is,
@@ -791,7 +796,7 @@ make it sound more complete.
 
 
 [docs/ORYNTRA_RESEARCH_GOOD_FINDS.txt]
-Classification: Product or technical documentation. Source size: 534 lines.
+Classification: Product or technical documentation. Source size: 1981 lines.
 
 This supporting file belongs to the product or technical documentation layer. Its role is
 bounded by the adjacent source and configuration files; a change should be evaluated in the
@@ -808,17 +813,36 @@ behavior changes.
 
 
 [docs/QUANT_MODEL_VALIDATION_LOG.md]
-Classification: Product or technical documentation. Source size: 187 lines.
+Classification: Product or technical documentation. Source size: 271 lines.
 
-Its substantive sections are Quant Lab model-validation log, 2026-09-12 — Universal V2 native
-and open-source learner review: no promotion, 2026-09-05 — V1.1 long-only trend/momentum
-research, Fixed candidate, Selection discipline, Results, Interpretation and limits,
-2026-09-05 — Existing long/short price-profile comparison, 2026-09-05 — Ten-year ETF audit of
-V1.1 long-only trend/momentum, Frozen audit, Results, Measurement boundaries, Next step,
-2026-09-05 — V1.2 defensive-sleeve repair: rejected on fresh confirmation basket, and
-additional private helpers. This document is part of the product's operating contract: revise
-it when the corresponding user-visible or operational behaviour changes, not merely to make it
-sound more complete.
+Its substantive sections are Quant Lab model-validation log, 2026-09-13 — TBA 8 broad 350-name
+robustness study, 2026-09-13 — TBA 8 integrated forecast-confidence and capacity candidate,
+2026-09-13 — TBA risk supervisor implementation: awaiting frozen OOS panel, 2026-09-12 —
+Universal V2 native and open-source learner review: no promotion, 2026-09-05 — V1.1 long-only
+trend/momentum research, Fixed candidate, Selection discipline, Results, Interpretation and
+limits, 2026-09-05 — Existing long/short price-profile comparison, 2026-09-05 — Ten-year ETF
+audit of V1.1 long-only trend/momentum, Frozen audit, Results, and additional private helpers.
+This document is part of the product's operating contract: revise it when the corresponding
+user-visible or operational behaviour changes, not merely to make it sound more complete.
+
+
+[docs/TBA_RISK_PAIRED_RESULTS_2026-09-13.json]
+Classification: Product or technical documentation. Source size: 45 lines.
+
+Its top-level configuration keys are status, panel, development, confirmation, decision,
+rejected_defaults. These values are declarative inputs for the associated client, asset
+catalog, or shared configuration surface.
+
+Top-level object keys: status, panel, development, confirmation, decision, rejected_defaults.
+
+
+[docs/TBA_RISK_SUPERVISOR.md]
+Classification: Product or technical documentation. Source size: 153 lines.
+
+Its substantive sections are TBA quantitative risk supervisor, Why this exists, Controls,
+Model scope, TBA 8 integrated decision layer, Out-of-sample gate, Public research basis. This
+document is part of the product's operating contract: revise it when the corresponding user-
+visible or operational behaviour changes, not merely to make it sound more complete.
 
 
 [docs/UNIVERSAL_V2_BACKEND.md]
@@ -862,17 +886,10 @@ HTML, Flutter, iOS asset-catalog, or branding contract.
 
 
 [ios-app/build_ipa.sh]
-Classification: Mobile application configuration or operator asset. Source size: 16 lines.
+Classification: Mobile application configuration or operator asset. Source size: 15 lines.
 
 This release helper cleans the Flutter project, restores packages and CocoaPods, builds the
 iOS release, and creates the Xcode archive/export path for App Store delivery.
-
-
-[ios-app/configure_admob.sh]
-Classification: Mobile application configuration or operator asset. Source size: 39 lines.
-
-This helper validates and inserts the configured AdMob application identifier into the iOS
-Runner property list.
 
 
 [ios-app/configure_widget_target.rb]
@@ -941,13 +958,13 @@ and post-install settings.
 
 
 [ios-app/ios/Podfile.lock]
-Classification: Native iOS integration or build configuration. Source size: 62 lines.
+Classification: Native iOS integration or build configuration. Source size: 44 lines.
 
 This lockfile records the exact native iOS pod graph used by the Flutter project.
 
 
 [ios-app/ios/Runner.xcodeproj/project.pbxproj]
-Classification: Native iOS integration or build configuration. Source size: 603 lines.
+Classification: Native iOS integration or build configuration. Source size: 588 lines.
 
 This is the Xcode project graph for Runner and OryntraWidget targets, files, phases, signing,
 app groups, versions, and build settings.
@@ -1174,13 +1191,13 @@ This generated header declares Flutter plugin registration for Runner.
 
 
 [ios-app/ios/Runner/GeneratedPluginRegistrant.m]
-Classification: Native iOS integration or build configuration. Source size: 50 lines.
+Classification: Native iOS integration or build configuration. Source size: 43 lines.
 
 This generated implementation registers the iOS plugins used by the Flutter application.
 
 
 [ios-app/ios/Runner/Info.plist]
-Classification: Native iOS integration or build configuration. Source size: 81 lines.
+Classification: Native iOS integration or build configuration. Source size: 79 lines.
 
 This property list declares app or widget identity, capabilities, URL schemes, background
 modes, permission strings, and extension metadata for its target.
@@ -1207,7 +1224,7 @@ the app.
 
 
 [ios-app/lib/app_config.dart]
-Classification: Flutter mobile application. Source size: 82 lines.
+Classification: Flutter mobile application. Source size: 31 lines.
 
 This file centralizes Flutter application configuration, including the server endpoint
 selection used by the mobile client. Keeping that decision in one place prevents individual
@@ -1220,7 +1237,7 @@ Class inventory:
 
 
 [ios-app/lib/main.dart]
-Classification: Flutter mobile application. Source size: 479 lines.
+Classification: Flutter mobile application. Source size: 474 lines.
 
 This is the Flutter client’s application shell. It composes navigation and high-level page
 state while coordinating backend access through the client services. It should be validated as
@@ -1229,7 +1246,7 @@ a mobile application rather than assumed correct because the web client works.
 Dart imports: package:flutter/material.dart, package:flutter/services.dart, app_config.dart,
 screens/account_screen.dart, screens/auth_gate_screen.dart, screens/paper_screen.dart,
 screens/quant_lab_screen.dart, screens/scanner_screen.dart, screens/watchlist_screen.dart,
-services/api_service.dart, services/consent_service.dart, services/notification_service.dart,
+services/api_service.dart, services/notification_service.dart,
 services/provider_key_store.dart, services/widget_service.dart, widgets/glass.dart
 
 Class inventory:
@@ -1254,7 +1271,7 @@ Function inventory:
 
 
 [ios-app/lib/screens/account_screen.dart]
-Classification: Flutter mobile application. Source size: 838 lines.
+Classification: Flutter mobile application. Source size: 854 lines.
 
 This Flutter screen presents identity, subscription, analysis-access, provider settings,
 notification preferences, tracked-symbol alerts, stored Quant Lab reports, policy links, and
@@ -1263,9 +1280,9 @@ loading, empty, error, and signed-out behavior rather than assuming that a succe
 interaction proves the mobile flow is complete.
 
 Dart imports: package:flutter/material.dart, package:url_launcher/url_launcher.dart,
-../app_config.dart, ../services/api_service.dart, ../services/consent_service.dart,
-../services/notification_service.dart, ../services/quant_lab_store.dart,
-../widgets/common.dart, ../widgets/glass.dart
+../app_config.dart, ../services/api_service.dart, ../services/notification_service.dart,
+../services/quant_lab_store.dart, ../widgets/common.dart, ../widgets/glass.dart,
+../widgets/subscription_comparison.dart
 
 Class inventory:
   - AccountScreen
@@ -1289,6 +1306,7 @@ Function inventory:
   - _open(String url)
   - _showAuth({bool create = false})
   - showCreateAccount()
+  - _showMembershipComparison()
   - refreshNotificationSettings()
   - _deleteAccount()
   - _removeMarketAlert(String ticker)
@@ -1340,7 +1358,7 @@ Function inventory:
 
 
 [ios-app/lib/screens/paper_screen.dart]
-Classification: Flutter mobile application. Source size: 875 lines.
+Classification: Flutter mobile application. Source size: 870 lines.
 
 This Flutter screen presents simulated-trade records and paper-performance presentation. It
 should treat server responses as untrusted remote state, preserving loading, empty, error, and
@@ -1348,7 +1366,7 @@ signed-out behavior rather than assuming that a successful desktop interaction p
 mobile flow is complete.
 
 Dart imports: package:flutter/material.dart, ../services/api_service.dart,
-../widgets/adaptive_banner.dart, ../widgets/common.dart, ../widgets/glass.dart
+../widgets/common.dart, ../widgets/glass.dart
 
 Class inventory:
   - PaperScreen
@@ -1418,7 +1436,7 @@ Function inventory:
 
 
 [ios-app/lib/screens/scanner_screen.dart]
-Classification: Flutter mobile application. Source size: 1446 lines.
+Classification: Flutter mobile application. Source size: 1436 lines.
 
 This Flutter screen presents symbol analysis, scanner results, and their loading/error states.
 It should treat server responses as untrusted remote state, preserving loading, empty, error,
@@ -1426,9 +1444,8 @@ and signed-out behavior rather than assuming that a successful desktop interacti
 mobile flow is complete.
 
 Dart imports: package:flutter/material.dart, package:url_launcher/url_launcher.dart,
-../app_config.dart, ../services/api_service.dart, ../services/interstitial_ad_service.dart,
-../services/notification_service.dart, ../services/widget_service.dart,
-../widgets/adaptive_banner.dart, ../widgets/common.dart, ../widgets/glass.dart,
+../app_config.dart, ../services/api_service.dart, ../services/notification_service.dart,
+../services/widget_service.dart, ../widgets/common.dart, ../widgets/glass.dart,
 ../widgets/tradingview_chart.dart
 
 Class inventory:
@@ -1473,7 +1490,7 @@ Function inventory:
 
 
 [ios-app/lib/screens/watchlist_screen.dart]
-Classification: Flutter mobile application. Source size: 292 lines.
+Classification: Flutter mobile application. Source size: 287 lines.
 
 This Flutter screen presents saved-symbol management and its account-scoped empty states. It
 should treat server responses as untrusted remote state, preserving loading, empty, error, and
@@ -1481,7 +1498,7 @@ signed-out behavior rather than assuming that a successful desktop interaction p
 mobile flow is complete.
 
 Dart imports: package:flutter/material.dart, ../services/api_service.dart,
-../widgets/adaptive_banner.dart, ../widgets/common.dart
+../widgets/common.dart
 
 Class inventory:
   - WatchlistScreen
@@ -1552,101 +1569,6 @@ Class inventory:
 Function inventory:
   - beginQuantLabRun()
   - endQuantLabRun()
-
-
-[ios-app/lib/services/consent_service.dart]
-Classification: Flutter mobile application. Source size: 3 lines.
-
-This service implements the platform-neutral consent interface. Keeping this work behind a
-service boundary lets screens remain focused on presentation and makes platform-specific
-behavior explicit; any change needs both a Flutter check and the relevant device or browser
-test.
-
-No simple Dart class/function inventory was detected; inspect this configuration or
-declarative source directly.
-
-
-[ios-app/lib/services/consent_service_mobile.dart]
-Classification: Flutter mobile application. Source size: 53 lines.
-
-This service implements mobile-platform consent behavior. Keeping this work behind a service
-boundary lets screens remain focused on presentation and makes platform-specific behavior
-explicit; any change needs both a Flutter check and the relevant device or browser test.
-
-Dart imports: dart:async, package:google_mobile_ads/google_mobile_ads.dart
-
-Class inventory:
-  - ConsentService
-
-Function inventory:
-  - gatherConsentAndInitializeAds()
-  - privacyOptionsRequired()
-  - showPrivacyOptions()
-
-
-[ios-app/lib/services/consent_service_web.dart]
-Classification: Flutter mobile application. Source size: 8 lines.
-
-This service implements web-platform consent behavior. Keeping this work behind a service
-boundary lets screens remain focused on presentation and makes platform-specific behavior
-explicit; any change needs both a Flutter check and the relevant device or browser test.
-
-Class inventory:
-  - ConsentService
-
-Function inventory:
-  - gatherConsentAndInitializeAds()
-  - privacyOptionsRequired()
-  - showPrivacyOptions()
-
-
-[ios-app/lib/services/interstitial_ad_service.dart]
-Classification: Flutter mobile application. Source size: 3 lines.
-
-This service implements the platform-neutral interstitial-ad interface. Keeping this work
-behind a service boundary lets screens remain focused on presentation and makes platform-
-specific behavior explicit; any change needs both a Flutter check and the relevant device or
-browser test.
-
-No simple Dart class/function inventory was detected; inspect this configuration or
-declarative source directly.
-
-
-[ios-app/lib/services/interstitial_ad_service_mobile.dart]
-Classification: Flutter mobile application. Source size: 75 lines.
-
-This service implements mobile interstitial-ad lifecycle behavior. Keeping this work behind a
-service boundary lets screens remain focused on presentation and makes platform-specific
-behavior explicit; any change needs both a Flutter check and the relevant device or browser
-test.
-
-Dart imports: dart:async, package:google_mobile_ads/google_mobile_ads.dart, ../app_config.dart
-
-Class inventory:
-  - InterstitialAdService
-
-Function inventory:
-  - initialize()
-  - recordSuccessfulScan()
-  - _load()
-  - dispose()
-
-
-[ios-app/lib/services/interstitial_ad_service_web.dart]
-Classification: Flutter mobile application. Source size: 8 lines.
-
-This service implements the no-native-ad web implementation. Keeping this work behind a
-service boundary lets screens remain focused on presentation and makes platform-specific
-behavior explicit; any change needs both a Flutter check and the relevant device or browser
-test.
-
-Class inventory:
-  - InterstitialAdService
-
-Function inventory:
-  - initialize()
-  - recordSuccessfulScan()
-  - dispose()
 
 
 [ios-app/lib/services/notification_service.dart]
@@ -1766,53 +1688,6 @@ Function inventory:
   })
 
 
-[ios-app/lib/widgets/adaptive_banner.dart]
-Classification: Flutter mobile application. Source size: 3 lines.
-
-This Flutter widget provides the platform-neutral banner-ad widget contract. Its success is
-visual and behavioral: it must preserve layout, accessibility, lifecycle safety, and the
-correct empty or unavailable state on the platforms where it is used.
-
-No simple Dart class/function inventory was detected; inspect this configuration or
-declarative source directly.
-
-
-[ios-app/lib/widgets/adaptive_banner_mobile.dart]
-Classification: Flutter mobile application. Source size: 72 lines.
-
-This Flutter widget provides the mobile banner-ad implementation. Its success is visual and
-behavioral: it must preserve layout, accessibility, lifecycle safety, and the correct empty or
-unavailable state on the platforms where it is used.
-
-Dart imports: package:flutter/material.dart, package:google_mobile_ads/google_mobile_ads.dart,
-../app_config.dart
-
-Class inventory:
-  - AdaptiveBanner
-  - _AdaptiveBannerState
-
-Function inventory:
-  - _load(int width)
-  - build(BuildContext context)
-  - dispose()
-
-
-[ios-app/lib/widgets/adaptive_banner_web.dart]
-Classification: Flutter mobile application. Source size: 24 lines.
-
-This Flutter widget provides the web fallback or web-specific banner treatment. Its success is
-visual and behavioral: it must preserve layout, accessibility, lifecycle safety, and the
-correct empty or unavailable state on the platforms where it is used.
-
-Dart imports: package:flutter/material.dart
-
-Class inventory:
-  - AdaptiveBanner
-
-Function inventory:
-  - build(BuildContext context)
-
-
 [ios-app/lib/widgets/common.dart]
 Classification: Flutter mobile application. Source size: 163 lines.
 
@@ -1854,6 +1729,30 @@ Class inventory:
 Function inventory:
   - of(BuildContext context)
   - build(BuildContext context)
+  - build(BuildContext context)
+
+
+[ios-app/lib/widgets/subscription_comparison.dart]
+Classification: Flutter mobile application. Source size: 377 lines.
+
+This Flutter widget provides the subscription comparison reusable visual component. Its
+success is visual and behavioral: it must preserve layout, accessibility, lifecycle safety,
+and the correct empty or unavailable state on the platforms where it is used.
+
+Dart imports: package:flutter/material.dart, ../app_config.dart, glass.dart
+
+Class inventory:
+  - SubscriptionComparisonSheet
+  - _PlanDetails
+  - _PlanCard
+  - _ComparisonFeature
+  - _FeatureRow
+
+Function inventory:
+  - _isCurrent(String code)
+  - build(BuildContext context)
+  - build(BuildContext context)
+  - _value(BuildContext context, String title, String value)
   - build(BuildContext context)
 
 
@@ -1913,31 +1812,30 @@ before the workspace is archived.
 
 
 [ios-app/pubspec.lock]
-Classification: Mobile application configuration or operator asset. Source size: 667 lines.
+Classification: Mobile application configuration or operator asset. Source size: 659 lines.
 
 This lockfile pins the resolved Dart/Flutter dependency graph for reproducible analysis,
 tests, and release builds.
 
 
 [ios-app/pubspec.yaml]
-Classification: Mobile application configuration or operator asset. Source size: 31 lines.
+Classification: Mobile application configuration or operator asset. Source size: 30 lines.
 
 This Flutter manifest declares the app version, SDK constraints, dependencies, bundled icon,
 and platform packages used by the client.
 
 
 [ios-app/test/oryntra_palette_test.dart]
-Classification: Mobile application configuration or operator asset. Source size: 124 lines.
+Classification: Mobile application configuration or operator asset. Source size: 128 lines.
 
 This Flutter test locks the product palette and semantic light/dark color relationships
 against accidental visual drift.
 
-Dart imports: package:flutter/foundation.dart, package:flutter/material.dart,
-package:flutter_test/flutter_test.dart, package:oryntra_ai/app_config.dart,
-package:oryntra_ai/screens/auth_gate_screen.dart,
+Dart imports: package:flutter/material.dart, package:flutter_test/flutter_test.dart,
+package:oryntra_ai/app_config.dart, package:oryntra_ai/screens/auth_gate_screen.dart,
 package:oryntra_ai/screens/quant_lab_screen.dart,
 package:oryntra_ai/services/api_service.dart, package:oryntra_ai/widgets/common.dart,
-package:oryntra_ai/widgets/glass.dart
+package:oryntra_ai/widgets/glass.dart, package:oryntra_ai/widgets/subscription_comparison.dart
 
 Function inventory:
   - main()
@@ -2012,7 +1910,7 @@ description, orientation, icons.
 
 
 [server/.env.example]
-Classification: Server configuration or operator asset. Source size: 94 lines.
+Classification: Server configuration or operator asset. Source size: 104 lines.
 
 This template records the names and broad purpose of runtime configuration without containing
 live values. It is the safe place to document optional provider, ads, authentication, or
@@ -2222,7 +2120,7 @@ Public code inventory:
 
 
 [server/backend/database.py]
-Classification: Backend service or research engine. Source size: 1422 lines.
+Classification: Backend service or research engine. Source size: 1459 lines.
 
 This is the durable-state boundary. It owns table setup and persistence operations for the
 application’s account, trade, analysis, cache, and research histories. It should be changed
@@ -2234,36 +2132,36 @@ Imports: __future__, datetime, json, math, os, pandas, sqlite3, typing
 Public code inventory:
   - function get_connection() (line 18)
   - function init_db() (line 32)
-  - function get_app_counter(key) (line 451)
-  - function increment_app_counter(key, amount) (line 464)
-  - function set_app_counter_min(key, minimum) (line 485)
-  - function store_ohlcv_bars(ticker, timeframe, hist, provider, adjusted) (line 506)
-  - function _period_cutoff_days(period) (line 567)
-  - function load_ohlcv_bars(ticker, timeframe, period) (line 581)
-  - function get_ohlcv_cache_summary(tickers, timeframe) (line 627)
-  - function get_ohlcv_cache_size_bytes() (line 657)
-  - function _maybe_int(value) (line 664)
-  - function set_market_cache_meta(key, value) (line 673)
-  - function get_market_cache_meta(key, default) (line 691)
-  - function get_successful_market_dates() (line 707)
-  - function mark_market_ingest_started(trading_date, endpoint) (line 718)
-  - function mark_market_ingest_failed(trading_date, error, status, rows_received, request_id) (line 742)
-  - function store_grouped_daily_bars(trading_date, results, provider, adjusted, request_id, minimum_rows) (line 780)
-  - function upsert_market_symbols(symbols, source) (line 900)
-  - function get_market_symbol(ticker) (line 959)
-  - function prune_ohlcv_before(cutoff_date) (line 971)
-  - function get_market_cache_status() (line 985)
-  - function store_pattern_events(ticker, timeframe, patterns) (line 1038)
-  - function evaluate_and_store_pattern_outcomes(ticker, timeframe, hist, patterns, horizons) (line 1102)
-  - function rebuild_pattern_stats(ticker, timeframe) (line 1214)
-  - function rebuild_pattern_stats.win_rate(h) (line 1250)
-  - function rebuild_pattern_stats.avg_ret(h) (line 1257)
-  - function get_pattern_stats(pattern_name, ticker, timeframe, limit) (line 1315)
-  - function get_recent_pattern_events(ticker, limit) (line 1343)
-  - function _iso_timestamp(value) (line 1370)
-  - function _maybe_float(value) (line 1379)
-  - function store_vai_training_run(status, samples, horizon_days, threshold, validation, terminal_output) (line 1388)
-  - function get_recent_vai_training_runs(limit) (line 1405)
+  - function get_app_counter(key) (line 488)
+  - function increment_app_counter(key, amount) (line 501)
+  - function set_app_counter_min(key, minimum) (line 522)
+  - function store_ohlcv_bars(ticker, timeframe, hist, provider, adjusted) (line 543)
+  - function _period_cutoff_days(period) (line 604)
+  - function load_ohlcv_bars(ticker, timeframe, period) (line 618)
+  - function get_ohlcv_cache_summary(tickers, timeframe) (line 664)
+  - function get_ohlcv_cache_size_bytes() (line 694)
+  - function _maybe_int(value) (line 701)
+  - function set_market_cache_meta(key, value) (line 710)
+  - function get_market_cache_meta(key, default) (line 728)
+  - function get_successful_market_dates() (line 744)
+  - function mark_market_ingest_started(trading_date, endpoint) (line 755)
+  - function mark_market_ingest_failed(trading_date, error, status, rows_received, request_id) (line 779)
+  - function store_grouped_daily_bars(trading_date, results, provider, adjusted, request_id, minimum_rows) (line 817)
+  - function upsert_market_symbols(symbols, source) (line 937)
+  - function get_market_symbol(ticker) (line 996)
+  - function prune_ohlcv_before(cutoff_date) (line 1008)
+  - function get_market_cache_status() (line 1022)
+  - function store_pattern_events(ticker, timeframe, patterns) (line 1075)
+  - function evaluate_and_store_pattern_outcomes(ticker, timeframe, hist, patterns, horizons) (line 1139)
+  - function rebuild_pattern_stats(ticker, timeframe) (line 1251)
+  - function rebuild_pattern_stats.win_rate(h) (line 1287)
+  - function rebuild_pattern_stats.avg_ret(h) (line 1294)
+  - function get_pattern_stats(pattern_name, ticker, timeframe, limit) (line 1352)
+  - function get_recent_pattern_events(ticker, limit) (line 1380)
+  - function _iso_timestamp(value) (line 1407)
+  - function _maybe_float(value) (line 1416)
+  - function store_vai_training_run(status, samples, horizon_days, threshold, validation, terminal_output) (line 1425)
+  - function get_recent_vai_training_runs(limit) (line 1442)
 
 
 [server/backend/documented_beta_counts.py]
@@ -2387,7 +2285,7 @@ Public code inventory:
 
 
 [server/backend/main.py]
-Classification: Backend service or research engine. Source size: 348 lines.
+Classification: Backend service or research engine. Source size: 235 lines.
 
 This is the server's composition root. It decides which routers exist in a given operating
 mode, protects frontend responses with no-cache headers, serves legal and static assets, and
@@ -2396,48 +2294,36 @@ make a private research feature visible, so changes should be followed by a star
 boundary check rather than a syntax check alone.
 
 Its declared HTTP boundary includes GET /, GET /legal/{page_name}, GET /health, GET
-/api/app/version, GET /api/app/stats, GET /api/app/market-cache, GET /api/app/ads, GET
-/api/app/ads/diagnostics, GET /ads.txt, GET /robots.txt, GET /sitemap.xml.
+/api/app/version, GET /api/app/stats, GET /api/app/market-cache, GET /robots.txt, GET
+/sitemap.xml.
 
 Imports: .database, .legal_operator, .market_cache, .routes, contextlib, fastapi,
 fastapi.middleware.cors, fastapi.middleware.gzip, fastapi.responses, fastapi.staticfiles,
-html, json, os, re, sqlite3
+json, os, sqlite3
 
 HTTP route decorators:
-  - line 221: app.get('/', include_in_schema=False) -> serve_frontend
-  - line 240: app.get('/legal/{page_name}', include_in_schema=False) -> serve_legal_page
-  - line 261: app.get('/health') -> health_check
-  - line 266: app.get('/api/app/version') -> app_version
-  - line 281: app.get('/api/app/stats') -> app_public_stats
-  - line 286: app.get('/api/app/market-cache') -> app_market_cache_status
-  - line 292: app.get('/api/app/ads') -> app_ads
-  - line 320: app.get('/api/app/ads/diagnostics') -> app_ads_diagnostics
-  - line 324: app.get('/ads.txt', include_in_schema=False) -> ads_txt
-  - line 332: app.get('/robots.txt', include_in_schema=False) -> robots_txt
-  - line 340: app.get('/sitemap.xml', include_in_schema=False) -> sitemap_xml
+  - line 148: app.get('/', include_in_schema=False) -> serve_frontend
+  - line 167: app.get('/legal/{page_name}', include_in_schema=False) -> serve_legal_page
+  - line 188: app.get('/health') -> health_check
+  - line 193: app.get('/api/app/version') -> app_version
+  - line 208: app.get('/api/app/stats') -> app_public_stats
+  - line 213: app.get('/api/app/market-cache') -> app_market_cache_status
+  - line 219: app.get('/robots.txt', include_in_schema=False) -> robots_txt
+  - line 227: app.get('/sitemap.xml', include_in_schema=False) -> sitemap_xml
 
 Public code inventory:
-  - function env_bool(name, default) (line 53)
-  - function ad_slot_env(prefix) (line 59)
-  - function adsense_client_id() (line 64)
-  - function adsense_publisher_id() (line 70)
-  - function public_site_url() (line 77)
-  - function adsense_head_markup() (line 80)
-  - function inject_adsense_head(html) (line 93)
-  - function ads_diagnostics() (line 101)
-  - async function lifespan(app) (line 126) [decorators: asynccontextmanager]
-  - async function oryntra_release_headers(request, call_next) (line 171) [decorators: app.middleware('http')]
-  - async function serve_frontend() (line 221) [decorators: app.get('/', include_in_schema=False)]
-  - async function serve_legal_page(page_name) (line 240) [decorators: app.get('/legal/{page_name}', include_in_schema=False)]
-  - async function health_check() (line 261) [decorators: app.get('/health')]
-  - async function app_version() (line 266) [decorators: app.get('/api/app/version')]
-  - async function app_public_stats() (line 281) [decorators: app.get('/api/app/stats')]
-  - async function app_market_cache_status() (line 286) [decorators: app.get('/api/app/market-cache')]
-  - async function app_ads() (line 292) [decorators: app.get('/api/app/ads')]
-  - async function app_ads_diagnostics() (line 320) [decorators: app.get('/api/app/ads/diagnostics')]
-  - async function ads_txt() (line 324) [decorators: app.get('/ads.txt', include_in_schema=False)]
-  - async function robots_txt() (line 332) [decorators: app.get('/robots.txt', include_in_schema=False)]
-  - async function sitemap_xml() (line 340) [decorators: app.get('/sitemap.xml', include_in_schema=False)]
+  - function env_bool(name, default) (line 41)
+  - function public_site_url() (line 47)
+  - async function lifespan(app) (line 52) [decorators: asynccontextmanager]
+  - async function oryntra_release_headers(request, call_next) (line 97) [decorators: app.middleware('http')]
+  - async function serve_frontend() (line 148) [decorators: app.get('/', include_in_schema=False)]
+  - async function serve_legal_page(page_name) (line 167) [decorators: app.get('/legal/{page_name}', include_in_schema=False)]
+  - async function health_check() (line 188) [decorators: app.get('/health')]
+  - async function app_version() (line 193) [decorators: app.get('/api/app/version')]
+  - async function app_public_stats() (line 208) [decorators: app.get('/api/app/stats')]
+  - async function app_market_cache_status() (line 213) [decorators: app.get('/api/app/market-cache')]
+  - async function robots_txt() (line 219) [decorators: app.get('/robots.txt', include_in_schema=False)]
+  - async function sitemap_xml() (line 227) [decorators: app.get('/sitemap.xml', include_in_schema=False)]
 
 
 [server/backend/market_cache.py]
@@ -2528,7 +2414,7 @@ Public code inventory:
 
 
 [server/backend/minerva.py]
-Classification: Backend service or research engine. Source size: 102 lines.
+Classification: Backend service or research engine. Source size: 149 lines.
 
 This supporting file belongs to the backend service or research engine layer. Its role is
 bounded by the adjacent source and configuration files; a change should be evaluated in the
@@ -2538,20 +2424,24 @@ Module statement: Minerva: a research-only Universal V2 candidate profile. The p
 frozen price-only baseline. Fundamental overlays remain zero until they have availability-
 dated records and pass a separate, predeclared evaluation; a name is not a release approval.
 
-Imports: .universal_engine, .universal_position_policy, __future__, dataclasses
+Imports: .universal_engine, .universal_institutional_decision, .universal_position_policy,
+.universal_risk_supervisor, __future__, dataclasses
 
 Public code inventory:
-  - function minerva_baseline(**overrides) (line 19) — Create the wider-universe price-only candidate from the frozen study.
-  - function minerva_residual_momentum_candidate(**overrides) (line 39) — Return the separate Minerva candidate with two market-residual horizons.
-  - function minerva_score_persistence_candidate(**overrides) (line 44) — Return a separate candidate that smooths successive causal ridge ranks.
-  - function minerva_economic_interactions_candidate(**overrides) (line 49) — Return the separate Minerva candidate with three named causal interactions.
-  - function tba1_ohlcv_structure_candidate(**overrides) (line 54) — TBA 1: Minerva risk construction with a compact OHLCV feature sleeve.
-  - function tba3_market_residual_target_candidate(**overrides) (line 59) — TBA 3: learn a forward return residualized by completed market beta.
-  - function tba4_completed_ic_gate_candidate(**overrides) (line 64) — TBA 4: trade only when completed trailing rank IC is nonnegative.
-  - function tba5_residual_momentum_candidate(**overrides) (line 69) — TBA 5: add completed 21/63-session stock-market residual momentum.
-  - function tba6_residual_lifecycle_candidate(**overrides) (line 74) — TBA 6: TBA 5 with the existing causal lifecycle policy enabled.
-  - function minerva_beta_ceiling_candidate(**overrides) (line 79) — Return a separate candidate that can scale down excess market beta to cash.
-  - function minerva_contract() (line 84)
+  - function minerva_baseline(**overrides) (line 21) — Create the wider-universe price-only candidate from the frozen study.
+  - function minerva_residual_momentum_candidate(**overrides) (line 41) — Return the separate Minerva candidate with two market-residual horizons.
+  - function minerva_score_persistence_candidate(**overrides) (line 46) — Return a separate candidate that smooths successive causal ridge ranks.
+  - function minerva_economic_interactions_candidate(**overrides) (line 51) — Return the separate Minerva candidate with three named causal interactions.
+  - function tba1_ohlcv_structure_candidate(**overrides) (line 56) — TBA 1: Minerva risk construction with a compact OHLCV feature sleeve.
+  - function tba2_qlib_risk_candidate(**overrides) (line 61) — TBA 2: portfolio construction for externally frozen Qlib scores.
+  - function tba3_market_residual_target_candidate(**overrides) (line 66) — TBA 3: learn a forward return residualized by completed market beta.
+  - function tba4_completed_ic_gate_candidate(**overrides) (line 71) — TBA 4: trade only when completed trailing rank IC is nonnegative.
+  - function tba5_residual_momentum_candidate(**overrides) (line 76) — TBA 5: add completed 21/63-session stock-market residual momentum.
+  - function tba6_residual_lifecycle_candidate(**overrides) (line 81) — TBA 6: TBA 5 with the existing causal lifecycle policy enabled.
+  - function tba8_institutional_risk_candidate(**overrides) (line 87) — TBA 8: persistent residual forecasts with causal confidence and capacity.
+  - function _tba_candidate(defaults, overrides) (line 107) — Apply the shared supervisor to TBA research without changing Minerva.
+  - function minerva_beta_ceiling_candidate(**overrides) (line 126) — Return a separate candidate that can scale down excess market beta to cash.
+  - function minerva_contract() (line 131)
 
 
 [server/backend/minerva_corporate.py]
@@ -2911,7 +2801,7 @@ Public code inventory:
 
 
 [server/backend/portfolio_execution.py]
-Classification: Backend service or research engine. Source size: 238 lines.
+Classification: Backend service or research engine. Source size: 252 lines.
 
 The Universal V2 ledger maintains actual simulated cash and shares. Prior-close targets
 transact at the next open, with two-sided costs, prior-dollar-volume fill ceilings, a no-trade
@@ -2921,11 +2811,12 @@ simulator.
 
 Module statement: Cash-funded long-only book with next-open fills, drift, costs and capacity.
 
-Imports: .universal_engine, .universal_position_policy, __future__, numpy, pandas
+Imports: .universal_engine, .universal_position_policy, .universal_risk_supervisor,
+__future__, numpy, pandas
 
 Public code inventory:
-  - function simulate_book(histories, targets, config, cash_returns, entry_allowed, policy_scores, policy_volatility) (line 17)
-  - function simulate_book.transact(j, notional, price, day, signal_date, reason) (line 80) — Cash/share ledger transaction; returns filled notional and fee.
+  - function simulate_book(histories, targets, config, cash_returns, entry_allowed, policy_scores, policy_volatility) (line 18)
+  - function simulate_book.transact(j, notional, price, day, signal_date, reason) (line 83) — Cash/share ledger transaction; returns filled notional and fee.
 
 
 [server/backend/provider_credentials.py]
@@ -3225,7 +3116,7 @@ Public code inventory:
 
 
 [server/backend/routes/auth.py]
-Classification: HTTP API route. Source size: 744 lines.
+Classification: HTTP API route. Source size: 791 lines.
 
 This route implements account and session flows for the browser client. It validates
 authentication requests and delegates durable identity work to the database layer; cookie,
@@ -3237,83 +3128,84 @@ Its declared HTTP boundary includes GET /oauth/providers, GET /oauth/{provider}/
 /logout, GET /me, GET /provider-credentials, PUT /provider-credentials, DELETE /provider-
 credentials/{provider}, DELETE /account, among other private operations.
 
-Imports: ..database, ..provider_credentials, __future__, base64,
+Imports: ..database, ..provider_credentials, .cqc_entitlements, __future__, base64,
 cryptography.hazmat.primitives, cryptography.hazmat.primitives.asymmetric, datetime, fastapi,
 fastapi.responses, hashlib, hmac, json, os, pydantic, secrets, time, typing, urllib.error,
 urllib.parse, urllib.request, zoneinfo
 
 HTTP route decorators:
-  - line 501: router.get('/oauth/providers') -> oauth_providers
-  - line 507: router.get('/oauth/{provider}/start') -> start_oauth
-  - line 533: router.get('/oauth/{provider}/callback', include_in_schema=False) -> oauth_callback_get
-  - line 543: router.post('/oauth/{provider}/callback', include_in_schema=False) -> oauth_callback_post
-  - line 553: router.post('/signup') -> signup
-  - line 594: router.post('/login') -> login
-  - line 628: router.post('/logout') -> logout
-  - line 642: router.get('/me') -> me
-  - line 657: router.get('/provider-credentials') -> get_provider_credentials
-  - line 666: router.put('/provider-credentials') -> put_provider_credential
-  - line 675: router.delete('/provider-credentials/{provider}') -> remove_provider_credential
-  - line 681: router.delete('/account') -> delete_account
-  - line 705: router.post('/subscribe') -> subscribe
+  - line 546: router.get('/oauth/providers') -> oauth_providers
+  - line 552: router.get('/oauth/{provider}/start') -> start_oauth
+  - line 578: router.get('/oauth/{provider}/callback', include_in_schema=False) -> oauth_callback_get
+  - line 588: router.post('/oauth/{provider}/callback', include_in_schema=False) -> oauth_callback_post
+  - line 598: router.post('/signup') -> signup
+  - line 640: router.post('/login') -> login
+  - line 675: router.post('/logout') -> logout
+  - line 689: router.get('/me') -> me
+  - line 704: router.get('/provider-credentials') -> get_provider_credentials
+  - line 713: router.put('/provider-credentials') -> put_provider_credential
+  - line 722: router.delete('/provider-credentials/{provider}') -> remove_provider_credential
+  - line 728: router.delete('/account') -> delete_account
+  - line 752: router.post('/subscribe') -> subscribe
 
 Public code inventory:
-  - class OAuthFlowError (line 61) — A safe, user-visible OAuth failure that never exposes provider tokens.
-  - class SignupRequest (line 65)
-  - function SignupRequest.valid_email(cls, v) (line 73) [decorators: field_validator('email'), classmethod]
-  - function SignupRequest.strong_enough(cls, v) (line 81) [decorators: field_validator('password'), classmethod]
-  - class LoginRequest (line 87)
-  - function LoginRequest.valid_email(cls, v) (line 93) [decorators: field_validator('email'), classmethod]
-  - class SubscribeRequest (line 100)
-  - class DeleteAccountRequest (line 104)
-  - class ProviderCredentialRequest (line 108)
-  - function ProviderCredentialRequest.valid_provider(cls, value) (line 114) [decorators: field_validator('provider'), classmethod]
-  - function ProviderCredentialRequest.valid_key(cls, value) (line 122) [decorators: field_validator('api_key'), classmethod]
-  - function _utc_now() (line 129)
-  - function _expires_at() (line 133)
-  - function _cookie_is_secure(request) (line 136)
-  - function _set_session_cookies(response, request, token) (line 141)
-  - function _clear_session_cookies(response, request) (line 163)
-  - function _hash_password(password, salt_hex) (line 169)
-  - function _verify_password(password, salt_hex, password_hash) (line 175)
-  - function _login_failure_key(email) (line 185)
-  - function _reject_if_login_throttled(email) (line 189)
-  - function _record_login_failure(email) (line 201)
-  - function _clear_login_failures(email) (line 215)
-  - function _public_user(row) (line 219)
-  - function _subscription_prompt_date() (line 228) — The membership reminder has one clear, user-facing timezone contract.
-  - function _consume_subscription_prompt(conn, user_id) (line 233) — Return whether this successful sign-in earns the once-per-EST-day offer.
-  - function _active_subscription_for(conn, user_id) (line 247)
-  - function get_auth_token(request) (line 276)
-  - function get_current_user_optional(request) (line 283)
-  - function require_current_user(request) (line 308)
-  - function require_active_subscription(request) (line 315)
-  - function _b64url(value) (line 322)
-  - function _decode_b64url(value) (line 326)
-  - function _oauth_state_hash(value) (line 330)
-  - function _oauth_config(provider) (line 334)
-  - function oauth_provider_status() (line 352)
-  - function _oauth_post_json(url, values) (line 363)
-  - function _oauth_get_json(url) (line 376)
-  - function _validated_identity_token(id_token, config, client_id, nonce) (line 388)
-  - function _consume_oauth_state(provider, state) (line 421)
-  - function _exchange_authorization_code(provider, code, state, config, client_id, client_secret, redirect_uri) (line 437)
-  - function _identity_user(conn, provider, claims, state, apple_user) (line 449)
-  - function _oauth_return_url(success, reason) (line 474)
-  - function _finish_oauth(provider, code, state_value, request, apple_user) (line 480)
-  - async function oauth_providers() (line 501) [decorators: router.get('/oauth/providers')] — Expose configuration readiness only; never expose client secrets or keys.
-  - async function start_oauth(provider, intent, accept_legal) (line 507) [decorators: router.get('/oauth/{provider}/start')]
-  - async function oauth_callback_get(provider, request, code, state, error) (line 533) [decorators: router.get('/oauth/{provider}/callback', include_in_schema=False)]
-  - async function oauth_callback_post(provider, request, code, state, error, user) (line 543) [decorators: router.post('/oauth/{provider}/callback', include_in_schema=False)]
-  - async function signup(req, request, response) (line 553) [decorators: router.post('/signup')]
-  - async function login(req, request, response) (line 594) [decorators: router.post('/login')]
-  - async function logout(request, response) (line 628) [decorators: router.post('/logout')]
-  - async function me(request, response) (line 642) [decorators: router.get('/me')]
-  - async function get_provider_credentials(request) (line 657) [decorators: router.get('/provider-credentials')]
-  - async function put_provider_credential(req, request) (line 666) [decorators: router.put('/provider-credentials')]
-  - async function remove_provider_credential(provider, request) (line 675) [decorators: router.delete('/provider-credentials/{provider}')]
-  - async function delete_account(req, request, response) (line 681) [decorators: router.delete('/account')]
-  - async function subscribe(request, req) (line 705) [decorators: router.post('/subscribe')]
+  - class OAuthFlowError (line 62) — A safe, user-visible OAuth failure that never exposes provider tokens.
+  - class SignupRequest (line 66)
+  - function SignupRequest.valid_email(cls, v) (line 75) [decorators: field_validator('email'), classmethod]
+  - function SignupRequest.strong_enough(cls, v) (line 83) [decorators: field_validator('password'), classmethod]
+  - class LoginRequest (line 89)
+  - function LoginRequest.valid_email(cls, v) (line 96) [decorators: field_validator('email'), classmethod]
+  - class SubscribeRequest (line 103)
+  - class DeleteAccountRequest (line 107)
+  - class ProviderCredentialRequest (line 111)
+  - function ProviderCredentialRequest.valid_provider(cls, value) (line 117) [decorators: field_validator('provider'), classmethod]
+  - function ProviderCredentialRequest.valid_key(cls, value) (line 125) [decorators: field_validator('api_key'), classmethod]
+  - function _verify_turnstile(token, request) (line 132) — Fail closed when Turnstile is configured; never log a challenge token.
+  - function _utc_now() (line 154)
+  - function _expires_at() (line 158)
+  - function _cookie_is_secure(request) (line 161)
+  - function _set_session_cookies(response, request, token) (line 166)
+  - function _clear_session_cookies(response, request) (line 188)
+  - function _hash_password(password, salt_hex) (line 194)
+  - function _verify_password(password, salt_hex, password_hash) (line 200)
+  - function _login_failure_key(email) (line 210)
+  - function _reject_if_login_throttled(email) (line 214)
+  - function _record_login_failure(email) (line 226)
+  - function _clear_login_failures(email) (line 240)
+  - function _public_user(row) (line 244)
+  - function _subscription_prompt_date() (line 253) — The membership reminder has one clear, user-facing timezone contract.
+  - function _consume_subscription_prompt(conn, user_id) (line 258) — Return whether this successful sign-in earns the once-per-EST-day offer.
+  - function _active_subscription_for(conn, user_id) (line 272)
+  - function get_auth_token(request) (line 321)
+  - function get_current_user_optional(request) (line 328)
+  - function require_current_user(request) (line 353)
+  - function require_active_subscription(request) (line 360)
+  - function _b64url(value) (line 367)
+  - function _decode_b64url(value) (line 371)
+  - function _oauth_state_hash(value) (line 375)
+  - function _oauth_config(provider) (line 379)
+  - function oauth_provider_status() (line 397)
+  - function _oauth_post_json(url, values) (line 408)
+  - function _oauth_get_json(url) (line 421)
+  - function _validated_identity_token(id_token, config, client_id, nonce) (line 433)
+  - function _consume_oauth_state(provider, state) (line 466)
+  - function _exchange_authorization_code(provider, code, state, config, client_id, client_secret, redirect_uri) (line 482)
+  - function _identity_user(conn, provider, claims, state, apple_user) (line 494)
+  - function _oauth_return_url(success, reason) (line 519)
+  - function _finish_oauth(provider, code, state_value, request, apple_user) (line 525)
+  - async function oauth_providers() (line 546) [decorators: router.get('/oauth/providers')] — Expose configuration readiness only; never expose client secrets or keys.
+  - async function start_oauth(provider, intent, accept_legal) (line 552) [decorators: router.get('/oauth/{provider}/start')]
+  - async function oauth_callback_get(provider, request, code, state, error) (line 578) [decorators: router.get('/oauth/{provider}/callback', include_in_schema=False)]
+  - async function oauth_callback_post(provider, request, code, state, error, user) (line 588) [decorators: router.post('/oauth/{provider}/callback', include_in_schema=False)]
+  - async function signup(req, request, response) (line 598) [decorators: router.post('/signup')]
+  - async function login(req, request, response) (line 640) [decorators: router.post('/login')]
+  - async function logout(request, response) (line 675) [decorators: router.post('/logout')]
+  - async function me(request, response) (line 689) [decorators: router.get('/me')]
+  - async function get_provider_credentials(request) (line 704) [decorators: router.get('/provider-credentials')]
+  - async function put_provider_credential(req, request) (line 713) [decorators: router.put('/provider-credentials')]
+  - async function remove_provider_credential(provider, request) (line 722) [decorators: router.delete('/provider-credentials/{provider}')]
+  - async function delete_account(req, request, response) (line 728) [decorators: router.delete('/account')]
+  - async function subscribe(request, req) (line 752) [decorators: router.post('/subscribe')]
 
 
 [server/backend/routes/backtest.py]
@@ -3340,6 +3232,35 @@ Public code inventory:
   - async function backtest_endpoint(req) (line 28) [decorators: router.post('/run')]
   - async function quick_backtest(ticker, period, min_score) (line 38) [decorators: router.get('/quick/{ticker}')]
   - async function browser_backtest_endpoint(req, request) (line 48) [decorators: public_router.post('/run-upload'), router.post('/run-upload')] — Run authenticated research on browser-fetched daily bars only.
+
+
+[server/backend/routes/cqc_entitlements.py]
+Classification: HTTP API route. Source size: 102 lines.
+
+This supporting file belongs to the http api route layer. Its role is bounded by the adjacent
+source and configuration files; a change should be evaluated in the workflow that actually
+consumes it rather than judged from the file in isolation.
+
+Its declared HTTP boundary includes GET /entitlement.
+
+Module statement: Narrow, server-to-server CQC Max entitlement relay. Oryntra remains the
+billing authority for the bundle. Rule Mirror receives only an access decision; it never
+receives an Oryntra session, password, portfolio, or subscription record. The endpoint is
+disabled unless both services
+
+Imports: ..database, __future__, fastapi, hashlib, hmac, os, time
+
+HTTP route decorators:
+  - line 89: router.get('/entitlement') -> cqc_entitlement
+
+Public code inventory:
+  - function _secret() (line 27)
+  - function _signature(timestamp, subject) (line 31)
+  - function subject_for_email(email) (line 36) — Return the local-only opaque subject; never transmit the email itself.
+  - function active_products_for_subject(conn, subject) (line 45)
+  - function active_products_for_email(conn, email) (line 64)
+  - function _verify_service_request(request) (line 69)
+  - function cqc_entitlement(request) (line 89) [decorators: router.get('/entitlement')] — Return only effective product access for a signed service caller.
 
 
 [server/backend/routes/debug_access.py]
@@ -3902,7 +3823,7 @@ Public code inventory:
 
 
 [server/backend/universal_engine.py]
-Classification: Backend service or research engine. Source size: 384 lines.
+Classification: Backend service or research engine. Source size: 412 lines.
 
 Universal V2 defines shared causal price features, validated configuration, signal provenance
 and portfolio target construction. Scanner, Pattern Lab and the V2 portfolio adapter use the
@@ -3911,19 +3832,20 @@ the engine is a research candidate, not a proven alpha source.
 
 Module statement: Universal V2: one causal signal contract for scanner and portfolio research.
 
-Imports: .universal_learning, .universal_market_context, .universal_peer_shock,
-.universal_position_policy, __future__, dataclasses, hashlib, json, numpy, pandas
+Imports: .universal_institutional_decision, .universal_learning, .universal_market_context,
+.universal_peer_shock, .universal_position_policy, .universal_risk_supervisor, __future__,
+dataclasses, hashlib, json, numpy, pandas
 
 Public code inventory:
-  - class UniversalConfig (line 22)
-  - function UniversalConfig.__post_init__(self) (line 70)
-  - function UniversalConfig.weights(self) (line 137) [decorators: property]
-  - function UniversalConfig.fingerprint(self) (line 142) [decorators: property]
-  - function UniversalConfig.residual_momentum_horizons(self) (line 146) [decorators: property] — Selected residual horizons; legacy switch maps to the full pair.
-  - function signal_panel(prices, config, benchmark_returns, fundamental_scores, opens, volumes, learning_closes, learning_opens, learning_volumes, learning_highs, learning_lows, fundamental_acceleration_scores) (line 154) — Features at t use only data through t; signals are executed after t.
-  - function scan_snapshot(history, config) (line 255)
-  - function scanner_setup(history) (line 275)
-  - function portfolio_targets(prices, config, benchmark_returns, fundamental_scores, opens, volumes, learning_closes, learning_opens, learning_volumes, learning_highs, learning_lows, fundamental_acceleration_scores, precomputed_panel) (line 284) — Create causal targets, optionally reusing a just-computed causal panel. ``run_universal`` needs the panel for lifecycle scoring as well as targets. Reusing it prevents a second identical walk-forward model fit without changing data availability, signals, or target math.
+  - class UniversalConfig (line 24)
+  - function UniversalConfig.__post_init__(self) (line 74)
+  - function UniversalConfig.weights(self) (line 141) [decorators: property]
+  - function UniversalConfig.fingerprint(self) (line 146) [decorators: property]
+  - function UniversalConfig.residual_momentum_horizons(self) (line 150) [decorators: property] — Selected residual horizons; legacy switch maps to the full pair.
+  - function signal_panel(prices, config, benchmark_returns, fundamental_scores, opens, volumes, learning_closes, learning_opens, learning_volumes, learning_highs, learning_lows, fundamental_acceleration_scores) (line 158) — Features at t use only data through t; signals are executed after t.
+  - function scan_snapshot(history, config) (line 266)
+  - function scanner_setup(history) (line 286)
+  - function portfolio_targets(prices, config, benchmark_returns, fundamental_scores, opens, volumes, learning_closes, learning_opens, learning_volumes, learning_highs, learning_lows, fundamental_acceleration_scores, precomputed_panel) (line 295) — Create causal targets, optionally reusing a just-computed causal panel. ``run_universal`` needs the panel for lifecycle scoring as well as targets. Reusing it prevents a second identical walk-forward model fit without changing data availability, signals, or target math.
 
 
 [server/backend/universal_fundamentals.py]
@@ -3939,11 +3861,11 @@ Imports: __future__, math, numpy, pandas, typing
 
 Public code inventory:
   - function build_fundamental_score_panel(events, sessions, symbols, revenue_scale, income_scale) (line 11) — Convert prevalidated SEC filing events into a session-aligned score panel. An event becomes usable at the session close on its declared filing date, so the V2 ledger can only trade it at the following open. Missing history is represented by a neutral zero, never a backfilled esti
-  - function build_fundamental_acceleration_panel(events, sessions, symbols, decay_sessions, revenue_scale, income_scale) (line 57) — Return a causal, decaying filing-to-filing change signal. This is deliberately *acceleration*, not an earnings surprise: it compares a newly public revenue/income-growth score with the issuer's last public score. An event can affect a session only on or after ``available_date``; 
+  - function build_fundamental_acceleration_panel(events, sessions, symbols, decay_sessions, revenue_scale, income_scale) (line 57) — Return a causal, decaying filing-to-filing change signal. This is deliberately *acceleration*, not an earnings surprise: it compares a newly public revenue/income-growth score with the issuer's last public score. An event can affect a session only on or after ``available_date``;
 
 
 [server/backend/universal_learning.py]
-Classification: Backend service or research engine. Source size: 251 lines.
+Classification: Backend service or research engine. Source size: 270 lines.
 
 This supporting file belongs to the backend service or research engine layer. Its role is
 bounded by the adjacent source and configuration files; a change should be evaluated in the
@@ -3955,10 +3877,10 @@ research.
 Imports: __future__, numpy, pandas
 
 Public code inventory:
-  - function walk_forward_ridge_scores(closes, opens, volumes, training_sessions, retrain_sessions, horizon_sessions, penalty, benchmark_returns, include_residual_momentum, residual_momentum_horizons, target_market_residual, include_economic_interactions, corporate_quality, corporate_observed, highs, lows, include_ohlcv_structure, score_smoothing, ic_gate, ic_lookback_sessions, ic_minimum) (line 18) — Return cross-sectional scores trained only on outcomes completed before each date. At close ``t`` the model sees features through ``t``. Training labels are open(t+1)-to-close(t+horizon) returns, demeaned across the investable universe for that date. A label is eligible only when
-  - function _apply_completed_ic_gate(scores, labels, horizon_sessions, lookback_sessions, minimum_ic) (line 155) — Hold cash when trailing, fully-finished cross-sectional IC is too weak. At decision close ``current``, a label starting at ``observed`` is usable only when its full horizon completed strictly earlier than ``current``. The gate therefore ends its evidence at ``current - horizon - 
-  - function _feature_cube(closes, volumes, benchmark_returns, residual_momentum_horizons, include_economic_interactions, corporate_quality, corporate_observed, opens, highs, lows) (line 183)
-  - function _validate_panel(panel, name, allow_zero) (line 241)
+  - function walk_forward_ridge_scores(closes, opens, volumes, training_sessions, retrain_sessions, horizon_sessions, penalty, benchmark_returns, include_residual_momentum, residual_momentum_horizons, target_market_residual, include_economic_interactions, corporate_quality, corporate_observed, highs, lows, include_ohlcv_structure, score_smoothing, ic_gate, ic_lookback_sessions, ic_minimum, return_diagnostics) (line 18) — Return cross-sectional scores trained only on outcomes completed before each date. At close ``t`` the model sees features through ``t``. Training labels are open(t+1)-to-close(t+horizon) returns, demeaned across the investable universe for that date. A label is eligible only when
+  - function _apply_completed_ic_gate(scores, labels, horizon_sessions, lookback_sessions, minimum_ic) (line 174) — Hold cash when trailing, fully-finished cross-sectional IC is too weak. At decision close ``current``, a label starting at ``observed`` is usable only when its full horizon completed strictly earlier than ``current``. The gate therefore ends its evidence at ``current - horizon -
+  - function _feature_cube(closes, volumes, benchmark_returns, residual_momentum_horizons, include_economic_interactions, corporate_quality, corporate_observed, opens, highs, lows) (line 202)
+  - function _validate_panel(panel, name, allow_zero) (line 260)
 
 
 [server/backend/universal_market_context.py]
@@ -4035,7 +3957,7 @@ Public code inventory:
 
 
 [server/backend/universal_research.py]
-Classification: Backend service or research engine. Source size: 163 lines.
+Classification: Backend service or research engine. Source size: 170 lines.
 
 This adapter joins shared targets, the cash/shares ledger and alpha statistics into a Quant-
 compatible report. It enforces evaluation warmup, keeps data/config/source fingerprints and
@@ -4045,12 +3967,12 @@ automatic promotion.
 Module statement: Universal V2 report adapter for Quant Lab and reproducible offline research.
 
 Imports: .alpha_consistency, .portfolio_execution, .quant_research, .universal_engine,
-.universal_market_context, .universal_peer_shock, .universal_position_policy,
-.universal_research_blueprint, .universal_taxonomy, __future__, dataclasses, hashlib, numpy,
-pandas, pathlib
+.universal_institutional_decision, .universal_market_context, .universal_peer_shock,
+.universal_position_policy, .universal_research_blueprint, .universal_risk_supervisor,
+.universal_taxonomy, __future__, dataclasses, hashlib, numpy, pandas, pathlib
 
 Public code inventory:
-  - function run_universal(histories, config, benchmark_returns, risk_free, evaluation_start, evaluation_end, market_observations, fundamental_scores, fundamental_acceleration_scores, fundamental_observed, learning_panels) (line 21)
+  - function run_universal(histories, config, benchmark_returns, risk_free, evaluation_start, evaluation_end, market_observations, fundamental_scores, fundamental_acceleration_scores, fundamental_observed, learning_panels) (line 23)
 
 
 [server/backend/universal_research_blueprint.py]
@@ -4069,6 +3991,30 @@ __future__, typing
 Public code inventory:
   - function research_blueprint() (line 12) — Return only contracts and gates, never a claim that a workstream is live.
   - function _item(identifier, title, readiness, inputs, knobs, invariants, next_gate) (line 84)
+
+
+[server/backend/universal_risk_supervisor.py]
+Classification: Backend service or research engine. Source size: 259 lines.
+
+This TBA-only causal risk layer caps correlated clusters and marginal variance contribution,
+scales concentrated books, and applies completed-return volatility and rolling-drawdown
+exposure ceilings. It is disabled for frozen Minerva and carries no performance claim until
+the declared out-of-sample Sharpe gate passes.
+
+Module statement: Causal, TBA-only portfolio risk supervision for Universal research. This
+layer does not create forecasts. It constrains forecast portfolios using only information
+available through the prior completed close. Minerva remains frozen with this supervisor
+disabled.
+
+Imports: __future__, dataclasses, math, numpy, typing
+
+Public code inventory:
+  - class RiskSupervisorConfig (line 17)
+  - function RiskSupervisorConfig.__post_init__(self) (line 51)
+  - function _correlation_clusters(covariance, active, threshold) (line 88)
+  - function supervise_cross_sectional_weights(weights, covariance, config) (line 110) — Cap correlated clusters and ex-ante component-risk concentration.
+  - function dynamic_exposure_scale(net_history, nav_history, target_annual_volatility, config) (line 178) — Use completed portfolio returns and NAV to set today's exposure ceiling.
+  - function risk_supervisor_contract(config) (line 240)
 
 
 [server/backend/universal_taxonomy.py]
@@ -4098,7 +4044,7 @@ Public code inventory:
 
 
 [server/backend/universal_yearly_protocol.py]
-Classification: Backend service or research engine. Source size: 181 lines.
+Classification: Backend service or research engine. Source size: 192 lines.
 
 This supporting file belongs to the backend service or research engine layer. Its role is
 bounded by the adjacent source and configuration files; a change should be evaluated in the
@@ -4319,14 +4265,14 @@ confirmation_end, risk_free_source, candidates.
 
 
 [server/frontend/index.html]
-Classification: Browser application structure. Source size: 194 lines.
+Classification: Browser application structure. Source size: 200 lines.
 
 This document is the browser application’s structural contract. Its element IDs, tab
 containers, forms, dialogs, and data attributes are consumed by app.js. Removing apparently
 cosmetic markup can break client initialization, so interface changes should preserve or
 intentionally migrate those hooks.
 
-HTML identifiers: 171. Forms: 1. Tab hooks: 7.
+HTML identifiers: 175. Forms: 1. Tab hooks: 7.
 
 Representative IDs (first 80):
   - addToWatchlistBtn
@@ -4392,6 +4338,10 @@ Representative IDs (first 80):
   - paperStats
   - paperTradeBtn
   - paperTradesGrid
+  - partnerAdvertising
+  - partnerDesktopAd
+  - partnerMobileAd
+  - partnerNativeAd
   - patternCacheStatus
   - patternCacheStatusBtn
   - patternCount
@@ -4405,10 +4355,6 @@ Representative IDs (first 80):
   - planStop
   - planStopPct
   - planTarget
-  - planTargetPct
-  - polygonApiKeyInput
-  - polygonCredentialStatus
-  - portfolioAccessBtn
 
 Tab identifiers: backtest, paper, portfolio, quant, scanner, settings, watchlist.
 
@@ -4417,8 +4363,8 @@ Tab identifiers: backtest, paper, portfolio, quant, scanner, settings, watchlist
 Classification: Legal and policy surface. Source size: 11 lines.
 
 This contact document is a policy-facing page served by the product. Its statements must
-remain consistent with actual data, account, subscription, advertising, and research behavior;
-legal wording should not be changed merely as interface copy.
+remain consistent with actual data, account, subscription, and research behavior; legal
+wording should not be changed merely as interface copy.
 
 HTML identifiers: 0. Forms: 0. Tab hooks: 0.
 
@@ -4427,8 +4373,8 @@ HTML identifiers: 0. Forms: 0. Tab hooks: 0.
 Classification: Legal and policy surface. Source size: 2 lines.
 
 This contact_canonical document is a policy-facing page served by the product. Its statements
-must remain consistent with actual data, account, subscription, advertising, and research
-behavior; legal wording should not be changed merely as interface copy.
+must remain consistent with actual data, account, subscription, and research behavior; legal
+wording should not be changed merely as interface copy.
 
 HTML identifiers: 0. Forms: 0. Tab hooks: 0.
 
@@ -4437,8 +4383,8 @@ HTML identifiers: 0. Forms: 0. Tab hooks: 0.
 Classification: Legal and policy surface. Source size: 16 lines.
 
 This methodology document is a policy-facing page served by the product. Its statements must
-remain consistent with actual data, account, subscription, advertising, and research behavior;
-legal wording should not be changed merely as interface copy.
+remain consistent with actual data, account, subscription, and research behavior; legal
+wording should not be changed merely as interface copy.
 
 HTML identifiers: 8. Forms: 0. Tab hooks: 0.
 
@@ -4457,8 +4403,8 @@ Representative IDs (first 80):
 Classification: Legal and policy surface. Source size: 2 lines.
 
 This methodology_canonical document is a policy-facing page served by the product. Its
-statements must remain consistent with actual data, account, subscription, advertising, and
-research behavior; legal wording should not be changed merely as interface copy.
+statements must remain consistent with actual data, account, subscription, and research
+behavior; legal wording should not be changed merely as interface copy.
 
 HTML identifiers: 0. Forms: 0. Tab hooks: 0.
 
@@ -4467,8 +4413,8 @@ HTML identifiers: 0. Forms: 0. Tab hooks: 0.
 Classification: Legal and policy surface. Source size: 2 lines.
 
 This methodology_v1_1 document is a policy-facing page served by the product. Its statements
-must remain consistent with actual data, account, subscription, advertising, and research
-behavior; legal wording should not be changed merely as interface copy.
+must remain consistent with actual data, account, subscription, and research behavior; legal
+wording should not be changed merely as interface copy.
 
 HTML identifiers: 0. Forms: 0. Tab hooks: 0.
 
@@ -4477,8 +4423,8 @@ HTML identifiers: 0. Forms: 0. Tab hooks: 0.
 Classification: Legal and policy surface. Source size: 16 lines.
 
 This privacy document is a policy-facing page served by the product. Its statements must
-remain consistent with actual data, account, subscription, advertising, and research behavior;
-legal wording should not be changed merely as interface copy.
+remain consistent with actual data, account, subscription, and research behavior; legal
+wording should not be changed merely as interface copy.
 
 HTML identifiers: 8. Forms: 0. Tab hooks: 0.
 
@@ -4497,8 +4443,8 @@ Representative IDs (first 80):
 Classification: Legal and policy surface. Source size: 2 lines.
 
 This privacy_canonical document is a policy-facing page served by the product. Its statements
-must remain consistent with actual data, account, subscription, advertising, and research
-behavior; legal wording should not be changed merely as interface copy.
+must remain consistent with actual data, account, subscription, and research behavior; legal
+wording should not be changed merely as interface copy.
 
 HTML identifiers: 0. Forms: 0. Tab hooks: 0.
 
@@ -4507,8 +4453,8 @@ HTML identifiers: 0. Forms: 0. Tab hooks: 0.
 Classification: Legal and policy surface. Source size: 2 lines.
 
 This privacy_v1_1 document is a policy-facing page served by the product. Its statements must
-remain consistent with actual data, account, subscription, advertising, and research behavior;
-legal wording should not be changed merely as interface copy.
+remain consistent with actual data, account, subscription, and research behavior; legal
+wording should not be changed merely as interface copy.
 
 HTML identifiers: 0. Forms: 0. Tab hooks: 0.
 
@@ -4517,8 +4463,8 @@ HTML identifiers: 0. Forms: 0. Tab hooks: 0.
 Classification: Legal and policy surface. Source size: 12 lines.
 
 This refund document is a policy-facing page served by the product. Its statements must remain
-consistent with actual data, account, subscription, advertising, and research behavior; legal
-wording should not be changed merely as interface copy.
+consistent with actual data, account, subscription, and research behavior; legal wording
+should not be changed merely as interface copy.
 
 HTML identifiers: 0. Forms: 0. Tab hooks: 0.
 
@@ -4527,8 +4473,8 @@ HTML identifiers: 0. Forms: 0. Tab hooks: 0.
 Classification: Legal and policy surface. Source size: 2 lines.
 
 This refund_canonical document is a policy-facing page served by the product. Its statements
-must remain consistent with actual data, account, subscription, advertising, and research
-behavior; legal wording should not be changed merely as interface copy.
+must remain consistent with actual data, account, subscription, and research behavior; legal
+wording should not be changed merely as interface copy.
 
 HTML identifiers: 0. Forms: 0. Tab hooks: 0.
 
@@ -4537,8 +4483,8 @@ HTML identifiers: 0. Forms: 0. Tab hooks: 0.
 Classification: Legal and policy surface. Source size: 2 lines.
 
 This refund_v1_1 document is a policy-facing page served by the product. Its statements must
-remain consistent with actual data, account, subscription, advertising, and research behavior;
-legal wording should not be changed merely as interface copy.
+remain consistent with actual data, account, subscription, and research behavior; legal
+wording should not be changed merely as interface copy.
 
 HTML identifiers: 0. Forms: 0. Tab hooks: 0.
 
@@ -4547,8 +4493,8 @@ HTML identifiers: 0. Forms: 0. Tab hooks: 0.
 Classification: Legal and policy surface. Source size: 15 lines.
 
 This risk disclaimer document is a policy-facing page served by the product. Its statements
-must remain consistent with actual data, account, subscription, advertising, and research
-behavior; legal wording should not be changed merely as interface copy.
+must remain consistent with actual data, account, subscription, and research behavior; legal
+wording should not be changed merely as interface copy.
 
 HTML identifiers: 7. Forms: 0. Tab hooks: 0.
 
@@ -4566,8 +4512,8 @@ Representative IDs (first 80):
 Classification: Legal and policy surface. Source size: 2 lines.
 
 This risk disclaimer_canonical document is a policy-facing page served by the product. Its
-statements must remain consistent with actual data, account, subscription, advertising, and
-research behavior; legal wording should not be changed merely as interface copy.
+statements must remain consistent with actual data, account, subscription, and research
+behavior; legal wording should not be changed merely as interface copy.
 
 HTML identifiers: 0. Forms: 0. Tab hooks: 0.
 
@@ -4576,8 +4522,8 @@ HTML identifiers: 0. Forms: 0. Tab hooks: 0.
 Classification: Legal and policy surface. Source size: 2 lines.
 
 This risk disclaimer_v1_1 document is a policy-facing page served by the product. Its
-statements must remain consistent with actual data, account, subscription, advertising, and
-research behavior; legal wording should not be changed merely as interface copy.
+statements must remain consistent with actual data, account, subscription, and research
+behavior; legal wording should not be changed merely as interface copy.
 
 HTML identifiers: 0. Forms: 0. Tab hooks: 0.
 
@@ -4586,8 +4532,8 @@ HTML identifiers: 0. Forms: 0. Tab hooks: 0.
 Classification: Legal and policy surface. Source size: 18 lines.
 
 This terms document is a policy-facing page served by the product. Its statements must remain
-consistent with actual data, account, subscription, advertising, and research behavior; legal
-wording should not be changed merely as interface copy.
+consistent with actual data, account, subscription, and research behavior; legal wording
+should not be changed merely as interface copy.
 
 HTML identifiers: 10. Forms: 0. Tab hooks: 0.
 
@@ -4608,8 +4554,8 @@ Representative IDs (first 80):
 Classification: Legal and policy surface. Source size: 2 lines.
 
 This terms_canonical document is a policy-facing page served by the product. Its statements
-must remain consistent with actual data, account, subscription, advertising, and research
-behavior; legal wording should not be changed merely as interface copy.
+must remain consistent with actual data, account, subscription, and research behavior; legal
+wording should not be changed merely as interface copy.
 
 HTML identifiers: 0. Forms: 0. Tab hooks: 0.
 
@@ -4618,8 +4564,8 @@ HTML identifiers: 0. Forms: 0. Tab hooks: 0.
 Classification: Legal and policy surface. Source size: 2 lines.
 
 This terms_v1_1 document is a policy-facing page served by the product. Its statements must
-remain consistent with actual data, account, subscription, advertising, and research behavior;
-legal wording should not be changed merely as interface copy.
+remain consistent with actual data, account, subscription, and research behavior; legal
+wording should not be changed merely as interface copy.
 
 HTML identifiers: 0. Forms: 0. Tab hooks: 0.
 
@@ -4656,14 +4602,14 @@ var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg)
 
 
 [server/frontend/static/css/refined.css]
-Classification: Browser presentation or client behaviour. Source size: 721 lines.
+Classification: Browser presentation or client behaviour. Source size: 723 lines.
 
 This stylesheet is the current blue research-desk presentation layer. It defines the visual
 hierarchy and responsive behavior for the shared workspace and Quant Desk. Its selectors must
 continue to match the actual HTML and JavaScript state classes; visual review at desktop and
 mobile widths is the appropriate validation.
 
-Approximate stylesheet selector blocks: 626. The first selectors are: :root; html; body;
+Approximate stylesheet selector blocks: 627. The first selectors are: :root; html; body;
 button, input, select; button; button:focus-visible, input:focus-visible, select:focus-
 visible; .icon; .brand-line; .brand-logo; .eyebrow; .muted; .page-copy; h1, h2, h3, p; h1, h2,
 h3; h1; h2; h3; .auth-layout; .auth-story; .auth-story .brand-logo; .story-content; .story-
@@ -4787,7 +4733,7 @@ relevant HTML, Flutter, iOS asset-catalog, or branding contract.
 
 
 [server/frontend/static/js/app.js]
-Classification: Browser presentation or client behaviour. Source size: 4125 lines.
+Classification: Browser presentation or client behaviour. Source size: 4127 lines.
 
 This is the browser orchestrator. It owns client-side API calls, account transitions, tab
 selection, scans, results, charts, paper records, settings, and Quant Desk rendering. It
@@ -4818,10 +4764,9 @@ Client function inventory:
   - apiJson(response)
   - sanitizeTickerSymbol(raw)
   - clearTickerIfAutofilledEmail()
-  - adSlotAllowed(el)
-  - hideAdSlot(el)
-  - renderAdsenseSlot(el, config)
-  - initAdSlots()
+  - clearPartnerAdvertisements()
+  - mountPartnerAdvertisement(slotId, markup)
+  - initPartnerAdvertisements()
   - visibleDialog()
   - openAccessibleDialog(modal, preferredFocus)
   - closeAccessibleDialog(modal)
@@ -4847,6 +4792,7 @@ Client function inventory:
   - refreshAuthState()
   - setAuthUI(user)
   - openAuthModal(mode='login')
+  - mountTurnstile()
   - closeAuthModal()
   - setProviderOnboardingMessage(message, warning=false)
   - hasBrowserProviderKey(preferred = 'auto')
@@ -4995,6 +4941,7 @@ Client function inventory:
   - animateLoadingSteps()
   - runBacktest()
   - renderBacktestResults(data)
+  - render()
   - kpi(name, value)
 
 Referenced browser API namespaces or methods: auth, backtest, debug, dev, explain,
@@ -5052,8 +4999,8 @@ Representative IDs (first 80):
 Classification: Maintenance-mode application. Source size: 405 lines.
 
 This methodology document is a policy-facing page served by the product. Its statements must
-remain consistent with actual data, account, subscription, advertising, and research behavior;
-legal wording should not be changed merely as interface copy.
+remain consistent with actual data, account, subscription, and research behavior; legal
+wording should not be changed merely as interface copy.
 
 HTML identifiers: 9. Forms: 0. Tab hooks: 0.
 
@@ -5261,16 +5208,6 @@ Public code inventory:
   - function env_bool(name, default) (line 16)
 
 
-[server/shared/ad_slots.json]
-Classification: Server configuration or operator asset. Source size: 49 lines.
-
-This configuration defines named advertising placement metadata separate from templates and
-application logic. It allows the server to reason about enabled slots without hard-coding
-placement decisions throughout the frontend.
-
-Top-level object keys: version, slots, build.
-
-
 [server/tests/conftest.py]
 Classification: Automated regression test. Source size: 10 lines.
 
@@ -5282,19 +5219,6 @@ Imports: __future__, pathlib, sys
 
 No classes or functions were found at module scope. The file is likely declarative
 configuration, package initialization, or command glue.
-
-
-[server/tests/test_ads_configuration.py]
-Classification: Automated regression test. Source size: 26 lines.
-
-This suite proves web advertising is blank and disabled by default and requires explicit
-enablement before AdSense markup or slots are considered active.
-
-Imports: __future__, backend.main
-
-Public code inventory:
-  - function test_web_ads_are_blank_by_default(monkeypatch) (line 6)
-  - function test_web_ads_require_explicit_enablement(monkeypatch) (line 18)
 
 
 [server/tests/test_alpha_context.py]
@@ -5388,6 +5312,22 @@ Public code inventory:
   - function CorporateQuantSystemTests.test_point_in_time_corporate_and_macro_records_do_not_arrive_early(self) (line 17)
   - function CorporateQuantSystemTests.test_regime_cost_and_full_system_outputs_are_structured(self) (line 36)
   - function CorporateQuantSystemTests.test_manifest_experiment_is_declarative_reproducible_and_recorded(self) (line 62)
+
+
+[server/tests/test_cqc_entitlements.py]
+Classification: Automated regression test. Source size: 69 lines.
+
+This supporting file belongs to the automated regression test layer. Its role is bounded by
+the adjacent source and configuration files; a change should be evaluated in the workflow that
+actually consumes it rather than judged from the file in isolation.
+
+Imports: backend, backend.main, backend.routes.auth, backend.routes.cqc_entitlements,
+fastapi.testclient, os, tempfile, time, unittest.mock
+
+Public code inventory:
+  - function _headers(subject) (line 13)
+  - function test_cqc_max_relay_returns_only_active_bundle_access() (line 22)
+  - function test_cqc_max_is_effective_as_oryntra_pro_for_the_matching_local_user() (line 49)
 
 
 [server/tests/test_debug_access.py]
@@ -5807,8 +5747,32 @@ Public code inventory:
   - function test_taxonomy_builder_can_make_an_automatic_financedatabase_seed(tmp_path) (line 775)
 
 
+[server/tests/test_universal_risk_supervisor.py]
+Classification: Automated regression test. Source size: 216 lines.
+
+This supporting file belongs to the automated regression test layer. Its role is bounded by
+the adjacent source and configuration files; a change should be evaluated in the workflow that
+actually consumes it rather than judged from the file in isolation.
+
+Imports: backend.minerva, backend.portfolio_execution, backend.universal_engine,
+backend.universal_institutional_decision, backend.universal_risk_supervisor, numpy, pandas
+
+Public code inventory:
+  - function test_every_named_tba_candidate_enables_supervisor_but_minerva_does_not() (line 27)
+  - function test_only_tba8_enables_the_institutional_layer_with_frozen_settings() (line 44)
+  - function test_institutional_layer_only_reduces_and_enforces_capacity() (line 54)
+  - function test_cost_hurdle_is_tunable_and_scales_a_weak_edge() (line 78)
+  - function test_zero_cost_multiplier_handles_missing_liquidity_without_numeric_warning() (line 98)
+  - function test_tba8_portfolio_path_records_decision_audit_and_keeps_it_causal() (line 109)
+  - function test_cluster_and_component_caps_only_reduce_risky_concentration() (line 127)
+  - function test_high_average_correlation_scales_the_whole_book_to_cash() (line 145)
+  - function test_dynamic_scale_uses_completed_volatility_and_drawdown_only() (line 163)
+  - function test_dynamic_scale_detects_completed_tail_loss_and_volatility_acceleration() (line 175)
+  - function test_execution_audits_and_rebalances_a_drawdown_reduction() (line 191)
+
+
 [server/tests/test_universal_yearly_protocol.py]
-Classification: Automated regression test. Source size: 91 lines.
+Classification: Automated regression test. Source size: 92 lines.
 
 This supporting file belongs to the automated regression test layer. Its role is bounded by
 the adjacent source and configuration files; a change should be evaluated in the workflow that
@@ -5822,8 +5786,8 @@ Public code inventory:
   - function test_seeded_protocol_requires_complete_availability_and_selects_reproducibly() (line 18)
   - function test_seeded_protocol_refuses_to_relax_spacing_or_missing_cash() (line 35)
   - function test_annual_trials_return_one_cash_funded_observation_per_selected_year() (line 50)
-  - function test_annual_trials_require_explicit_market_closes_when_market_context_is_enabled() (line 68)
-  - function test_declared_chunk_still_requires_an_eligible_year() (line 79)
+  - function test_annual_trials_require_explicit_market_closes_when_market_context_is_enabled() (line 69)
+  - function test_declared_chunk_still_requires_an_eligible_year() (line 80)
 
 
 [server/tests/test_universe_selection.py]
@@ -5957,6 +5921,25 @@ Public code inventory:
   - function main() (line 39)
 
 
+[server/tools/build_tba_paired_panel.py]
+Classification: Operator or research utility. Source size: 118 lines.
+
+This supporting file belongs to the operator or research utility layer. Its role is bounded by
+the adjacent source and configuration files; a change should be evaluated in the workflow that
+actually consumes it rather than judged from the file in isolation.
+
+Module statement: Download and freeze an adjusted daily panel for paired TBA engineering
+tests. The default universe is predeclared and deliberately contains long-history current
+survivors. That makes the output useful for same-data A/B engineering, but not a point-in-time
+investable-universe perf
+
+Imports: __future__, argparse, backend.research_universe, hashlib, json, pandas, pathlib, sys,
+yfinance
+
+Public code inventory:
+  - function main() (line 35)
+
+
 [server/tools/build_universal_taxonomy.py]
 Classification: Operator or research utility. Source size: 177 lines.
 
@@ -6035,7 +6018,7 @@ Public code inventory:
 
 
 [server/tools/generate_master_docs.py]
-Classification: Operator or research utility. Source size: 848 lines.
+Classification: Operator or research utility. Source size: 843 lines.
 
 This generator produces this manual from the checked-out source without reading private
 environment values, local databases, cached histories, or generated build products. Its
@@ -6060,33 +6043,33 @@ Public code inventory:
   - function paragraph(text) (line 95)
   - function category_for(path) (line 99)
   - function purpose_for(path) (line 140)
-  - function safe_docstring(node) (line 362)
-  - function format_args(node) (line 367)
-  - function decorator_name(decorator) (line 377)
-  - class SymbolVisitor (line 384)
-  - function SymbolVisitor.__init__(self) (line 385)
-  - function SymbolVisitor.visit_Import(self, node) (line 391)
-  - function SymbolVisitor.visit_ImportFrom(self, node) (line 394)
-  - function SymbolVisitor.visit_ClassDef(self, node) (line 398)
-  - function SymbolVisitor._function(self, node) (line 405)
-  - function python_entry(path, text) (line 421)
-  - function js_entry(text) (line 449)
-  - function language_entry(text, language) (line 464)
-  - function html_entry(text) (line 478)
-  - function css_entry(text) (line 490)
-  - function json_entry(text) (line 500)
-  - function text_entry(path, text) (line 512)
-  - function short_list(values, limit) (line 531)
-  - function python_story(path, text) (line 539)
-  - function change_guidance(category, path) (line 551)
-  - function declarative_story(path, text) (line 575)
-  - function mobile_file_story(path) (line 607)
-  - function binary_story(path) (line 690)
-  - function support_file_story(path, text) (line 712)
-  - function public_surface_sentence(path, text) (line 734)
-  - function narrative_file_entry(path, text) (line 749)
-  - function environment_inventory(files) (line 776)
-  - function main() (line 789)
+  - function safe_docstring(node) (line 361)
+  - function format_args(node) (line 366)
+  - function decorator_name(decorator) (line 376)
+  - class SymbolVisitor (line 383)
+  - function SymbolVisitor.__init__(self) (line 384)
+  - function SymbolVisitor.visit_Import(self, node) (line 390)
+  - function SymbolVisitor.visit_ImportFrom(self, node) (line 393)
+  - function SymbolVisitor.visit_ClassDef(self, node) (line 397)
+  - function SymbolVisitor._function(self, node) (line 404)
+  - function python_entry(path, text) (line 420)
+  - function js_entry(text) (line 448)
+  - function language_entry(text, language) (line 463)
+  - function html_entry(text) (line 477)
+  - function css_entry(text) (line 489)
+  - function json_entry(text) (line 499)
+  - function text_entry(path, text) (line 511)
+  - function short_list(values, limit) (line 530)
+  - function python_story(path, text) (line 538)
+  - function change_guidance(category, path) (line 550)
+  - function declarative_story(path, text) (line 574)
+  - function mobile_file_story(path) (line 606)
+  - function binary_story(path) (line 685)
+  - function support_file_story(path, text) (line 707)
+  - function public_surface_sentence(path, text) (line 729)
+  - function narrative_file_entry(path, text) (line 744)
+  - function environment_inventory(files) (line 771)
+  - function main() (line 784)
 
 
 [server/tools/market_cache_cli.py]
@@ -6206,21 +6189,25 @@ Public code inventory:
 
 
 [server/tools/run_tba2_risk_ablation.py]
-Classification: Operator or research utility. Source size: 85 lines.
+Classification: Operator or research utility. Source size: 133 lines.
 
 This supporting file belongs to the operator or research utility layer. Its role is bounded by
 the adjacent source and configuration files; a change should be evaluated in the workflow that
 actually consumes it rather than judged from the file in isolation.
 
-Module statement: Hold cached Qlib scores fixed and measure TBA 1 risk-layer impact.
+Module statement: Hold cached Qlib scores fixed and compare native, legacy, and supervised
+risk.
 
-Imports: __future__, backend.alpha_evaluation, backend.minerva, backend.portfolio_execution,
-backend.universal_engine, json, numpy, pandas, pathlib
+Imports: __future__, argparse, backend.alpha_evaluation, backend.minerva,
+backend.portfolio_execution, backend.universal_engine, json, numpy, pandas, pathlib, sys
 
 Public code inventory:
-  - function risk_targets(predicted, histories, benchmark, config) (line 20)
-  - function native_topk_targets(predicted, dates, symbols) (line 32)
-  - function main() (line 47)
+  - function risk_targets(predicted, histories, benchmark, config) (line 24)
+  - function native_topk_targets(predicted, dates, symbols) (line 36)
+  - function excess_sharpe(returns, cash) (line 51)
+  - function measurements(returns, benchmark, cash) (line 57)
+  - function mean_available(values) (line 64)
+  - function main() (line 69)
 
 
 [server/tools/run_tba2_risk_component_ablation.py]
@@ -6242,6 +6229,45 @@ pathlib, sys
 Public code inventory:
   - function targets(predicted, histories, benchmark, config, equal_weight) (line 30)
   - function main() (line 50)
+
+
+[server/tools/run_tba_paired_risk_study.py]
+Classification: Operator or research utility. Source size: 182 lines.
+
+This supporting file belongs to the operator or research utility layer. Its role is bounded by
+the adjacent source and configuration files; a change should be evaluated in the workflow that
+actually consumes it rather than judged from the file in isolation.
+
+Module statement: Compare each native TBA signal with and without the shared risk supervisor.
+The paired sides use identical data, years, symbols, signals, costs, and model settings. Only
+RiskSupervisorConfig.enabled changes. TBA 2 is evaluated by the separate frozen-Qlib-score
+runner because its
+
+Imports: __future__, argparse, backend.minerva, backend.universal_yearly_protocol,
+dataclasses, hashlib, json, numpy, pandas, pathlib, sys
+
+Public code inventory:
+  - function load_inputs(bars_path, risk_free_path) (line 48)
+  - function summarize(report) (line 77)
+  - function main() (line 95)
+
+
+[server/tools/run_tba_risk_component_study.py]
+Classification: Operator or research utility. Source size: 123 lines.
+
+This supporting file belongs to the operator or research utility layer. Its role is bounded by
+the adjacent source and configuration files; a change should be evaluated in the workflow that
+actually consumes it rather than judged from the file in isolation.
+
+Module statement: Ablate TBA risk controls on fixed data, years, symbols, and signals.
+
+Imports: __future__, argparse, backend.minerva, backend.universal_risk_supervisor,
+backend.universal_yearly_protocol, dataclasses, json, pathlib, sys,
+tools.run_tba_paired_risk_study
+
+Public code inventory:
+  - function profile(*active) (line 41)
+  - function main() (line 67)
 
 
 [server/tools/run_universal_study.py]

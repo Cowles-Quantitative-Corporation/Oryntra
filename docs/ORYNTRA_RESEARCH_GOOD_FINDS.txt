@@ -531,3 +531,1450 @@ Testing retained 24 bounded development candidates. A wider no-trade band improv
 
 **Inference boundary:** AQR’s discussion is a research-direction argument, not a recipe, a claim that impact is easy to predict for Oryntra, or evidence that an ML cost model would improve returns. The proposed two-track evaluation is Oryntra-specific inference.
 **Status:** Research lead only — not implemented or validated.
+
+## 2026-09-13, America/New_York — Jane Street
+
+**Source:** *What the interns have wrought, 2024 edition: A time-travel debugger*
+**Direct URL:** https://blog.janestreet.com/what-the-interns-have-wrought-2024-edition-index/
+**Classification:** Candidate for research-allocation infrastructure; not a production trading rule.
+
+**What the source says:** Jane Street describes risk-checking systems that each receive explicit upper bounds, and a Limshare system that dynamically allocates those scarce limits while preserving an overall risk bound. It also describes replaying historical state to debug why a risk request was accepted or rejected.
+
+**Oryntra research lead:** Treat risk budget as an allocatable resource across TBA sleeves, not just a static per-name cap. Add a replayable decision ledger that can answer which sleeve requested risk, which limit was binding, what other sleeve consumed the budget, and why the request was rejected. Test dynamic budget allocation against static 10% marginal-risk caps with the same forecast and confirmation years.
+
+**Inference boundary:** Jane Street does not disclose Limshare’s production objective, weights, or implementation details. Oryntra should borrow the auditable allocation pattern, not claim to reproduce Limshare.
+
+## 2026-09-13, America/New_York — Citadel
+
+**Source:** *What We Do — Disciplined Risk Management*
+**Direct URL:** https://www.citadel.com/what-we-do/
+**Classification:** Candidate for shared risk-and-PnL data modeling; not evidence for a return feature.
+
+**What the source says:** Citadel describes independent portfolio construction and risk oversight, constant position monitoring, automated testing, and continuously updated stress scenarios. Its public materials also emphasize identifying key risk exposures and performance drivers and monitoring risk tolerance against portfolio objectives.
+
+**Oryntra research lead:** Add a cross-TBA risk ledger that joins position exposure, risk contribution, realized PnL, stress result, and limit status in one timestamped record. This would let us audit whether a model earned returns by taking an unrecognized common risk and would support the Jane Street-style replay idea.
+
+**Inference boundary:** Citadel’s public description does not reveal its proprietary scenarios, data, or limits. The Oryntra proposal is an observability and governance design, not a claim of institutional equivalence.
+
+## 2026-09-13, America/New_York — AQR Capital Management
+
+**Source:** *Strategic Portfolio Construction: How to Put It All Together*
+**Direct URL:** https://www.aqr.com/-/media/AQR/Documents/Insights/Alternative-Thinking/Alternative-Thinking-Strategic-Portfolio-Construction.pdf
+**Classification:** Candidate for robust portfolio-construction research.
+
+**What the source says:** AQR describes starting with unconstrained predictive views, reverse-engineering implied expected returns with a covariance model, and then applying constraints and transaction-cost estimates in a robust optimizer. It explicitly warns that estimation error and model error can make unconstrained outputs extreme or unstable.
+
+**Oryntra research lead:** Compare the current risk-cap projection with a robust optimizer that keeps the signal-implied portfolio as an anchor and penalizes covariance, turnover, concentration, and capacity uncertainty. The optimizer must emit an objective/constraint manifest and be tested against the current TBA candidate—not replace it by assumption.
+
+**Inference boundary:** This is a public construction framework, not AQR’s production optimizer or a guarantee that robust optimization improves Oryntra Sharpe.
+
+## 2026-09-13, America/New_York — Man Numeric / Man Group
+
+**Source:** *Black Box + Glass Box: Using Creative Systematic Risk Modelling to Navigate an Uncertain Macro Environment*
+**Direct URL:** https://www.man.com/insights/black-box-glass-box
+**Classification:** Candidate for dynamic factor-risk research; not a return signal.
+
+**What the source says:** Man Numeric describes a statistical factor risk model that discovers portfolios of securities explaining prevalent current risks instead of relying only on a fixed human-defined factor list. It combines that statistical “black box” with forward-looking human-defined risk factors, while keeping the additional factors inside the risk-model framework.
+
+**Oryntra research lead:** Add a report-only blind-factor diagnostic that discovers dominant cross-sectional return directions, reports explained variance and composition stability, and compares them with the existing taxonomy and correlation clusters. A discovered factor may constrain risk only after stability, coverage, and out-of-sample tests; it must not become an opaque alpha sleeve.
+
+**Inference boundary:** Man does not disclose its production SFRM data, hyperparameters, or factor weights. This is an architecture hypothesis, not a claim that an SVD or PCA implementation reproduces Man Numeric.
+
+## 2026-09-13, America/New_York — Man AHL
+
+**Source:** *Conviction in the Systematic Hunt for Alpha: A Primer*
+**Direct URL:** https://www.man.com/documents/download/b91c4-03d1f-20417-5c219/Man_AHL_Insights_Conviction_in_the_Systematic_Hunt_for_Alpha%3A_A_Primer_English_%28United_States%29_28-08-2024.pdf
+**Classification:** Candidate for uncertainty-aware sleeve allocation.
+
+**What the source says:** Man AHL describes combining a correlation matrix with expected returns and using uncertainty/conviction to modify allocations, including Monte Carlo outcome distributions and netting overlapping strategy exposures.
+
+**Oryntra research lead:** Give each TBA sleeve a forecast-confidence record based on completed validation evidence, then use a bounded confidence multiplier or risk budget—not a discretionary override. Store the uncertainty distribution, overlap netting, and resulting marginal risk change.
+
+**Inference boundary:** The public primer’s hypothetical examples do not disclose a production confidence estimator or prove better returns. Oryntra must test confidence weighting against equal-weight and fixed-cap controls.
+
+## 2026-09-13, America/New_York — Two Sigma
+
+**Source:** *Unwinds, Diversification, and Constraints: The Mechanics of Financial Panics*
+**Direct URL:** https://www.twosigma.com/articles/unwinds-diversification-and-constraints-the-mechanics-of-financial-panics/
+**Classification:** Candidate for liquidation-cascade stress testing.
+
+**What the source says:** Two Sigma describes how shared constraints and loss thresholds can cause teams or strategies to unwind in sequence, producing a weakness cascade that may eventually force sales of otherwise strong and liquid positions.
+
+**Oryntra research lead:** Add a scenario-only unwind simulator that applies simultaneous sleeve loss limits, correlation convergence, liquidity caps, and a declared unwind ordering. Report forced-sale overlap, residual exposure, skipped trades, and recovery path. Do not turn the scenario into a live stop rule without separate evidence.
+
+**Inference boundary:** This is a mechanics discussion, not a disclosed Two Sigma production algorithm or a prediction that every loss limit creates a cascade.
+
+## 2026-09-13, America/New_York — Man Group
+
+**Source:** *We See Risk Where Others May Not: Applying Dynamic Risk Management to a Cash Equities Portfolio*
+**Direct URL:** https://www.man.com/insights/applying-dynamic-risk-management
+**Classification:** Candidate for risk-forecast research.
+
+**What the source says:** Man describes combining risk-based portfolio optimization with dynamic risk management and argues that risk may be forecast more reliably than returns. The public example emphasizes diversification and tail characteristics rather than only maximizing expected return.
+
+**Oryntra research lead:** Separate a risk-forecast evaluation from an alpha-forecast evaluation. Compare realized volatility, tail loss, correlation, and capacity forecasts against naive estimates before allowing any forecast to scale TBA exposure. This would prevent the recent drawdown bundle from being accepted merely because it sounded institutionally sophisticated.
+
+**Inference boundary:** The article’s reported outcomes are not evidence for Oryntra’s data, universe, or thresholds. Any implementation must pass the same untouched-period Sharpe and consistency gates.
+
+## 2026-09-13, America/New_York — Man AHL
+
+**Source:** *Who is AHL?* (research process overview)
+**Direct URL:** https://www.man.com/sites/default/files/uploads/embed/ahl-landing-page-who-is-ahl-1/index.html
+**Classification:** Candidate for a simulation-to-paper-trading promotion gate.
+
+**What the source says:** Man AHL describes a two-stage process: simulate ideas over long histories and environments, then paper trade accepted ideas live before using money.
+
+**Oryntra research lead:** Add a frozen-candidate paper ledger that records predictions, intended orders, simulated fills, data-quality events, and a code/config hash while the candidate runs forward. Require a predeclared promotion rule and compare the paper period with the original untouched backtest.
+
+**Inference boundary:** The page does not disclose AHL’s exact paper-trading duration, thresholds, or production tooling. This is a process control, not evidence of higher alpha.
+
+## 2026-09-13, America/New_York — AQR
+
+**Source:** *The Replication Crisis That Wasn’t*
+**Direct URL:** https://www.aqr.com/insights/perspectives/the-replication-crisis-that-wasnt
+**Classification:** Candidate for independent research replication.
+
+**What the source says:** AQR describes independently replicating research results and discusses data mining, file-drawer effects, and patterns that can stop working after discovery or crowding.
+
+**Oryntra research lead:** Before tuning, run a second implementation/configuration against the same frozen bars and verify signal rows, order timestamps, costs, and metrics. Store a replication diff; fail the candidate if unexplained differences exceed a fixed tolerance.
+
+**Inference boundary:** This is a published research-practice discussion, not a disclosed Oryntra-compatible replication framework.
+
+## 2026-09-13, America/New_York — Man Group
+
+**Source:** *Regimes, Systematic Models and the Power of Prediction*
+**Direct URL:** https://www.man.com/insights/regimes-systematic-models-power-of-prediction
+**Classification:** Candidate for report-only historical regime analogs.
+
+**What the source says:** Man describes transforming a set of economic variables, measuring multivariate similarity to historical dates, and evaluating subsequent factor returns in similar and dissimilar regimes.
+
+**Oryntra research lead:** Build a diagnostic that shows the current feature vector, nearest historical analogs, distance stability, analog count, and later returns. Use it to stratify tests first; do not feed it into live weights until it survives untouched-period validation.
+
+**Inference boundary:** The public methodology does not provide production data, features, or portfolio thresholds, and its reported results cannot be assumed for Oryntra.
+
+## 2026-09-13, America/New_York — AQR
+
+**Source:** *To Trade or Not to Trade? Informed Trading With Short-Term Signals for Long-Term Investors*
+**Direct URL:** https://www.aqr.com/insights/research/journal-article/to-trade-or-not-to-trade-informed-trading-with-short-term-signals-for-longterm-investors
+**Classification:** Candidate for a turnover-aware execution overlay.
+
+**What the source says:** AQR describes allowing a short-term view to influence trading of a slower portfolio without independently trading the short-term view, reducing the chance that transaction costs consume the signal.
+
+**Oryntra research lead:** Test a bounded overlay that delays or accelerates an already-planned TBA rebalance only when expected benefit exceeds estimated costs. Report turnover, slippage, holding period, and alpha decay against a no-overlay control.
+
+**Inference boundary:** The article’s algorithm and assumptions are not a disclosed Oryntra implementation and must not be treated as a guaranteed return improvement.
+
+## 2026-09-13, America/New_York — Man Group
+
+**Source:** *Quantifying Long-Term Market Impact* / *How Can We Reduce Costs for Correlated Order Flows?*
+**Direct URLs:** https://www.man.com/insights/quantifying-long-term-market-impact and https://www.man.com/insights/reduce-costs-correlated-order-flows
+**Classification:** Candidate for portfolio-level impact accounting.
+
+**What the source says:** Man describes expected future flow shortfall, where the current order’s impact affects later correlated orders rather than being treated as an isolated fill cost.
+
+**Oryntra research lead:** Group same-direction orders by asset, family, and time window; apply a decaying future-flow impact estimate; and compare net alpha, turnover, fill rate, and capacity curves against the existing per-trade cost model.
+
+**Inference boundary:** The public articles do not disclose production parameters or guarantee that the method improves Oryntra’s results. Calibrate only with real execution evidence or label assumptions clearly.
+
+## 2026-09-13, America/New_York — Man Group
+
+**Source:** *Conviction in the Systematic Hunt for Alpha* and *An Introduction to Machine Learning*
+**Direct URLs:** https://www.man.com/insights/conviction-the-systematic-hunt and https://www.man.com/insights/intro-machine-learning
+**Classification:** Candidate for alpha-decay, crowding, and model-vintage monitoring.
+
+**What the source says:** Man emphasizes monitoring alpha degradation, data-release sensitivity, crowding, turnover, capacity, and model half-life; it also notes that periodic refits may keep models fresh.
+
+**Oryntra research lead:** Track every model vintage’s forecast rank, realized spread, turnover, cross-model overlap, estimated capacity, and net alpha from inception. Alert for decay or crowding, but require a frozen champion/challenger comparison before any retune or promotion.
+
+**Inference boundary:** These are process observations, not evidence that automatic refitting or a crowding rule will improve returns.
+
+## 2026-09-13, America/New_York — Man AHL
+
+**Source:** *The Need for Speed in Trend-Following Strategies*
+**Direct URL:** https://www.man.com/insights/need-for-speed-trend-following
+**Classification:** Candidate for adaptive execution speed.
+
+**What the source says:** Man separates model speed from execution speed and describes staging trades passively when the signal horizon permits, while aggressing only when necessary.
+
+**Oryntra research lead:** Add a research-only scheduler that chooses immediate, staged, or delayed fills from signal half-life, spread, volatility, and estimated impact. Preserve the target position and compare against the current next-open execution assumption.
+
+**Inference boundary:** The article describes Man AHL’s approach at a high level; it does not provide an Oryntra-ready execution algorithm or thresholds.
+
+## 2026-09-13, America/New_York — BlackRock
+
+**Source:** *Benchmark concentration and the effects on active portfolios* and *Don’t Lose Your Breadth: The Key to Macro Resilience*
+**Direct URLs:** https://www.blackrock.com/institutions/en-au/insights/investment-actions/benchmark-concentration-and-the-effects-on-active-portfolios and https://www.blackrock.com/institutions/en-ca/insights/thought-leadership/investment-actions/macro-resilience
+**Classification:** Candidate for effective-breadth diagnostics.
+
+**What the source says:** BlackRock uses concentration and effective-breadth concepts to show that a portfolio can appear diversified by holdings while becoming concentrated in a few benchmark or risk drivers.
+
+**Oryntra research lead:** Calculate effective breadth across positions, TBA sleeves, families, and factor exposures. Stratify out-of-sample results by breadth and report whether extra holdings actually add independent risk contributors.
+
+**Inference boundary:** The public research does not specify Oryntra’s universe, data, or a production threshold. Breadth should remain a diagnostic before it becomes a constraint.
+
+## 2026-09-13, America/New_York — Two Sigma
+
+**Source:** *Introducing the Two Sigma Factor Lens*
+**Direct URL:** https://www.twosigma.com/wp-content/uploads/Introducing-the-Two-Sigma-Factor-Lens.10.18.pdf
+**Classification:** Candidate for orthogonal factor attribution.
+
+**What the source says:** Two Sigma describes a parsimonious factor lens that uses liquid core factors and rolling regressions to separate common exposures from residual, marginal risk factors.
+
+**Oryntra research lead:** Extend the current factor diagnostics with rolling residualization, factor-selection stability, and explicit common-beta versus residual-return attribution. Keep discovered factors report-only until their composition and coverage are stable.
+
+**Inference boundary:** Two Sigma’s factor lens is not an Oryntra-ready model, and its public examples do not establish predictive alpha for Oryntra.
+
+## 2026-09-13, America/New_York — Bridgewater
+
+**Source:** *The All Weather Story*
+**Direct URL:** https://www.bridgewater.com/research-and-insights/the-all-weather-story
+**Classification:** Candidate for driver-based stress testing.
+
+**What the source says:** Bridgewater organizes portfolio resilience around economic surprises such as growth and inflation rather than relying only on isolated historical episodes.
+
+**Oryntra research lead:** Add report-only growth/inflation driver scenarios that map TBA holdings and sleeves to expected sensitivities, then report loss, concentration, and recovery. Do not turn scenario outputs into trade signals without separate evidence.
+
+**Inference boundary:** Bridgewater does not disclose its production forecasts, and a scenario framework is not proof of better returns.
+
+## 2026-09-13, America/New_York — Bridgewater / Two Sigma
+
+**Sources:** *The All Weather Story* and *Introducing the Two Sigma Factor Lens*
+**Classification:** Candidate for an alpha/beta separation ledger.
+
+**What the sources say:** Both institutional frameworks emphasize understanding common market exposures separately from active or residual returns.
+
+**Oryntra research lead:** Require every study to report gross return, benchmark beta, beta-adjusted alpha, residual risk, and factor attribution from the same frozen period. A return increase that is explained by larger beta should not count as an alpha improvement.
+
+**Inference boundary:** This is an accounting and evaluation control, not a new predictive signal.
+
+## 2026-09-13, America/New_York — Man Group / AQR
+
+**Sources:** Man Group’s *ArcticDB* and AQR’s multiple-testing research
+**Direct URLs:** https://www.man.com/news-centre/man-group-brings-powerful-dataframe-database-product-arcticdb-to-market-with-bloomberg and https://www.aqr.com/-/media/AQR/Documents/Journal-Articles/JFDS_Winter2019_A-Data-Science-Solution-to-Multiple-Testing-Crisis---Lopez_de_Prado.pdf?sc_lang=en
+**Classification:** Candidate for point-in-time data and research-trial accounting.
+
+**What the sources say:** Man describes point-in-time dataset analysis and time-series backtesting infrastructure; AQR discusses selection bias from trying many candidate strategies and the need to account for the total trial set.
+
+**Oryntra research lead:** Give every data bundle an immutable snapshot and availability timestamp, then record every candidate trial and its relationship to the selected model. Report raw and trial-adjusted Sharpe/alpha and fail closed when a feature was unavailable at the simulated decision time.
+
+**Inference boundary:** These sources do not prescribe Oryntra’s exact adjustment method or database design. The first implementation should be an audit/reporting layer before changing model weights.
+
+## 2026-09-13, America/New_York — Man Group
+
+**Source:** *Shades of Green: A Systematic Approach to ESG*
+**Direct URL:** https://www.man.com/technology/shades-of-green-esg
+**Classification:** Candidate for data-vendor quality contracts.
+
+**What the source says:** Man describes vendor-specific cleansing, quality checks, coverage review, stability checks, manual comparison, and auditable overrides for messy datasets.
+
+**Oryntra research lead:** Add field-level checks for price continuity, corporate actions, missingness, duplicates, coverage, and cross-source disagreement. Preserve every exception and correction in a data-quality ledger.
+
+**Inference boundary:** This process comes from a particular data domain; it does not prove that a quality filter improves alpha.
+
+## 2026-09-13, America/New_York — Man Group / Two Sigma
+
+**Sources:** Man Group’s systematic-investing research and Two Sigma’s interpretability survey
+**Direct URLs:** https://www.man.com/insights/intro-machine-learning and https://www.twosigma.com/articles/interpretability-methods-in-machine-learning-a-brief-survey/
+**Classification:** Candidate for feature staleness and explanation diagnostics.
+
+**What the sources say:** Institutional ML research must account for capacity, crowding, data timing, and model behavior; model-agnostic explanation tools can expose how predictions depend on features.
+
+**Oryntra research lead:** Record first-available time, update cadence, age, coverage, and missingness for every non-price feature. Save explanation summaries and their time/fold stability to detect drift or leakage, without treating explanations as causal proof.
+
+**Inference boundary:** Interpretability outputs can be unstable and are diagnostic only; they are not a substitute for untouched-period testing.
+
+## 2026-09-13, America/New_York — Man Group
+
+**Source:** *Factors*
+**Direct URL:** https://www.man.com/insights/factors
+**Classification:** Candidate for portability and bad-period evidence gates.
+
+**What the source says:** Man’s factor discussion emphasizes economic justification, persistence, a history covering bad times, implementability, liquidity, and robustness across geographies and implementation costs.
+
+**Oryntra research lead:** Require a predeclared evidence matrix across markets, sectors, liquidity tiers, and crisis windows. Report direction, beta-adjusted alpha, hit rate, and costs in every cell so a specialized edge is not presented as universal.
+
+**Inference boundary:** The criteria are research guidance, not a guarantee that an effect transfers to Oryntra’s universe.
+
+## 2026-09-13, America/New_York — Two Sigma
+
+**Source:** *Factor Construction and Explanation of Design Choices*
+**Direct URL:** https://www.twosigma.com/wp-content/uploads/Design-Choices_SV.Final_.pdf
+**Classification:** Candidate for specification-perturbation testing.
+
+**What the source says:** Two Sigma shows that universe, definition, weighting, neutrality, and sector treatment are material factor-design choices.
+
+**Oryntra research lead:** For every candidate, predeclare a small neighborhood of economically reasonable specifications and report the distribution of results rather than selecting the best variant. Keep the holdout untouched.
+
+**Inference boundary:** The document illustrates factor-design sensitivity; it does not identify which specification is best for Oryntra.
+
+## 2026-09-13, America/New_York — Man Group
+
+**Source:** *Factors* and *Factor Investing*
+**Direct URLs:** https://www.man.com/insights/factors and https://www.man.com/insights/factor-investing
+**Classification:** Candidate for bad-period and liquidity-tail ledgers.
+
+**What the source says:** Man emphasizes understanding severe bad outcomes, real implementation costs, liquidity, and the gap between idealized and tradable portfolios—especially during stress.
+
+**Oryntra research lead:** Require every study to include crisis windows, volatility spikes, gaps, halts, and the least-liquid eligible names. Report whether alpha survives costs and whether exits are executable.
+
+**Inference boundary:** This is a testing standard, not a new alpha signal.
+
+## 2026-09-13, America/New_York — Man Numeric
+
+**Source:** *Questioning Quality*
+**Direct URL:** https://www.man.com/insights/questioning-quality
+**Classification:** Candidate for low-confidence crowding diagnostics.
+
+**What the source says:** Man describes using curated manager filings and systematic concentration indicators to examine shared exposures and possible factor crowding.
+
+**Oryntra research lead:** Add a clearly incomplete crowding proxy from dated public holdings and shared factor exposures. Show coverage and uncertainty; use it to flag investigation, never as a complete map of institutional positioning.
+
+**Inference boundary:** Public filings are delayed and incomplete, so this cannot be treated as precise real-time positioning.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Process ideas derived from the institutional research collected above.
+
+**Research evidence graph:** Connect each source to its disclosed mechanism, the Oryntra capability gap, data contract, predeclared test, result, and promotion decision. This prevents an attractive institutional name from becoming an unsupported implementation.
+
+**Model cards:** Create a versioned card for every TBA vintage containing objective, universe, availability rules, training window, cadence, costs, risk controls, exclusions, and failure modes. Treat the card as part of the test artifact, not optional documentation.
+
+**Experiment budgets:** Give each research question a finite number of trials, one primary metric, secondary diagnostics, and a stopping rule before running variants. A failed question should close or be reframed instead of generating unlimited tuning.
+
+**Predictive versus causal labels:** Every feature and finding should be labeled predictive, explanatory, or causal. Predictive success does not establish a causal mechanism, and causal language requires a separate identification design.
+
+**Promotion rule:** These are process controls intended to make future research more reliable; they are not claims of alpha and should be implemented only after the existing evidence ledger can support them.
+
+## 2026-09-13, America/New_York — BlackRock / Man Group / Man AHL
+
+**Sources:** BlackRock model-governance description, Man Numeric’s *Black Box + Glass Box*, and Man AHL’s model/data-risk disclosure
+**Direct URLs:** https://careers.blackrock.com/job/gurgaon/model-governance-portfolio-risk-modeling-aladdin-financial-engineering-associate/45831/81286650032, https://www.man.com/insights/black-box-glass-box, and https://www.man.com/documents/download/ba025-5sXXf-jjznA-KLax8/405441817.1628627976/Man_AHL_Alpha_%28AUD%29_-_Class_B_PDS_with_Application_Form_English_29-10-2019.pdf
+**Classification:** Candidate for model lifecycle governance and independent safeguards.
+
+**What the sources say:** Institutional model operations include performance monitoring, documentation, validation, remediation, independent safeguards, and explicit handling of model/data failures. Man Numeric also describes combining statistical blind factors with governed forward-looking risk proxies.
+
+**Oryntra research lead:** Add lifecycle states (candidate, shadow, active, watch, quarantined, retired, restored), immutable transition evidence, and a model-agnostic safety layer for stale data, malformed signals, impossible prices, oversized orders, and risk-limit breaches. Give every forward risk proxy an owner, rationale, effective date, sunset date, and review history.
+
+**Inference boundary:** These public descriptions do not reveal production thresholds or approval workflows. The proposed controls are governance infrastructure, not alpha claims.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Candidate:** Risk-model challenger and remediation replay.
+
+**Research lead:** Treat covariance, factor, and tail-risk estimators as models that can drift. Run a challenger in shadow mode, score forecast errors, and require a frozen comparison before replacing the incumbent. Preserve the old estimator so historical decisions can be replayed under the version that actually existed at the time.
+
+**Inference boundary:** This is a proposed Oryntra process derived from institutional model-governance patterns; it has not been implemented or tested yet.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Operational resilience candidates derived from institutional model/data-risk disclosures.
+
+**Graceful degradation:** Predeclare what happens when data is missing, stale, delayed, or contradictory: bounded hold, confidence reduction, no-trade, or flatten. Test each policy rather than silently filling values.
+
+**Deterministic idempotence:** Stable identifiers for model decisions, rebalances, and simulated orders should make retries safe and replays reproducible. Compare exposure and cost under partial fills and repeated job delivery.
+
+**Incident replay:** Link every rejected order, data failure, override, and unexpected fill to the exact model/config/data version. A fix should create a regression test or a documented reason not to change behavior.
+
+**Resilience scenarios:** Test delayed feeds, process restarts, missing benchmarks, and partial service loss. Report stale exposure, unhedged time, recovery latency, and duplicate/omitted decisions separately from market PnL.
+
+**Inference boundary:** These controls can protect realized behavior and research integrity, but they are not expected-alpha features and have not been implemented.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Falsifiable alpha hypotheses, kept separate from institutional governance controls.
+
+1. **Residual signal after common-risk removal:** Test whether a signal predicts returns after rolling market, sector, and discovered-factor exposures are removed.
+2. **Forecast calibration:** Test whether out-of-fold score bins are monotonic and calibrated, then evaluate whether calibrated sizing improves net results without extra turnover.
+3. **Meta-labeling:** Keep the base direction fixed and use a separate out-of-fold model only to accept or reject proposed trades; compare against all trades and shuffled controls.
+4. **Signal interaction stability:** Test a predeclared, small interaction family and require stability across time, sector, and liquidity slices.
+5. **Holding-period adaptation:** Estimate signal decay using only prior information and compare a bounded adaptive horizon against a fixed-horizon control.
+6. **Breadth versus conviction:** Hold gross forecast exposure constant and test whether more independent names improve consistency or simply dilute the strongest forecasts.
+
+**Promotion rule:** None of these hypotheses is an approved feature. Each needs a frozen specification, realistic costs, a search-budget record, and untouched confirmation.
+
+## 2026-09-13, America/New_York — BlackRock Systematic
+
+**Source:** *Augmented Investment Management* (AIM)
+**Direct URL:** https://www.blackrock.com/institutions/en-au/literature/whitepaper/augmented-investment-management.pdf
+**Classification:** Candidate for two-stage alpha and portfolio-construction architecture.
+
+**What the source says:** BlackRock describes using ML to generate alpha forecasts from many signals while separating those forecasts from risk-aware portfolio construction; it also describes interpretable signal contributions and live monitoring.
+
+**Oryntra research lead:** Make the alpha stage emit forecasts, uncertainty, and provenance, while a separate construction stage applies costs, exposure limits, liquidity, and risk budgets. Preserve the forecast-to-target-to-order chain so any change can be attributed.
+
+**Inference boundary:** AIM is a public description of a BlackRock system, not an Oryntra-ready implementation or evidence of higher returns for Oryntra.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Candidate:** Shared signal library with mandate adapters.
+
+**Research lead:** Maintain one versioned, point-in-time signal library while allowing TBA mandates to select bounded subsets, horizons, and risk targets. Measure reuse, overlap, and accidental correlated bets instead of assuming shared signals diversify.
+
+**Candidate:** Explanation drift monitoring.
+
+**Research lead:** Compare live feature contributions with the validated distribution; material sign or dominance shifts trigger review, not silent refitting.
+
+**Candidate:** Forecast-to-order attribution.
+
+**Research lead:** Attribute lost alpha separately to forecast error, risk constraints, liquidity, timing, and execution so future tuning targets the real bottleneck.
+
+**Promotion rule:** These are architecture hypotheses and diagnostics, not approved model features.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Portfolio-combination hypotheses.
+
+1. **Ensemble diversity objective:** Weight signals by forecast quality and incremental residual return, not standalone Sharpe. Test whether weaker standalone sleeves add distinct drawdown or factor behavior.
+2. **Bayesian forecast shrinkage:** Pull noisy forecasts toward a neutral prior using sample size, error, and regime stability; compare against fixed and no-shrinkage controls.
+3. **Uncertainty-aware robust allocation:** Treat expected returns, covariance, and costs as ranges and measure the return paid for robustness against a standard optimizer.
+4. **Turnover deadband:** Trade only when expected alpha decay exceeds spread/impact and target deviation crosses a predeclared band; report delayed alpha and accumulated risk drift.
+5. **Asymmetric loss utility:** Compare standard objectives with explicit left-tail, recovery-time, and consecutive-loss penalties, reporting the return sacrificed for protection.
+
+**Promotion rule:** These are research candidates only. The priors, ranges, deadbands, and penalties must be fixed before untouched evaluation.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Robustness-simulation hypotheses.
+
+1. **Dependence-preserving resampling:** Use block or stationary bootstrap methods that retain serial correlation, cross-asset dependence, volatility clustering, and turnover bursts; report uncertainty bands rather than a single simulated return.
+2. **Cost and fill uncertainty:** Draw spread, impact, delay, and fill outcomes from observed distributions and rerun the same signal path to test whether the edge survives execution uncertainty.
+3. **Adversarial feature perturbation:** Apply realistic lag, rounding, revision, and measurement-error perturbations; flag candidates whose decisions are unstable under small plausible changes.
+4. **Synthetic regime stress:** Generate stress paths from pre-test volatility/correlation regimes only for failure analysis, never as extra evidence of historical alpha.
+5. **Pathwise risk-of-ruin review:** Compare drawdown depth, recovery time, capital usage, and consecutive losses across historical, resampled, and stress paths under fixed and dynamic exposure.
+
+**Promotion rule:** Synthetic and resampled results are uncertainty/stress evidence, not replacement holdouts. The historical untouched test remains decisive.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Event and alternative-data hypotheses.
+
+1. **Event-time integrity:** Preserve event, first-available, provider-receipt, revision, and market-time timestamps; evaluate only information available at the decision time.
+2. **News novelty and duplicate control:** Cluster syndicated or repeated events so one headline cannot multiply conviction; test incremental information beyond price and volume.
+3. **Reaction-horizon decomposition:** Separate immediate, short-horizon, and persistent responses, then match holding periods and costs to the declared horizon.
+4. **Text-model abstention:** Allow ambiguous, conflicting, low-coverage, or out-of-domain documents to produce no signal; report abstention and error costs.
+5. **Event-signal orthogonalization:** Residualize event features against existing momentum, volatility, gap, and volume signals before calling them new alpha.
+
+**Promotion rule:** Event data must pass point-in-time, duplicate, coverage, and untouched-period tests before it can influence any TBA decision.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Market-realism hypotheses.
+
+1. **Borrow and short availability:** Model locate availability, borrow fee, recalls, and forced buy-ins as time-varying; unavailable shorts become no-trade or reduced exposure.
+2. **Delisting and corporate-action continuity:** Keep delisted names, mergers, spin-offs, splits, special dividends, ticker changes, and bankruptcies in the historical universe.
+3. **Trading-session and halt constraints:** Align decisions to exchange calendars, timezones, auctions, holidays, limit states, and halts; report stale exposure and unfilled risk.
+4. **Financing and margin budget:** Include financing, collateral haircuts, margin requirements, and interest on cash or borrow; report capital and margin-call paths.
+5. **Capacity by liquidity regime:** Estimate capacity separately in normal, stressed, and outage conditions rather than using one average-volume multiple.
+
+**Promotion rule:** These controls improve realism and may reduce apparent alpha. They must be tested before any strategy comparison is treated as meaningful.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Multi-horizon and multi-sleeve coordination hypotheses.
+
+1. **Multi-horizon reconciliation:** Keep fast, medium, and slow forecasts separate; reconcile using decay, overlap, and uncertainty instead of frequency alone.
+2. **Position-level order netting:** Net opposing sleeve orders before execution while retaining sleeve-level contribution attribution; compare gross and net turnover/costs.
+3. **Shared capital allocator:** Allocate across models using common risk, liquidity, margin, and correlation budgets, with an opportunity-cost explanation for each allocation.
+4. **Asynchronous-information conflict policy:** Track signal age and define stale-conflict behavior—abstain, reduce confidence, or defer—especially across news gaps and market closures.
+5. **Portfolio versus sleeve controls:** Test whether limits applied per sleeve still breach portfolio-level risk when exposures overlap.
+
+**Promotion rule:** These are architecture hypotheses. Any netting or allocation change must preserve attribution and pass unchanged-data comparisons against the current baseline.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Alpha and benchmark-measurement controls.
+
+1. **Time-varying beta:** Declare the rolling window, shrinkage, and minimum observations; show alpha sensitivity instead of selecting the favorable beta method afterward.
+2. **Benchmark ensemble:** Compare the declared S&P/QQQ blend, each component, and relevant factor benchmarks with market, style, sector, and residual attribution.
+3. **Benchmark contamination:** Detect overlap between benchmark constituents/factors and the strategy’s signal or universe; require a clean alternative when overlap makes alpha misleading.
+4. **Alpha uncertainty intervals:** Pair beta-adjusted alpha with block-aware confidence intervals and cost/date sensitivity; report the probability alpha is positive.
+5. **Evaluation lockfile:** Freeze benchmark symbols/weights, risk-free source, beta method, annualization, costs, and missing-data policy so results remain comparable.
+
+**Promotion rule:** These are evaluation controls, not return-generating features. Any historical result without the same lockfile should be treated as non-comparable.
+
+## 2026-09-13, America/New_York — Man Group / Oryntra research synthesis
+
+**Source:** *Creating Portfolio Convexity: Trend Versus Options*
+**Direct URL:** https://www.man.com/insights/creating-portfolio-convexity
+**Classification:** Candidate for an explicitly budgeted crisis-protection sleeve.
+
+**What the source says:** Man discusses combining systematic defensive approaches with option-based hedges, emphasizing the tradeoff between crisis responsiveness and the long-run carry cost of protection.
+
+**Oryntra research lead:** Test a small, explicit defensive sleeve using available proxies, compare it with no hedge and each component alone, and report drawdown, recovery, carry, turnover, and marginal expected-shortfall reduction.
+
+**Additional hypotheses:** Evaluate several predeclared hedge triggers for delay and whipsaw; measure whether protection covers residual portfolio risk or duplicates existing low-beta/short exposure.
+
+**Inference boundary:** The public example does not prescribe a hedge for Oryntra or prove that protection improves its returns. Any test requires realistic instrument, cost, and availability data.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Backlog triage:**
+
+**Phase A — measurement integrity:** evaluation lockfile, point-in-time data,
+alpha/beta separation, trial accounting, model cards, replication, and event
+timestamps.
+
+**Phase B — tradability:** corporate actions and delistings, borrow and financing,
+exchange sessions and halts, cost/fill uncertainty, liquidity-regime capacity,
+and forecast-to-order attribution.
+
+**Phase C — portfolio risk:** effective breadth, factor attribution, shared
+capital, order netting, regime stress, risk-model challengers, and hedge overlap.
+
+**Phase D — alpha experiments:** residual signals, calibration, meta-labeling,
+holding-period adaptation, interactions, event features, ensemble diversity, and
+robust allocation.
+
+**Decision rule:** An alpha experiment should not compensate for an invalid
+measurement or unrealistic execution assumption. Promotion requires evidence from
+the preceding phase.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Forecast uncertainty and adaptation hypotheses.
+
+1. **Prediction intervals:** Produce calibrated uncertainty bands or quantiles rather than only point forecasts; test whether width predicts realized error and improves sizing.
+2. **Online change points:** Detect breaks in returns, volatility, correlation, liquidity, or feature distributions using past data; measure false alarms and detection delay before any response.
+3. **Constrained online adaptation:** Bound refit movement, turnover, exposures, and update frequency; keep a frozen champion for rolling comparisons.
+4. **Monotonic/sign-stability constraints:** Compare economically directional constraints with unconstrained models to see whether they reduce overfit or remove useful nonlinear behavior.
+5. **Uncertainty-aware abstention:** Decline trades when forecast intervals overlap neutral after costs or calibration is unreliable; measure opportunity cost and tail protection.
+
+**Promotion rule:** These capabilities must be calibrated out of sample and cannot respond to future observations or tune themselves on the holdout.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Anti-overfitting and adversarial-evaluation hypotheses.
+
+1. **Sealed holdout:** Keep the final period and data hash inaccessible to tuning code; reveal a fixed report under a predeclared evaluation protocol.
+2. **Negative controls:** Add economically irrelevant features and shifted labels; any signal there indicates leakage or a broken evaluator.
+3. **Permutation/placebo tests:** Shuffle labels, shift event timestamps, or use matched noise while preserving the pipeline; legitimate edge should disappear.
+4. **Adversarial review:** Search explicitly for leakage, survivorship, benchmark contamination, favorable parameter choices, and omitted costs; record objections and resolutions.
+5. **Reproducibility envelope:** Repeat frozen studies across seeds, runtime versions, and independent implementations; unexplained metric or order differences block promotion.
+
+**Promotion rule:** These tests can invalidate a candidate but cannot establish future profitability by themselves.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Counterfactual and causal-hygiene hypotheses.
+
+1. **Counterfactual execution baselines:** Compare each order with no trade, prior target, delayed execution, and benchmark scheduling alternatives.
+2. **Event-study hygiene:** Predeclare event windows, controls, clustering, contamination exclusions, and non-overlap rules.
+3. **Decision-level treatment effects:** Compare accepted trades with comparable rejected opportunities using only decision-time information; treat results as observational.
+4. **Synthetic-control comparisons:** Match concentrated positions or sleeves to transparent factor or basket proxies and evaluate incremental net value beyond beta.
+5. **Marginal decision value:** Ablate signals, constraints, hedges, and execution choices in a declared order so dependent components do not receive double credit.
+
+**Promotion rule:** These methods improve attribution and causal discipline; they do not by themselves prove a tradable causal edge.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Distribution-shift and transferability hypotheses.
+
+1. **Distribution-shift dashboard:** Compare live features, returns, liquidity, correlations, and universe composition with validated envelopes.
+2. **Invariant signal search:** Prefer relationships stable across declared environments; penalize unexplained sign or rank flips.
+3. **Unlabeled-domain adaptation gate:** Test the new domain’s input distribution and data contract before applying a model; route materially different domains to shadow or abstention.
+4. **Calibration transfer:** Check whether forecast calibration transfers across sectors, liquidity tiers, and instruments; recalibrate on a separate window only.
+5. **Universe churn sensitivity:** Use point-in-time membership, delayed additions/removals, and realistic survival to expose dependence on today’s winners.
+
+**Promotion rule:** A model that fails transferability is not necessarily useless, but its valid domain must be explicitly documented rather than generalized.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Portfolio-optimizer diagnostics.
+
+1. **Feasibility ledger:** Record constraints, input values, feasibility, relaxations, and distance from requested targets; never hide infeasible optimization behind silent clipping.
+2. **Solution stability:** Perturb forecasts, costs, covariance, and constraints within realistic error and measure weight/objective sensitivity.
+3. **Binding-constraint diagnostics:** Store binding constraints and marginal objective costs to identify whether performance is limited by forecasts, capacity, risk, or overly tight rules.
+4. **Convex baseline first:** Establish a transparent convex or heuristic baseline before a non-convex solver; compare under identical data, constraints, restarts, and costs.
+5. **Seed/restart envelope:** Measure solution dispersion, failure rate, runtime, and out-of-sample results across fixed seeds and restart budgets.
+
+**Promotion rule:** A complex optimizer must demonstrate stable, reproducible out-of-sample value rather than a single favorable in-sample solution.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Broker and account-implementation hypotheses.
+
+1. **Account implementability:** Include minimum sizes, rounding, fractional eligibility, shortability, cash buffers, settlement, and broker restrictions; report target-to-actual deviation.
+2. **Order-routing uncertainty:** Stress venue, broker, order type, queue, and latency assumptions with conservative, central, and favorable fills.
+3. **Settlement/cash ledger:** Track unsettled proceeds, dividends, financing, margin availability, and cash reserved for pending orders.
+4. **Broker reconciliation:** Reconcile intended orders, acknowledgments, fills, cancels, positions, cash, and fees; flag orphan fills and state mismatches before the next decision.
+
+**Promotion rule:** These controls determine whether a strategy is implementable in an account; they do not increase simulated alpha by themselves.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Research-infrastructure hypotheses.
+
+1. **Bitemporal feature store:** Preserve observation and availability timestamps plus revisions so historical queries reconstruct what was knowable.
+2. **Incremental recomputation:** Recompute only affected dates/assets after source or transformation changes, then compare with a clean full rebuild.
+3. **Cache/artifact lineage:** Link every cached dataset, feature, signal, optimizer output, and report to source hashes, code/config, and evaluation lockfile; invalidate explicitly.
+4. **Compute/latency budgets:** Record runtime, memory, storage, transfer, and decision latency, including degraded behavior when budgets are exceeded.
+5. **Reference implementation checksums:** Compare optimized/vectorized calculations with a small transparent reference implementation over randomized and edge-case fixtures.
+
+**Promotion rule:** Infrastructure improvements must preserve semantics and reproducibility; speed alone is not evidence of a better model.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Performance-diagnostic hypotheses.
+
+1. **Cross-sectional information:** Report rank IC, spread return, monotonicity, turnover-adjusted IC, and capacity by date, not only portfolio Sharpe.
+2. **Conditional-performance matrix:** Slice by market direction, volatility, correlation, liquidity, sector, and horizon with minimum-count and uncertainty guards.
+3. **Tail/path metrics:** Include skew, kurtosis, worst gap, expected shortfall, underwater duration, recovery ratio, and loss clustering.
+4. **Turnover-adjusted information ratio:** Show information per turnover, impact, and capital unit to distinguish scalable from friction-heavy edges.
+5. **Metric-independence map:** Identify metrics sharing return series or assumptions and predeclare the primary promotion metric.
+
+**Promotion rule:** More metrics do not equal more evidence; correlated or repeatedly selected diagnostics must not become a hidden tuning surface.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** P&L explain and risk-budget accounting hypotheses.
+
+1. **Daily P&L explain:** Reconcile price return, dividends/actions, forecast, sizing, beta/factors, financing, fees, spread, impact, timing, and residual P&L.
+2. **Expected-versus-realized execution:** Compare estimated and realized spread, impact, fill, and delay by asset, order, and liquidity regime.
+3. **Risk-budget utilization:** Track planned and realized volatility, expected-shortfall, correlation, capacity, margin, and turnover budgets.
+4. **Unexplained-P&L quarantine:** Investigate persistent or concentrated residual P&L before promotion rather than treating unexplained gains as alpha.
+
+**Promotion rule:** Every result should reconcile to a transparent P&L and risk ledger within declared tolerances.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Cross-asset expansion hypotheses.
+
+1. **Asset-class adapter contracts:** Give equities, ETFs, futures, options, bonds, FX, and crypto separate data, calendar, pricing, cost, financing, and risk contracts.
+2. **Unit/currency integrity:** Track currency, multiplier, tick value, expiry, roll, and conversion timestamp; separate asset alpha from FX and roll effects.
+3. **Instrument-specific liquidity:** Calibrate spread, impact, depth, fill, borrow, roll, and financing by asset class and venue.
+4. **Cross-asset transfer gate:** Require an untouched transfer study with matched horizons and benchmarks before moving a signal beyond its home asset class.
+5. **Roll/expiry ledger:** Preserve futures/options contract selection, rolls, expiry, exercise/assignment, implied-volatility inputs, and settlement rules.
+
+**Promotion rule:** A shared signal is not a shared implementation. Transferability must be demonstrated under the destination instrument’s actual mechanics.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Safe-execution and transaction-cost-analysis hypotheses.
+
+1. **Post-trade TCA:** Attribute shortfall to spread, impact, timing, opportunity cost, fees, venue, order type, and scheduler decision; compare with pre-trade estimates.
+2. **Logged-policy evaluation:** Test a new execution policy on historical logs or paper trades with adequate action overlap; quantify off-policy uncertainty and unsupported extrapolation.
+3. **Safe exploration:** If execution exploration is permitted, cap participation, price deviation, notional, and duration, with a kill switch and conservative baseline.
+4. **Opportunity-cost ledger:** Record missed fills, delayed orders, and constraint rejections, then track subsequent price/risk to judge abstention quality.
+
+**Promotion rule:** Execution learning cannot change the investment signal and cannot move to live use without logged/paper evidence and explicit safety limits.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Controlled model-tournament hypotheses.
+
+1. **Frozen tournament:** Run candidates concurrently with identical point-in-time data, costs, risk budgets, and paper rules; freeze configurations for the window.
+2. **Selection-blind review:** Where practical, review evidence bundles before seeing candidate names or prior rankings to reduce narrative and recency bias.
+3. **Survival analysis:** Track retirement, decay, drawdown, and correlation over time rather than selecting only the endpoint return leader.
+4. **No-retune rule:** Only predeclared safety actions may change during the window; any other change starts a new vintage with new evidence.
+
+**Promotion rule:** Tournament results are comparable only when candidates share the same data, evaluation lockfile, and observation window.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Timing and rebalance-robustness hypotheses.
+
+1. **Rebalance-calendar sensitivity:** Repeat nearby dates, frequencies, weekday conventions, and holiday handling; label timing-sensitive strategies explicitly.
+2. **Open/close convention:** Compare next-open, same-close, VWAP, delayed, and staged execution only when data availability supports each.
+3. **Timestamp jitter:** Shift signal/execution timestamps by realistic amounts to expose leakage, clock alignment, and stale-price assumptions.
+4. **Rebalance clustering:** Model correlated impact and capacity when many sleeves or holdings trade on the same dates.
+
+**Promotion rule:** A candidate should not be called robust if a small timing shift reverses the result without a defensible market-mechanics explanation.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Monitoring and observability hypotheses.
+
+1. **Severity model:** Separate informational, warning, action-required, and emergency alerts by threshold and affected capital; distinguish data, signal, execution, and operations.
+2. **Alert deduplication:** Group correlated alerts by root cause and affected models/assets so message volume does not hide the first failure.
+3. **Acknowledgment/escalation ledger:** Record evidence reviewed, decision, owner, recurrence, and expiry for accepted risk; unresolved breaches remain visible.
+4. **Silent-failure sentinels:** Monitor heartbeats, expected events, reconciliation, benchmark availability, and report generation—not only extreme values.
+5. **Monitoring backtest:** Replay historical and synthetic failures to measure detection delay, false positives, escalation, and recovery.
+
+**Promotion rule:** Monitoring quality is itself a testable system property, not an assumed byproduct of logging.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Alternative-data economics and coverage hypotheses.
+
+1. **Incremental data value:** Add sources one at a time to a fixed baseline and measure net alpha, coverage, turnover, latency, compute, and licensing cost.
+2. **Vendor redundancy/disagreement:** Compare providers or proxies for the same concept; quantify disagreement, missingness, revision lag, and availability.
+3. **Alternative-data half-life:** Track efficacy from first availability through decay, crowding, and provider methodology changes.
+4. **Acquisition-cost break-even:** Compare uncertainty-banded net contribution with data, engineering, storage, compliance, and monitoring costs.
+5. **Coverage selection bias:** Test whether availability predicts size, sector, geography, liquidity, or survival; include coverage masks and no-data controls.
+
+**Promotion rule:** Gross predictive value is insufficient when data acquisition, coverage, or licensing makes the source uneconomic or non-reproducible.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Research/production separation and deployment-safety hypotheses.
+
+1. **Environment separation:** Keep research engines, TBA candidates, credentials, data stores, and public routes separate; export artifacts without exposing execution.
+2. **Promotion artifact:** Require a versioned artifact containing model card, evaluation lockfile, tests, risk limits, and approval state before crossing environments.
+3. **Fail-closed feature flags:** Unknown or contradictory configuration disables the candidate or returns a safe no-op; test startup, rollback, and partial configuration.
+4. **Deployment reproducibility:** Pin runtime, dependencies, model, data, and config; rebuild cleanly and compare outputs before release.
+5. **Access/secret scope:** Keep read-only research access separate from broker execution and administrative credentials; verify research cannot submit orders.
+
+**Promotion rule:** Research-only candidates must remain non-selectable and non-executable until the explicit promotion artifact and permission gates exist.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Human-override and discretionary-overlay hypotheses.
+
+1. **Explicit override policy:** Define allowed scope, duration, evidence, owner, and expiry; keep overrides separate from model forecasts and weights.
+2. **Overlay shadow comparison:** Run proposed macro or discretionary overlays beside the untouched systematic model and measure incremental return, risk, turnover, missed opportunity, and correlation.
+3. **Override counterfactual:** Preserve systematic action, overridden action, rationale, timestamp, and both later outcomes.
+4. **Override fatigue:** Monitor frequency, reversals, concentration, and expiry; repeated overrides become a research/model hypothesis instead of a permanent patch.
+
+**Promotion rule:** Human judgment may be studied, but it cannot be credited with alpha unless the unchanged-system counterfactual is preserved.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Decision-explanation and research-output hypotheses.
+
+1. **Decision explanation contract:** Expose model vintage, data freshness, dominant signals, uncertainty, beta, constraints, expected costs, and abstention reasons in a stable schema.
+2. **Human-readable risk narrative:** Generate consistent exposure, concentration, liquidity, tail, and scenario explanations from the same numerical ledger.
+3. **Explanation consistency tests:** Ensure explanations change with inputs and remain identical on deterministic replay; detect stale or omitted fields.
+4. **Uncertainty/limitation disclosure:** Show coverage, missingness, validation domain, intervals, and known failure modes beside every score.
+
+**Promotion rule:** Explanation is evidence-linked contribution reporting, not unsupported causal storytelling or a substitute for validation.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Multi-objective model-selection hypotheses.
+
+1. **Promotion frontier:** Display beta-adjusted alpha, consistency, drawdown, expected shortfall, turnover, capacity, complexity, and data cost as a Pareto frontier.
+2. **Minimum-evidence constraints:** Require floors for coverage, untouched observations, reproducibility, and execution realism before return comparison.
+3. **Complexity-adjusted selection:** Charge explicit costs for features, parameters, dependencies, latency, and monitoring; compare incremental benefit with a simpler baseline.
+4. **Stability-weighted scorecard:** Weight evidence by independent environments, trials, and observations using a rule fixed before selection.
+
+**Promotion rule:** No single composite score should hide a material tradeoff or allow insufficient evidence to be rescued by a high return.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Leverage, funding, and procyclicality hypotheses.
+
+1. **Leverage hysteresis:** Use separate reduce/restore thresholds and measure lag, whipsaw, turnover, recovery, and residual risk.
+2. **Procyclicality stress:** Combine volatility spikes, widening spreads, falling collateral, and shrinking capacity to identify forced-sale feedback loops.
+3. **Funding-liquidity waterfall:** Define the order of cash, liquid assets, hedges, and positions used under margin stress; report forced-sale overlap and buffer recovery.
+4. **Leverage attribution:** Separate signal return from gross/net exposure, financing, and volatility-targeting effects under fixed-dollar and adaptive controls.
+5. **Margin uncertainty:** Stress haircuts, maintenance requirements, concentration add-ons, and intraday calls as ranges instead of one optimistic schedule.
+
+**Promotion rule:** Leverage changes must be evaluated with financing and forced-sale mechanics, not only volatility-scaled returns.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Mandate and objective-integrity hypotheses.
+
+1. **Mandate identity:** Version benchmark, target volatility, leverage, liquidity, turnover, drawdown, horizon, universe, currency, and capital; material changes start a new study.
+2. **Objective-change attribution:** Compare an old-mandate replay when targets or constraints change so objective effects are not credited to alpha.
+3. **Risk-appetite scenarios:** Evaluate fixed forecasts under conservative, central, and aggressive risk appetites and report the frontier.
+4. **Capital-scale sensitivity:** Test account sizes with fixed costs and capacity; disclose scale-dependent behavior.
+5. **Mandate conflict detection:** Fail clearly on incompatible risk, liquidity, turnover, exit, leverage, or margin settings before optimization.
+
+**Promotion rule:** A model result is comparable only when its mandate identity and evaluation lockfile match.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Dependence and covariance-model hypotheses.
+
+1. **Covariance validity ledger:** Record positive-semidefinite checks, missing-data handling, shrinkage, projection, and repairs.
+2. **Dependence-estimator ensemble:** Compare sample, shrinkage, factor, robust, and regime-conditioned estimators on forecast error and portfolio stability—not only enabled returns.
+3. **Tail-dependence validation:** Test co-movement during drawdowns, liquidity stress, and correlation convergence across empirical and conservative alternatives.
+4. **Correlation calibration:** Score predicted pairwise/cluster correlations against realized outcomes with rolling errors before using shocks as controls.
+5. **Risk-model missingness policy:** Predeclare bounded peer estimates, exposure reduction, or abstention when history/factors/correlations are unavailable or stale.
+
+**Promotion rule:** A correlation or covariance control should not be trusted solely because it improves a backtest; its forecast quality and repairs must be visible.
+
+## 2026-09-13, America/New_York — AQR / Man Group
+
+**Sources:** AQR’s *Investing in Disappearing Anomalies* and Man’s *Handling Alpha Uncertainty — Reducing Noise and Turnover in the Process*
+**Direct URLs:** https://www.aqr.com/insights/research/working-paper/investing-in-disappearing-anomalies?aqrPDF=1 and https://www.man.com/maninstitute/documents/download/IgRAO-rLcKS-EYjcG-3iiyQ/White_Paper_English_%28United_States%29_23-03-2022.pdf
+**Classification:** Candidate refinement for alpha decay and no-trade bands.
+
+**What the sources say:** AQR discusses anomalies that weaken as they become known or implementation frictions change; Man describes forecast uncertainty and avoiding trades when expected-return changes are inside noise to reduce unnecessary turnover.
+
+**Oryntra research lead:** Estimate an anomaly-decay curve using strategy age, crowding proxies, data-release sensitivity, and implementation friction. Add a bounded forecast-noise no-trade band and compare turnover saved, missed alpha, exposure drift, and tail behavior with an always-rebalance control.
+
+**Inference boundary:** The sources do not specify Oryntra thresholds or prove that a no-trade band improves returns; both ideas require frozen, cost-aware, untouched testing.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Research-idea management hypotheses.
+
+1. **Mechanism-level deduplication:** Map each proposal to mechanism, layer, data, and failure mode; flag renamings or parameter variants before allocating a new tuning budget.
+2. **Idea status state machine:** Track captured, sourced, specified, queued, tested, rejected, deferred, promoted, and superseded states with evidence links.
+3. **Novelty/overlap review:** Compare new ideas with the backlog, current code, and prior results; permit an explicit “not new” decision.
+4. **Failure-mode clustering:** Group proposals by leakage, crowding, capacity, tails, execution, drift, or operations to prioritize repeated gaps without stacking redundant controls.
+
+**Promotion rule:** A large backlog is not progress unless each idea has a distinct mechanism, status, and evidence trail.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Research-capital allocation hypotheses.
+
+1. **Expected information value:** Rank experiments by uncertainty resolved, downstream decisions affected, cost, and cost of waiting—not only upside narrative.
+2. **Research-risk budget:** Limit simultaneous unvalidated changes, data sources, optimizer variants, and model families while reserving capacity for replication and holdouts.
+3. **Sequential stopping:** Predefine stop, continue, replicate, or abandon thresholds before results arrive.
+4. **Dependency-aware queue:** Record prerequisites such as point-in-time data, execution logs, broker state, and risk forecasts; block experiments until they exist.
+
+**Promotion rule:** Research bandwidth is itself a constrained resource; a larger backlog is not evidence of progress.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Source-quality and evidence-grading hypotheses.
+
+1. **Source grading:** Label each source as disclosed mechanism, empirical result, hypothetical illustration, marketing, or commentary.
+2. **Disclosure completeness:** Track data dates, universe, costs, turnover, benchmark, controls, and out-of-sample rules; missing details lower transfer confidence.
+3. **Claim-to-evidence mapping:** Link every note claim to a passage, calculation, or explicit inference; inspiration is not performance evidence.
+4. **Replication/contradiction register:** Record independent and failed replications plus disagreements instead of letting one favorable paper dominate.
+5. **Source aging:** Revisit findings when market structure, data access, regulation, or technology changes.
+
+**Promotion rule:** Institutional reputation does not substitute for disclosed mechanisms and evidence that transfers to Oryntra’s data and tests.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Reproducible research-audit package hypotheses.
+
+1. **Experiment bundle:** Export code/config hashes, data manifest, lockfile, model card, logs, metrics, plots, and environment metadata together.
+2. **Independent rerun:** Provide a clean runner that does not depend on the developer’s workspace, caches, credentials, or uncommitted files.
+3. **Audit-friendly schema:** Store units, annualization, missingness, sample counts, intervals, benchmark, costs, and calculation version with every metric.
+4. **Review sign-off:** Record reviewer, questions, objections, resolutions, and approval scope; report approval is not production approval.
+
+**Promotion rule:** A result without an independently rerunnable evidence bundle remains provisional.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Data/schema evolution hypotheses.
+
+1. **Versioned contracts:** Version dataset, feature, signal, order, and result schemas with explicit compatibility and migration semantics.
+2. **Backward-compatible replay:** Reproduce historical runs with the parser, corporate-action logic, and schema actually used at the time.
+3. **Migration differential tests:** Compare old/new outputs on overlap fixtures and separate intended from accidental differences.
+4. **Deprecation/retention:** Retain raw data, revisions, artifacts, logs, and approvals long enough for replay and audit.
+
+**Promotion rule:** A schema change is a new research dependency and may require a new evidence bundle even when the model code is unchanged.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** AI-assisted research governance hypotheses.
+
+1. **Role separation:** Keep idea generation, data preparation, implementation, evaluation, and promotion as separate stages; an AI assistant cannot approve its own result.
+2. **Hypothesis-to-code consistency:** Compare stated hypothesis, features, target, horizon, universe, signs, costs, and actual implementation before testing.
+3. **AI provenance log:** Record inputs, tool calls, files, generated code, reviewer decisions, and data snapshots while excluding secrets.
+4. **AI idea trial budget:** Cap generated variants and require a fixed or human closure rule to prevent automated search overfitting.
+5. **Untrusted-input checks:** Treat external text and tool output as data; screen embedded instructions, future-dated content, duplicates, and unsupported claims.
+
+**Promotion rule:** AI can accelerate research mechanics, but evidence, review, and promotion remain separately governed.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Taxable-account and after-tax-return hypotheses.
+
+1. **Tax-lot-aware implementation:** Preserve lots, basis, holding periods, wash-sale restrictions, and realized/unrealized P&L; compare with a tax-agnostic control.
+2. **After-tax objective separation:** Report pre-tax alpha, taxes, fees, financing, and after-tax return separately; include jurisdiction/account in the mandate.
+3. **Tax-policy range:** Stress rates, holding periods, dividends, loss offsets, and lot selection instead of one favorable assumption.
+4. **Realized-P&L timing:** Reconcile realized, deferred, disallowed, and carried losses with account cash and economic return.
+
+**Promotion rule:** Tax effects may change implementable outcomes but are not signal alpha and require jurisdiction-specific review.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Reproducible interactive-research hypotheses.
+
+1. **Baseline-preserving explorer:** Change one declared parameter/stress/constraint while retaining the reference data and lockfile; show deltas.
+2. **Common-period comparison:** Compare vintages on identical dates, assets, costs, benchmarks, and missing-data policy.
+3. **Scenario provenance/replay:** Save inputs, changes, generated config, outputs, and timestamps for independent reproduction.
+4. **Sensitivity surface:** Show parameter-grid outcomes with uncertainty and feasibility masks; prevent one slider value becoming a hidden optimum.
+5. **Shareable evidence report:** Export baseline, delta, assumptions, limitations, hashes, and log links; screenshots alone are not evidence.
+
+**Promotion rule:** Interactive controls may accelerate understanding, but every result must remain traceable to a frozen baseline and replayable inputs.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Endogenous-crowding and feedback hypotheses.
+
+1. **Endogenous impact:** Model how the strategy’s own orders alter price, spread, future liquidity, and later signal returns at larger scale.
+2. **Shared-position crowding network:** Represent overlap among Oryntra sleeves, public factors, and dated manager exposures; stress simultaneous exits.
+3. **Capacity-to-alpha curve:** Re-estimate net alpha as capital scales with impact, crowding, turnover, and decay; identify where additional capital becomes harmful.
+4. **Crowding-warning validation:** Test whether crowding predicts spread widening, reversals, correlation convergence, or capacity loss before it changes exposure.
+
+**Promotion rule:** A crowding proxy is a risk/market-impact hypothesis until it predicts out-of-sample consequences reliably.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Scenario-library quality hypotheses.
+
+1. **Coverage map:** Link each scenario to factors, assets, liquidity, and operational failures; report untested drivers and redundant scenarios.
+2. **Scenario freshness:** Version shocks, instruments, assumptions, and recovery rules; review representativeness as markets and portfolios change.
+3. **Overlap control:** Cluster similar historical/hypothetical scenarios to avoid inflated confidence from repeated stress variants.
+4. **Combination stress:** Test bounded combinations of volatility, correlation, liquidity, funding, and data failures, labeling unsupported extremes.
+
+**Promotion rule:** A large scenario library is not robust unless its coverage, independence, freshness, and assumptions are visible.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Model inventory and validation-cadence hypotheses.
+
+1. **Model inventory:** Registry of alpha, risk, cost, benchmark, data-quality, execution, and reporting models with owners, inputs, outputs, criticality, consumers, and dependencies.
+2. **Validation cadence:** Review frequency and evidence depth based on capital, execution, safety, and public-reporting impact.
+3. **Retirement/sunset:** Objective triggers for decay, invalid data, unsupported dependencies, unacceptable error, or replacement; preserve replay artifacts.
+4. **Dependency-failure propagation:** Simulate failed components and trace invalid models, positions, reports, and controls; require safe behavior at each boundary.
+
+**Promotion rule:** Criticality and dependency evidence should determine validation depth; no component should inherit a casual schedule by default.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Forecast-to-execution integrity and uncertainty hypotheses.
+
+1. **Input contracts:** Declare units, frequency, timestamp semantics, null policy, ranges, and adjustment state; reject silent contract changes.
+2. **Horizon alignment:** Make signal, label, holding, rebalance, and cost windows explicit so timing overlap cannot manufacture alpha.
+3. **Uncertainty propagation:** Carry forecast, covariance, cost, and liquidity uncertainty into sizing and limits instead of treating upstream estimates as exact.
+4. **Parameter bands:** Prefer stable regions across plausible parameter ranges to a single historical optimum.
+5. **Constraint economics:** Record shadow prices for binding risk, liquidity, leverage, and concentration constraints.
+6. **Order timing and partial fills:** Separate decision, submission, queue, fill, cancel, and replace timestamps; test residual exposure and cancellation policies.
+7. **Emergency liquidity ladder:** Validate staged responses to spreads, halts, broker impairment, funding loss, and margin stress without assuming instant execution.
+8. **Disagreement gate:** Test abstention or reduced sizing when alpha, risk, benchmark, and execution models materially disagree.
+
+**Promotion rule:** A candidate must survive contract, horizon, uncertainty, and execution-lifecycle checks before its return or Sharpe improvement is treated as evidence of alpha.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Attribution, replay integrity, and policy-governance hypotheses.
+
+1. **Counterfactual attribution:** Compare each decision with feasible no-trade, delayed, smaller-size, and opposite-action alternatives to separate selection skill from execution luck.
+2. **Latency stress:** Replay with bounded delays, stale features, and missed rebalances; reject edges dependent on zero-latency assumptions.
+3. **Revision and universe audit:** Preserve point-in-time inputs, data revisions, universe-entry/exit reasons, suspensions, and delistings to expose hindsight and survivorship bias.
+4. **Decay-alarm calibration:** Measure detection delay, false alarms, and capital saved before automatic de-risking.
+5. **Policy monotonicity:** Verify that worse liquidity, higher uncertainty, and larger drawdown cannot accidentally increase exposure.
+6. **Limit precedence:** Make issuer, sector, factor, portfolio, broker, and emergency-limit conflicts deterministic and replayable.
+7. **Recovery safety:** Exercise reconnects, duplicate messages, stale state, and partial state with live-like open orders and positions.
+8. **Explanation stability:** Investigate materially changing reason codes or attributions when the evidence is nearly unchanged.
+9. **Research value scoring:** Prioritize experiments by information gain, decision relevance, cost, and false-discovery risk—not headline return.
+
+**Promotion rule:** A result is not a model improvement until its attribution survives counterfactual, latency, revision, universe, policy, and recovery checks.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Causal measurement, data availability, and reproducibility hypotheses.
+
+1. **Causal event controls:** Predefine matched controls, windows, and placebo dates for event features so broad market moves are not mistaken for event alpha.
+2. **Missingness mechanisms:** Separate random gaps, vendor outages, halts, and selection-driven missingness; test each handling policy independently.
+3. **Availability service levels:** Track feature release time, delay, and stale tolerance; penalize or abstain when availability assumptions fail.
+4. **Benchmark stability:** Re-estimate beta and benchmark mix across windows and regimes to test whether alpha survives reasonable benchmark choices.
+5. **Turnover attribution:** Decompose turnover into signal, risk, benchmark, corporate-action, constraint, and forced-exit causes.
+6. **Drawdown recovery:** Measure time under water, recovery capital, and opportunity cost alongside maximum drawdown.
+7. **Limit utilization:** Identify constraints that are useful, permanently inactive, or accidentally dominant by regime.
+8. **Deterministic replay:** Require identical inputs to produce explainably identical outputs across seeds, machines, and parallel execution.
+9. **Vendor disagreement:** Compare independent sources and define safe behavior when they diverge.
+10. **Version-pinned package:** Pin code, dependencies, schemas, data, seeds, and configuration as one reproducible research artifact.
+
+**Promotion rule:** Causal attribution, availability, benchmark robustness, and reproducibility must be evidenced before a backtest result can influence model selection.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Statistical inference and return-decomposition hypotheses.
+
+1. **Sequential-testing budget:** Account for repeated holdout looks and allocate a declared false-discovery budget over time.
+2. **Prior sensitivity:** Test reasonable priors for returns, risk, costs, and regime persistence instead of relying on one arbitrary prior.
+3. **Hierarchical shrinkage:** Borrow information across related assets only through an explicit hierarchy and verify out-of-sample stability.
+4. **Neutralization order:** Freeze and audit the order of beta, sector, size, liquidity, and factor neutralization.
+5. **Orthogonality drift:** Monitor whether distinct sleeves converge onto one hidden driver in new regimes.
+6. **Execution selection bias:** Compare all eligible quotes with observed-execution samples to quantify queue optimism.
+7. **Benchmark contamination:** Test constituent and weight-change timing for leakage into universes, labels, and factors.
+8. **Session decomposition:** Separate overnight, auction, regular-session, and closing-auction P&L, risk, and costs.
+9. **Carry decomposition:** Separate price alpha from dividends, borrow, funding, FX carry, and other holding economics.
+10. **Risk of ruin:** Simulate path-dependent loss and liquidity outcomes under parameter uncertainty and clustered stress.
+
+**Promotion rule:** A return claim should identify its statistical testing burden and economic sources before it is compared with another model’s alpha or Sharpe.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Market-structure and portfolio-construction hypotheses.
+
+1. **Factor attribution:** Separate persistent factor exposure from genuine timing or selection skill.
+2. **Residualization integrity:** Ensure cross-sectional residuals use only point-in-time information and a valid universe.
+3. **Cost calibration ladder:** Compare spread, impact, delay, borrow, and fee assumptions with realized executions at conservative levels.
+4. **Impact distributions:** Condition impact uncertainty on size, urgency, liquidity, and volatility rather than one coefficient.
+5. **Universe churn:** Stress listing, delisting, liquidity, and eligibility thresholds for membership instability.
+6. **Allocation hysteresis:** Test turnover bands and minimum holding intervals against forecast noise and cost.
+7. **Tail dependence:** Test whether apparently diversified assets become jointly exposed in drawdowns.
+8. **Effective breadth:** Remove common-factor, liquidity, currency, issuer, and crowding redundancy from the count of independent bets.
+9. **Covariance challengers:** Compare shrinkage, robust, factor, and regime-conditioned estimators on frozen windows.
+10. **Stress-consistent sizing:** Use compatible stress, liquidity, and correlation assumptions in both sizing and loss estimates.
+
+**Promotion rule:** A portfolio improvement should survive realistic costs, unstable universes, tail dependence, and compatible risk assumptions—not just improve a normal-period covariance backtest.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Operational resilience and monitoring hypotheses.
+
+1. **Lineage completeness:** Grade metrics by recoverable inputs, transforms, filters, and versions.
+2. **Semantic schema diffs:** Detect meaning, unit, adjustment, label, and default-value changes beyond syntax.
+3. **Calendar/clock resilience:** Stress holidays, daylight saving, leap days, early closes, timezones, and out-of-order bars.
+4. **Venue fragmentation:** Test routing, dark-pool, auction, and consolidated-feed assumptions against venue-specific fills.
+5. **Broker failover:** Replay disconnects, rejects, duplicate acknowledgements, credential expiry, switching, and idempotent order IDs.
+6. **Collateral waterfall:** Model liquidation order, haircut changes, settlement timing, and borrowing constraints.
+7. **Cash/settlement forecast:** Include unsettled cash, dividends, fees, borrow, deposits, withdrawals, and margin calls.
+8. **Stress ensemble diversity:** Measure joint failure in stress and reward independent error structure.
+9. **Alert fatigue:** Calibrate volume, duplicates, response time, misses, and escalation against limited human attention.
+10. **Monitoring counterfactuals:** Estimate avoided loss, false intervention, and detection delay for each guardrail.
+
+**Promotion rule:** Reliability controls need evidence about both failure prevention and operational burden; a noisy or untested guardrail is not automatically safer.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Event timing, portfolio liquidation, and controlled-change hypotheses.
+
+1. **Information embargoes:** Apply realistic publication, vendor, and processing delays to event and fundamental data.
+2. **Event clusters:** Group related announcements, revisions, and follow-ups so one shock is not counted as independent evidence.
+3. **Corporate-action equivalence:** Verify splits, dividends, mergers, symbol changes, and spin-offs preserve economic exposure.
+4. **Liquidity horizons:** Align risk horizons with realistic liquidation time under participation limits and stress.
+5. **Liquidation-order sensitivity:** Test unwind sequences so loss is not an artifact of arbitrary selling order.
+6. **Change-impact attribution:** Pair old and new runs and attribute deltas to each declared code, data, feature, cost, or limit change.
+7. **Rollback readiness:** Prove accepted versions can be restored without losing positions, orders, lineage, or audits.
+8. **Feature-embargo boundaries:** Audit timestamp joins at exact dataset boundaries for timezone and future-row leakage.
+9. **Stress representativeness:** Compare synthetic and historical shocks on factors, liquidity, correlation, and recovery.
+10. **False-intervention cost:** Quantify return, turnover, and risk costs of unnecessary de-risking across thresholds.
+
+**Promotion rule:** A change is evidence-backed only when its information timing, economic continuity, liquidation behavior, and paired impact are separately verified.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Data-quality, feasibility, and independent-reconciliation hypotheses.
+
+1. **Quote staleness:** Age quotes and test stale or withdrawn best prices rather than assuming displayed liquidity is executable.
+2. **Adverse selection:** Separate spread-crossing cost from unfavorable movement immediately after execution.
+3. **Feasibility frontier:** Record infeasible optimizer requests and the nearest feasible portfolio instead of silently relaxing constraints.
+4. **Risk-model backtest:** Compare realized volatility, correlations, factors, and drawdowns with prior risk forecasts by horizon.
+5. **Stress coverage:** Score distinct drivers, data support, historical analogues, and recovery assumptions—not scenario count.
+6. **Beta-drift hedging:** Test hedge effectiveness within rebalance intervals, including gaps and hedge costs.
+7. **Cash drag:** Attribute uninvested, settlement, collateral, buffer, and forced cash separately.
+8. **Independent P&L:** Reconcile expected, broker, accounting, and market-value P&L through a separate calculation path.
+9. **Provider survivorship:** Test vendor coverage, ticker history, and delisted-name availability for sample bias.
+10. **Synthetic-data realism:** Validate simulated prices, spreads, volume, jumps, and dependence against held-out real statistics.
+
+**Promotion rule:** A model result should not be trusted until executable liquidity, optimizer feasibility, risk-forecast accuracy, universe coverage, and independent P&L agree.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Validation-design and model-selection hypotheses.
+
+1. **Purged and embargoed validation:** Remove overlapping labels and add gaps where holding periods can share information.
+2. **Nested selection:** Keep inner tuning folds separate from the outer evaluation fold.
+3. **Regime balance:** Include distinct volatility, liquidity, trend, and crisis states rather than only common calm periods.
+4. **Probability calibration:** Compare predicted probabilities, intervals, and expected returns with realized frequencies by confidence bucket.
+5. **Metric plurality:** Evaluate rank quality, spread returns, top-k selection, and portfolio utility together.
+6. **Utility scorecard:** Declare weights for net return, risk, turnover, liquidity, drawdown, capacity, and operational burden.
+7. **Benchmark-relative tails:** Measure excess-return tails, downside beta, drawdown co-movement, and recovery.
+8. **Fold independence:** Audit shared assets, events, features, and benchmark constituents across folds.
+9. **Rebalance sensitivity:** Test nearby schedules and execution windows instead of one selected day.
+10. **Turnover-regularized selection:** Include implementation cost and weight stability when choosing similar candidates.
+
+**Promotion rule:** Model selection should survive leakage-resistant folds, multiple metrics, regime variation, and realistic rebalance choices before being called robust.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Governance, auditability, and operational-control hypotheses.
+
+1. **Immutable decision ledger:** Preserve original inputs, outputs, constraints, approvals, and timestamps in append-only form.
+2. **Policy-to-order binding:** Attach exact model, risk, cost, and configuration versions to every order and fill.
+3. **Human overrides:** Measure frequency, direction, size, reasons, outcomes, and deviation from policy.
+4. **Handoff completeness:** Verify transfers include orders, positions, alerts, assumptions, exceptions, and pending actions.
+5. **Operational tabletop drills:** Rehearse data, broker, halt, model-release, and credential incidents with recovery objectives.
+6. **Access scope:** Review who or what can read data, change models or limits, submit orders, or delete evidence.
+7. **Secret rotation:** Exercise key and broker-credential rotation without unsafe interruption or duplicate order authority.
+8. **Tamper evidence:** Make edits, deletions, clock changes, and backfills detectable in critical records.
+9. **Reconciliation tolerances:** Define materiality and escalation for broker, accounting, market-value, and research differences.
+10. **Evidence retention:** Set retention, deletion, export, and access rules for reproducible research artifacts.
+
+**Promotion rule:** A strategy cannot be considered operationally ready if its decisions, permissions, overrides, recovery paths, or evidence history cannot be reconstructed.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Research-lifecycle, decay, and reproducibility hypotheses.
+
+1. **Pre-registered stopping:** Define futility, safety, coverage, and success criteria before seeing a trial result.
+2. **Research debt:** Track shortcuts, missing evidence, approximations, owners, impact, and due dates.
+3. **Alpha-decay attribution:** Separate signal decay, crowding, costs, universe, data, risk-scaling, and execution causes.
+4. **Challenger rotation:** Maintain independently designed shadow challengers with replacement and rollback rules.
+5. **Paper/live discrepancy:** Compare fills, delays, limits, data, and operator actions on identical decisions and timestamps.
+6. **Drift-trigger calibration:** Set thresholds using historical false-alarm and missed-deterioration rates.
+7. **Cross-regime calibration:** Test whether probability, volatility, cost, and liquidity calibration transfers between regimes.
+8. **Compute determinism:** Check parallel reductions, floating-point order, hardware, and seeds for material differences.
+9. **Experiment-cost accounting:** Include data, compute, human review, and opportunity costs in research prioritization.
+10. **Negative-result preservation:** Index failed hypotheses and variants to prevent repeated dead ends.
+
+**Promotion rule:** Research quality includes knowing when to stop, what failed, why it failed, what it cost, and whether the result can be reproduced.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Alternative-data, news, and fundamental-vintage hypotheses.
+
+1. **Source reliability:** Stratify sources by timeliness, correction rate, coverage, and historical stability.
+2. **Entity resolution:** Audit issuer, subsidiary, product, person, ticker, and identifier mappings through corporate changes.
+3. **Publication timing:** Separate occurrence, publication, ingestion, parsing, and model-availability timestamps.
+4. **Sentiment half-life:** Estimate decay by source, event type, regime, and liquidity.
+5. **News placebos:** Compare matched non-events, delayed publication, and randomized labels to test incremental information.
+6. **Contradictory sources:** Define confidence, abstention, and review behavior when sources disagree or are corrected.
+7. **Fundamental restatements:** Rebuild pre-restatement information sets to prevent hindsight in valuation and quality signals.
+8. **Estimate vintages:** Preserve consensus and analyst revisions to distinguish level effects from revision effects.
+9. **Coverage bias:** Measure issuer, region, size, and industry over- or under-representation in alternative data.
+10. **Text abstention:** Require confidence, novelty, and source-quality thresholds; log no-action cases for calibration.
+
+**Promotion rule:** Text or alternative data should influence a model only after timing, identity, source quality, coverage bias, and incremental-information tests pass.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Macro, cross-asset, and correlation-shock hypotheses.
+
+1. **Macro-vintage replay:** Preserve release, revision, benchmark, and availability vintages for economic data.
+2. **Surprise normalization:** Scale releases by forecast dispersion, regime, and importance rather than raw units.
+3. **Policy timing:** Separate decision, statement, press conference, leak, ingestion, and tradable timestamps.
+4. **Yield-curve representations:** Compare level, slope, curvature, forwards, real yields, breakevens, and roll conventions.
+5. **Cross-asset lead-lag:** Test rates, credit, FX, commodities, and volatility signals with asynchronous closes and delays.
+6. **Regime uncertainty:** Use probabilistic labels and test transition ambiguity rather than hard regime boundaries.
+7. **Macro missingness:** Stress delayed, revised, discontinued, and country-specific releases separately.
+8. **Breadth evidence:** Test participation, dispersion, concentration, and advance/decline against controlled baselines.
+9. **Correlation shocks:** Verify that covariance or copula shocks improve OOS loss estimates without merely cutting exposure everywhere.
+10. **Macro-liquidity interaction:** Measure effects on spreads, depth, impact, borrow, and fill uncertainty before changing size or urgency.
+
+**Promotion rule:** Macro features should earn a role by surviving vintage, timing, asynchronous-data, regime, and liquidity tests—not by explaining one historical crisis.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Portfolio mandate, liquidity obligation, and capital-allocation hypotheses.
+
+1. **Constraint hierarchy:** Order safety, legal, liquidity, broker, portfolio, and preference constraints explicitly.
+2. **Investor-liquidity mismatch:** Compare asset liquidation horizons with account, mandate, withdrawal, redemption, and capital-call obligations.
+3. **Redemption/capital-call stress:** Simulate clustered cash demands, collateral calls, and delayed receipts with liquidation costs.
+4. **Friction netting:** Separate fees, commissions, financing, borrow, taxes, and operations from gross return.
+5. **Mandate drift:** Monitor instruments, leverage, liquidity, geography, concentration, and other declared limits.
+6. **Capital-allocation fairness:** Test consistent allocation of scarce risk, borrow, liquidity, and compute resources.
+7. **Restricted-asset policy:** Define valuation, reporting, haircuts, and unwind treatment for halted or non-liquid assets.
+8. **Cash-buffer opportunity cost:** Measure protection and forgone return across funding and volatility regimes.
+9. **Leverage-path sensitivity:** Compare liquidation risk for identical exposures reached through different financing paths.
+10. **Capacity expansion effects:** Test whether new capital dilutes opportunities, changes execution priority, or obscures capacity loss.
+
+**Promotion rule:** A strategy’s return is not implementable until its mandate, liquidity obligations, financing path, and capital-allocation effects are explicit.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Machine-learning integrity and safe-degradation hypotheses.
+
+1. **Preprocessing leakage:** Fit scaling, imputation, winsorization, embeddings, and selection only on training information.
+2. **Hyperparameter accounting:** Record search space, trials, failures, stopping rules, and holdout access.
+3. **Attribution stability:** Compare explanations across seeds, folds, regimes, perturbations, and nearby versions.
+4. **Calibration drift:** Monitor probability, interval, and expected-return calibration separately from error.
+5. **Adversarial perturbations:** Test plausible changes in prices, spreads, missingness, timestamps, and feature order.
+6. **Ensemble-weight uncertainty:** Stress alternative weights, correlations, and member failures.
+7. **Retraining triggers:** Compare calendar, drift, performance, regime, and event triggers with a frozen no-retrain control.
+8. **Cold starts and rare events:** Test new assets, regimes, sparse events, and unseen categories without future information.
+9. **Capacity frontier:** Map complexity against OOS stability, latency, interpretability, data needs, and failure surface.
+10. **Safe degradation:** Define fallbacks for missing features, latency breaches, calibration failure, and unseen distributions.
+
+**Promotion rule:** An ML component earns production consideration only when its search burden, attribution, calibration, perturbation behavior, retraining policy, and fallback path are visible.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Strategy-composition, portfolio-construction, and execution-architecture hypotheses.
+
+1. **Signal catalog:** Record rationale, horizon, inputs, transforms, owner, costs, and failure modes for every signal.
+2. **Sleeve contracts:** Declare output, risk, turnover, liquidity, and incompatibility boundaries for composable sleeves.
+3. **Liquidity-aware universes:** Rank opportunity jointly with spread, depth, borrow, capacity, and data quality.
+4. **Dynamic hedge overlays:** Compare static, threshold, forecast, and stress-triggered hedges with basis-risk accounting.
+5. **Adaptive risk budgets:** Test bounded, slow changes using forecast quality, drawdown, correlation, and liquidity evidence against no-adaptation.
+6. **Execution schedules:** Compare urgency, participation, slicing, auction, and passive schedules under common scenarios.
+7. **Cross-account netting:** Measure savings and allocation effects while preserving ownership and mandate boundaries.
+8. **Construction challengers:** Compare equal-risk, utility, robust, hierarchical, and constrained allocations on common inputs.
+9. **Ablation tests:** Remove sleeves, interactions, hedges, and constraints one at a time to identify true additive value.
+10. **Interface versioning:** Version signal, risk, cost, execution, and reporting contracts independently.
+
+**Promotion rule:** Complexity earns its place only when component contracts, ablations, liquidity, execution, and interface compatibility show additive out-of-sample value.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Data-engineering correctness and runtime-efficiency hypotheses.
+
+1. **Incremental correctness:** Compare incremental updates with full recomputation through revisions, late data, and restarts.
+2. **Cache invalidation:** Version cache keys and dependencies; prove corrections cannot leave stale features.
+3. **Resampling semantics:** Specify OHLCV, corporate-action, and event aggregation across frequencies and sessions.
+4. **Cold-cache latency:** Measure cold, warm, degraded, and backfilled paths rather than only ideal warm performance.
+5. **Resource quotas:** Stress memory, CPU, storage, network, and concurrency with fail-closed behavior.
+6. **Feature materialization:** Compare precomputed, incremental, and on-demand freshness, cost, storage, and failure risk.
+7. **Failure injection:** Test missing partitions, corrupt rows, delayed feeds, duplicates, and partial writes at boundaries.
+8. **Multi-horizon consistency:** Ensure daily, intraday, and event views agree on timestamps, adjustments, identifiers, and availability.
+9. **Parallelism scaling:** Check worker count for order, floating-point, timeout, and selection changes.
+10. **Backfill/live parity:** Replay live periods through backfill and compare features, decisions, latency, and errors field by field.
+
+**Promotion rule:** Faster research or serving is valuable only when incremental, cached, parallel, resampled, and backfilled results remain equivalent and fail safely.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Security, privacy, dependency, and research-governance hypotheses.
+
+1. **Data minimization:** Store only fields needed for features, reports, and experiments; remove sensitive data from logs and exports.
+2. **Isolation:** Test portfolio, credential, file, output, and audit separation across accounts and workspaces.
+3. **Artifact access:** Define view, modify, promote, export, and delete permissions for snapshots, models, configs, and evidence.
+4. **Reproducible builds:** Rebuild from pinned inputs and compare hashes, schemas, and behavior.
+5. **Dependency supply chain:** Inventory packages, licenses, provenance, vulnerabilities, and update paths without silent numerical drift.
+6. **Secrets scans:** Check logs, notebooks, serialized models, traces, screenshots, and exports for credentials or private data.
+7. **Incident replay:** Exercise detection, containment, revocation, evidence preservation, and recovery.
+8. **Privacy-preserving exports:** Test redaction, aggregation, expiry, and re-identification risk.
+9. **License compatibility:** Track obligations for data, code, models, and documentation before sharing or deploying.
+10. **Security-control usability:** Measure the cost of false blocks and quarantine decisions without normalizing bypasses.
+
+**Promotion rule:** A research or trading component is not ready when its data boundaries, dependencies, permissions, incident path, or redistribution rights are unknown.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Research observability, evidence presentation, and metric-governance hypotheses.
+
+1. **Decision replay:** Inspect exact features, forecasts, constraints, orders, fills, and state transitions behind a historical decision.
+2. **Risk-driver dashboard:** Decompose current and forecast risk by issuer, sector, factor, macro, liquidity, currency, and model drivers.
+3. **Data-quality dashboard:** Surface freshness, gaps, revisions, duplicates, outliers, source disagreement, and contract violations.
+4. **Uncertainty reporting:** Show intervals, parameter ranges, scenario bands, and coverage beside return, alpha, beta, and Sharpe.
+5. **Scenario diff:** Compare baseline and stress positions, constraints, costs, decisions, and P&L line by line.
+6. **Alert priority:** Rank by expected loss, urgency, confidence, reversibility, and required action; validate against response outcomes.
+7. **Evidence-linked model cards:** Link claims to snapshots, experiments, tests, limitations, and approvals.
+8. **Metric registry:** Version definitions, windows, units, and formulas for alpha, beta, Sharpe, drawdown, turnover, capacity, and cost.
+9. **Research-session provenance:** Capture queries, changes, datasets, versions, and discarded paths.
+10. **Reproducible reports:** Render text, tables, and charts from one frozen result object.
+
+**Promotion rule:** Research interfaces should expose uncertainty, provenance, definitions, and causal drivers—not only attractive summary metrics.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Research governance and decision-quality hypotheses.
+
+1. **Blinded review:** Hide names, authors, and desired outcomes during initial candidate evaluation.
+2. **Hypothesis taxonomy:** Match evidence standards to descriptive, predictive, causal, execution, risk, or operational claims.
+3. **Causal graphs:** Map data, signals, exposures, costs, and outcomes before claiming an intervention is identified.
+4. **Uncertainty budgets:** Track data, labels, parameters, costs, execution, and model-choice uncertainty.
+5. **Committee aggregation:** Compare simple, weighted, robust, and disagreement-aware aggregation without hindsight.
+6. **Backlog aging:** Reassess old hypotheses for changed data, market structure, dependencies, and relevance.
+7. **Reproducibility challenge:** Require an independent rebuild from the evidence package.
+8. **Claim-to-evidence matrix:** Link every narrative claim to metrics, tests, sources, limitations, and confidence.
+9. **Threshold sensitivity:** Test reasonable action thresholds, utility weights, and abstention rules.
+10. **Hindsight lock:** Preserve pre-decision beliefs and evidence before comparing later outcomes.
+
+**Promotion rule:** Research conclusions should be reviewable without author context and should state exactly what was claimed, known, uncertain, and tested.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Model-promotion, deployment, and release-governance hypotheses.
+
+1. **Shadow evaluation:** Run candidates beside the accepted model with identical inputs, recording hypothetical orders and risk without capital impact.
+2. **Canary promotion:** Limit exposure to a declared decision slice or risk budget with stop criteria.
+3. **Rollback gates:** Calibrate thresholds using loss, detection delay, false rollback cost, and recovery time.
+4. **Version skew:** Detect incompatible model, feature, risk, cost, broker, and reporting versions before execution.
+5. **Schema migration:** Replay old and new schemas to expose changed meanings, defaults, missingness, and decisions.
+6. **Feature-flag ledger:** Record assignment, exposure, overrides, expiry, and outcome for rollouts.
+7. **Risk-policy migration:** Compare limits, sizing, and liquidation on identical portfolios and stress paths.
+8. **Release evidence:** Require tests, hashes, model cards, approvals, rollback instructions, and limitations.
+9. **Promotion SLOs:** Define freshness, latency, availability, fill, risk, reconciliation, and incident objectives.
+10. **Post-release review:** Reconcile observed behavior with the release evidence and record deviations.
+
+**Promotion rule:** A model change is not complete at deployment; it needs bounded exposure, rollback evidence, version compatibility, and post-release reconciliation.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Performance attribution, benchmark fairness, and capacity-reporting hypotheses.
+
+1. **Selection versus allocation:** Separate security selection, sleeve/sector allocation, interaction, and residual effects.
+2. **Timing versus exposure:** Distinguish useful entry/exit timing from simply holding a factor or market exposure.
+3. **Active share and overlap:** Measure benchmark overlap, common holdings, and concentration to identify expensive beta.
+4. **Conditional hit rates:** Report wins by regime, side, size, liquidity, horizon, confidence, and cost bucket.
+5. **Tail contribution:** Identify trades, assets, factors, and decisions driving worst-loss quantiles and stress outcomes.
+6. **Liquidity-adjusted performance:** Apply realistic liquidation horizons and participation limits to return, alpha, Sharpe, and drawdown.
+7. **Capacity standard:** Publish turnover, impact, crowding, borrow, assumptions, and uncertainty behind capacity estimates.
+8. **P&L bridge:** Reconcile forecast return through fills, fees, financing, borrow, taxes, slippage, and net realized P&L.
+9. **Benchmark timing:** Test benchmark prices and rebalance times for favorable or inconsistent timing.
+10. **Residual attribution:** Require an explanation for P&L not assigned to signal, exposure, cost, execution, or cash.
+
+**Promotion rule:** Performance claims should explain where returns came from, what they cost, how much capacity they require, and what remains unexplained.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Trade-lifecycle, signal-diversity, and realized-risk hypotheses.
+
+1. **Trade-duration survival:** Estimate open-position probability by age, signal, volatility, liquidity, and regime.
+2. **Exit-reason attribution:** Separate stops, targets, trailing exits, reversals, timeouts, limits, halts, and forced liquidation.
+3. **State-conditional expectancy:** Report payoff, hit rate, drawdown, and cost by entry/exit state and transition path.
+4. **Uncertainty-adjusted ranking:** Rank by expected utility and confidence or lower-bound quality, not point forecasts alone.
+5. **Signal-overlap graph:** Map shared inputs, exposures, dates, and error correlation to find duplicated alpha.
+6. **Model diversity:** Measure forecast, position, turnover, risk-driver, and failure-period diversity rather than model count.
+7. **Turnover sources:** Attribute new names, resizing, exits, hedges, constraints, corporate actions, and benchmark drift.
+8. **Risk bridge:** Reconcile forecast risk with realized volatility, drawdown, tail loss, and liquidity loss by horizon and regime.
+9. **Benchmark reconstitution:** Test index additions, deletions, and flows for leakage, crowding, and artificial alpha.
+10. **Data-availability impact:** Quantify stale, missing, delayed, and quarantined data effects on decisions, returns, and risk.
+
+**Promotion rule:** Portfolio evidence should explain not only whether a trade worked, but why it opened, why it closed, which other signals overlapped, and how data quality affected the result.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Market-microstructure and execution-realism hypotheses.
+
+1. **Queue uncertainty:** Estimate fill probability from age, depth, cancellation, venue, and urgency.
+2. **Hidden liquidity:** Compare displayed depth with realized fills, midpoint behavior, and conditional liquidity.
+3. **Auction execution:** Treat open and close auctions as distinct price-discovery, imbalance, and gap-risk environments.
+4. **Trade-sign robustness:** Compare classifiers across feeds, corrections, and quote revisions.
+5. **Borrow lifecycle:** Track locate, rate, recalls, buy-ins, settlement, and forced covers for shorts.
+6. **Impact decay:** Estimate temporary and permanent impact across horizons and account for self-induced signal contamination.
+7. **Execution alpha:** Separate prediction, venue, timing, slicing, spread capture, adverse selection, and opportunity cost.
+8. **Slice policies:** Compare fixed, volume-, volatility-, and urgency-adaptive slices under common assumptions.
+9. **Feed challengers:** Replay independent feeds and quantify quote ordering, corrections, latency, and consolidation effects.
+10. **Execution stops:** Define pause, cancel, reprice, and reduce conditions for spreads, depth, volatility, halts, stale data, and broker health.
+
+**Promotion rule:** Execution alpha is credible only when queue, hidden liquidity, auctions, borrow, feed differences, impact decay, and stop behavior are represented.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Financing, collateral, securities-lending, and settlement hypotheses.
+
+1. **Financing term structure:** Model rates, haircuts, term changes, renewal risk, and basis by instrument and maturity.
+2. **Margin mismatch:** Compare internal stress forecasts with broker and clearing calculations, including intraday calls.
+3. **Collateral eligibility:** Stress haircuts, concentration, eligibility, settlement delays, and substitutions.
+4. **Borrow recalls and squeezes:** Test recalls, fee spikes, scarcity, buy-ins, forced cover, and correlated short unwinds.
+5. **Lending economics:** Attribute fees, rebates, utilization, term, availability, and recall probability to short expectancy.
+6. **FX hedge basis:** Separate asset and currency returns from hedge carry, slippage, and basis risk.
+7. **Dividend/withholding:** Model ex-date timing, withholding, substitute payments, recovery, and vendor adjustments.
+8. **Settlement failures:** Simulate failed delivery, instruction mismatch, late cash, partial settlement, and remediation.
+9. **Cash sweeps and buffers:** Compare reserve, sweep, investment, and collateral policies under rates and funding stress.
+10. **Financing providers:** Test broker and provider assumptions for net alpha, capacity, and forced-liquidation risk.
+
+**Promotion rule:** Net performance is not implementable until financing, collateral, borrowing, currency, taxes, and settlement paths are explicitly modeled.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Institutional control, rights, surveillance, and exception-governance hypotheses.
+
+1. **Restricted lists:** Block prohibited issuers, instruments, strategies, and jurisdictions consistently across research, simulation, orders, and exports.
+2. **Pre-trade ordering:** Make risk, mandate, compliance, liquidity, and broker checks deterministic.
+3. **Rights inventory:** Record license, permitted use, retention, redistribution, and attribution terms for benchmarks and datasets.
+4. **Regulatory-report replay:** Recreate historical holdings, transactions, valuations, and disclosures from immutable records.
+5. **Trade surveillance:** Test indicators for unusual size, timing, cancellation, concentration, cross-account activity, and override patterns.
+6. **Conflict controls:** Identify personal, account, vendor, affiliate, and incentive conflicts affecting decisions.
+7. **Data purpose/consent:** Link sensitive or licensed data to approved purpose, retention, access, and deletion.
+8. **Corporate-action approval:** Review unusual mergers, spin-offs, tenders, rights issues, and symbol changes before state changes.
+9. **Exception aging:** Track unresolved compliance, risk, data, and operational exceptions with owner, severity, expiry, and escalation.
+10. **Control backtests:** Estimate prevented loss, false blocks, missed violations, and control degradation historically.
+
+**Promotion rule:** Institutional robustness includes rights, restrictions, conflicts, surveillance, reporting, and exception behavior—not just model returns.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Derivatives, volatility-surface, and flow hypotheses.
+
+1. **Options-implied information:** Test volatility, skew, term structure, open interest, and dealer positioning beyond price/volume baselines.
+2. **Surface integrity:** Preserve strike, expiry, settlement, interpolation, and corporate-action conventions; reject stale or inconsistent quotes.
+3. **Implied versus realized:** Separate volatility risk premium, forecast error, jump, liquidity, and hedging costs.
+4. **Options-flow timing:** Track trade, quote, report, clearing, and availability timestamps.
+5. **Open-interest rollover:** Test expiry, roll, assignment, and concentration without future-contract leakage.
+6. **Dealer-position uncertainty:** Stress inventory, delta/gamma, hedging frequency, and sign assumptions.
+7. **ETF flows:** Separate mechanical flows, information, benchmark rebalances, and underlying liquidity impact.
+8. **Index-arbitrage contamination:** Test duplicated signals and capacity-limited index/ETF/constituent relationships.
+9. **Derivative liquidity ladder:** Model spread, depth, open interest, margin, exercise, assignment, and exit feasibility.
+10. **Volatility-hedge opportunity cost:** Measure protection, carry, basis, slippage, and tail benefit across instruments.
+
+**Promotion rule:** Derivatives-derived alpha or hedging value requires clean contract conventions, point-in-time flow data, liquidity realism, and explicit carry and tail-cost accounting.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Human-in-the-loop, decision-operations, and postmortem hypotheses.
+
+1. **Cognitive load:** Measure reviewer capacity across positions, alerts, exceptions, and explanations.
+2. **Checklist effects:** Compare structured review with free-form review using omissions, latency, and false confidence.
+3. **Narrative adversarial review:** Test decisions against persuasive unsupported stories and explanations.
+4. **Dissent preservation:** Record minority views, alternatives, uncertainty, and objections before decisions.
+5. **Human latency:** Define review deadlines and safe actions when a reviewer is unavailable.
+6. **Role separation:** Test independence among research, approval, execution, risk, reconciliation, and postmortem roles.
+7. **Decision-simulator training:** Replay hidden-outcome cases to evaluate calibration, not completion speed.
+8. **Fatigue/schedule stress:** Test overnight, weekend, alert-cluster, and incident conditions.
+9. **Incentive alignment:** Check whether incentives reward hidden risk, turnover, or delayed loss recognition.
+10. **Postmortem taxonomy:** Classify incidents by data, model, execution, risk, process, human, vendor, and external causes.
+
+**Promotion rule:** Human controls need measurable capacity, latency, independence, incentives, dissent, and postmortem feedback—not assumptions that review is automatically protective.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Crisis-risk, reverse-stress, and recovery hypotheses.
+
+1. **Reverse stress:** Start from unacceptable loss, liquidity, margin, or operational outcomes and solve for plausible shock combinations.
+2. **Risk-budget waterfall:** Show gross capital becoming net exposure after issuer, factor, liquidity, leverage, hedge, cash, and emergency reductions.
+3. **Contagion paths:** Trace shocks through prices, correlations, margin, funding, borrow, forced sales, and signal behavior.
+4. **Drawdown hysteresis:** Test de-risking and re-risking for whipsaw, procyclicality, and delayed recovery.
+5. **Crisis alpha correlation:** Test whether independent sleeves converge through shared liquidity and deleveraging channels.
+6. **Tail-hedge overlap:** Identify duplicate payouts, joint failures, and carry duplication across hedges.
+7. **Recovery economics:** Compare recovery speed, opportunity cost, and trading costs after stress reductions.
+8. **Liquidity propagation:** Couple spread, depth, participation, impact, margin, borrow, and queue changes.
+9. **Stress uncertainty:** Vary shock size, duration, correlation, recovery, and execution assumptions.
+10. **Crisis-playbook rehearsal:** Replay severe events with deadlines, fallback modes, communication, and evidence capture.
+
+**Promotion rule:** Crisis protection should be judged by plausible shock paths, liquidity and funding propagation, recovery economics, and uncertainty—not a single historical drawdown.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Robust optimization, discrete constraints, and solver-stability hypotheses.
+
+1. **Distributionally robust optimization:** Optimize across plausible return, covariance, cost, and liquidity distributions.
+2. **Chance constraints:** Test probabilistic exposure, loss, and liquidity limits under estimation error and finite samples.
+3. **CVaR versus drawdown:** Compare expected shortfall, maximum drawdown, recovery time, and path-dependent utility.
+4. **Cardinality and lots:** Include discrete holdings, minimum sizes, odd lots, and rounding in replay.
+5. **Turnover/impact regularization:** Compare penalties and constraints with realized execution evidence.
+6. **Solver stability:** Re-run across tolerances, starts, solvers, floating-point settings, and degenerate covariance.
+7. **Constraint-relaxation ledger:** Record relaxed, binding, and infeasible constraints and marginal effects.
+8. **Robust factor exposure:** Stress factor definitions, loadings, signs, horizons, and missing exposures.
+9. **Utility sensitivity:** Compare risk aversion, loss asymmetry, drawdown, liquidity, and capacity assumptions.
+10. **Optimization-to-order parity:** Verify weights survive lots, cash, fees, margin, borrow, participation, and scheduling.
+
+**Promotion rule:** An optimizer is credible only when its distributional assumptions, discrete feasibility, solver stability, constraint tradeoffs, and order implementation agree.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Feature-quality, label, rank, and signal-health hypotheses.
+
+1. **Outlier influence:** Recompute signals and results after removing, winsorizing, or downweighting influential observations.
+2. **Rank stability:** Test persistence across nearby dates, vendors, preprocessing, and small perturbations.
+3. **IC decay:** Track information-coefficient skill by horizon, regime, universe, liquidity, and signal age.
+4. **Label construction:** Compare forward, excess, residual, drawdown, and event labels with overlap and cost treatment.
+5. **Cross-sectional normalization:** Test z-score, rank, robust, sector, beta, and volatility normalization for hidden exposures.
+6. **Tie/missing policy:** Define deterministic handling for ties, gaps, zero volume, halts, and sparse universes.
+7. **Feature age:** Measure quality as inputs become stale under vendor and ingestion delays.
+8. **Feature interactions:** Detect nonlinear concentration, leakage, and out-of-range instability.
+9. **Incremental feature value:** Add one feature family at a time against a frozen baseline after cost and complexity.
+10. **Signal-health diagnostic:** Combine coverage, stability, decay, calibration, crowding, cost, and error without silently becoming a trading signal.
+
+**Promotion rule:** A feature is useful only when its construction, normalization, rank behavior, decay, interactions, and incremental value are independently evidenced.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Regime, factor, crowding, and feedback-dynamics hypotheses.
+
+1. **Causal mediation:** Distinguish direct signal effects from exposure, liquidity, crowding, and regime channels.
+2. **Signal turnover:** Attribute rank changes to new data, normalization, universe, corporate actions, and true movement.
+3. **Transition warnings:** Compare volatility, correlation, breadth, liquidity, macro, and cross-asset indicators for lead time and false alarms.
+4. **Change-point uncertainty:** Represent break location, duration, and recovery as uncertain.
+5. **Latent-factor stability:** Refit factors across windows, universes, and seeds and test persistent exposures.
+6. **Crowding migration:** Track crowding across names, factors, sectors, venues, and instruments after changes.
+7. **Neutralization tradeoff:** Measure alpha, risk, and cost as factor/beta neutralization becomes more aggressive.
+8. **Macro beta:** Decompose responses to rates, inflation, growth, FX, commodities, credit, and volatility versus security alpha.
+9. **Feedback throttling:** Reduce position or participation when own orders worsen spread, depth, or future signal quality.
+10. **Regime risk budgets:** Compare fixed, smooth, and sharp adaptation with transition and whipsaw costs.
+
+**Promotion rule:** Regime-aware changes should demonstrate stable factor interpretation, useful warning lead time, controlled turnover, and feedback-aware costs.
+
+## 2026-09-13, America/New_York — Oryntra research synthesis
+
+**Classification:** Fundamental, accounting-quality, and mixed-signal hypotheses.
+
+1. **Point-in-time statements:** Rebuild statements, footnotes, estimates, and availability dates without restated-history leakage.
+2. **Accounting quality:** Separate accruals, cash conversion, revenue recognition, reserves, working capital, and one-time items.
+3. **Guidance revisions:** Test guidance changes, estimate revisions, surprise magnitude, and dispersion with delays.
+4. **Balance-sheet stress:** Model leverage, maturities, liquidity, covenants, refinancing, and rate sensitivity.
+5. **Capital allocation:** Treat buybacks, issuance, dividends, M&A, debt repayment, and investment as distinct dated signals.
+6. **Sector comparability:** Verify margins, leverage, growth, valuation, and quality are comparable across business models.
+7. **Fundamental freshness:** Measure information half-life after filings, estimates, revisions, and events.
+8. **Mixed-signal incrementality:** Test fundamentals beyond price/volume after factor, sector, size, and liquidity controls.
+9. **Accounting placebos:** Use randomized dates, matched firms, and non-economic fields to test anomalies.
+10. **Fundamental capacity:** Estimate turnover, crowding, liquidity, event gaps, and capacity for slow strategies.
+
+**Promotion rule:** Fundamental information earns a role only when it is point-in-time, economically interpretable, comparable, incrementally useful, and tradable at its expected horizon.

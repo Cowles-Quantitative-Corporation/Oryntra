@@ -1,0 +1,22 @@
+ORYNTRA STRIPE FRONTEND SETUP
+=============================
+
+The frontend now uses the authenticated Oryntra backend instead of public static Payment Links.
+
+Start trial:
+POST /api/billing/checkout with {"plan_code":"pro"} or {"plan_code":"cqc_max"}.
+The API returns a Stripe-hosted Checkout URL and binds the session to the signed-in Oryntra user.
+
+Return from Stripe:
+Stripe redirects to /?checkout=success&session_id={CHECKOUT_SESSION_ID}.
+The frontend calls /api/billing/checkout-status and then refreshes /api/auth/me.
+The query string alone never grants access.
+
+Manage billing:
+Settings > Billing & subscription calls POST /api/billing/portal and redirects to Stripe Customer Portal.
+
+Current launch offer:
+- Oryntra Pro: 7 days free, then $6.99/month.
+- CQC Max: 7 days free, then $10.99/month.
+
+Required backend deployment variables and webhook instructions are in backend/STRIPE_BILLING_SETUP.md.

@@ -62,6 +62,40 @@ repository; there is no runnable TBA 7 configuration to modify. Any future TBA
 builder must use the shared `_tba_candidate` constructor so it receives the
 supervisor by default.
 
+### TBA 8 integrated decision layer
+
+TBA 8 keeps TBA 5's completed 21/63-session market-residual momentum and the
+shared 10% marginal-risk contribution cap. It adds only three connected pieces:
+
+- 25% persistence between successive causal ridge rankings, reducing monthly
+  model jumps without introducing a second forecasting model;
+- a raw predicted-relative-return and training-error diagnostic from the same
+  walk-forward ridge fit; positive forecasts retain their proposed weight and
+  nonpositive forecasts receive a 50% confidence scale in the frozen candidate;
+- a prior-20-session median dollar-volume constraint that requires at least
+  $1 million daily liquidity and caps target notional to 80% of a three-session,
+  2%-per-session participation budget.
+
+The capacity/confidence layer runs before beta, peer-shock, covariance, marginal
+risk and volatility controls. It can only reduce an existing long target and
+leave cash; it cannot create a trade or add leverage. Its dated decisions are
+stored in the research report. A round-trip cost hurdle is implemented and
+audited, but its TBA 8 multiplier is frozen at zero because every positive
+multiplier tested on development years reduced Sharpe. This distinction avoids
+claiming that transaction costs are a live forecast gate when they are not.
+
+The candidate deliberately does not add news, fundamentals, options, order-book
+or broker-margin features: the frozen panel does not contain point-in-time
+versions of those inputs, so adding switches for them would be inert code rather
+than a tested model.
+
+The later 350-name robustness study supports the narrow purpose of this layer:
+relative to TBA 5, TBA 8 slightly improved mean Sharpe, improved minimum annual
+Sharpe, lowered turnover and reduced the worst drawdown. It did not create a
+stable alpha source—five of twelve annual alpha observations remained negative.
+Accordingly, the risk and capacity system should be treated as useful portfolio
+construction around an inadequate forecast, not as the missing forecast itself.
+
 ## Out-of-sample gate
 
 `server/tools/run_tba2_risk_ablation.py` holds Qlib prediction scores fixed and
@@ -91,6 +125,17 @@ TBA on eight confirmation years, but worsened minimum annual Sharpe for five
 of six models. It therefore remains a private candidate. No cached external
 Qlib scores were available, so no Qlib comparison or open-source victory is
 claimed.
+
+`server/tools/run_tba8_upgrade_study.py` compares TBA 8 with its TBA 5 signal
+ancestor while keeping the shared supervisor, execution model, sampled symbols,
+dates, costs, benchmark and risk-free series identical. On the five remaining
+unused years in the frozen panel (2009, 2012, 2018, 2020 and 2024), TBA 8 improved
+mean annual alpha from -7.53% to -6.89% and worst annual Sharpe from -0.498 to
+-0.355, but mean Sharpe slipped from 0.414 to 0.397. Each had three of five
+positive-Sharpe years and four negative-alpha years. Therefore TBA 8 remains an
+unconfirmed private research candidate rather than replacing TBA 5. The exact
+configuration, annual observations and data fingerprints are preserved in
+`docs/TBA8_INTEGRATED_RESULTS_2026-09-13.json`.
 
 ## Public research basis
 

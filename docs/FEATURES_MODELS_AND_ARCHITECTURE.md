@@ -291,10 +291,6 @@ A Flutter method channel asks iOS for background execution time while a Quant La
 
 After a scan, Flutter passes ticker, signal, price, and quality to the native app group. The WidgetKit extension reads those values, shows a small or medium “Latest Oryntra AI Scan” card, refreshes on a 30-minute timeline, and links back to the scanner URL scheme. It is a latest-result display, not a live market-data widget.
 
-### Advertising and consent
-
-The mobile app gathers consent through Google’s UMP flow before initializing ads. Adaptive banners and an interstitial-after-successful-scans service are implemented with web no-op fallbacks. Native builds use bundled production unit IDs unless build-time overrides are supplied; `ADMOB_TEST_MODE=true` switches both iOS banner and interstitial placements to Google test units. Privacy choices are accessible from Account.
-
 ### Stored Quant Lab reports
 
 Completed mobile reports are saved to device preferences with timestamp, universe, fingerprint, and report payload. Account can reopen or delete them. This device-local store is separate from the server account database.
@@ -305,9 +301,9 @@ Completed mobile reports are saved to device preferences with timestamp, univers
 
 Settings controls research defaults, browser-local Polygon/Massive and Twelve Data keys, provider verification/removal, theme selection, account access, and permanent account deletion. Provider keys are scoped to the signed-in browser user in IndexedDB, not local-storage plaintext and not server account fields.
 
-### Optional web advertising and discoverability
+### Browser advertising and discoverability
 
-The server publishes ad placement metadata and diagnostics, conditionally injects AdSense verification/script markup, and can serve `ads.txt`. It also serves `robots.txt` and a sitemap when the public base URL is configured. Ads are blank/off by default until explicit flags and placement IDs are provided.
+The server serves `robots.txt` and a sitemap when the public base URL is configured. Signed-in browser workspaces may show third-party advertising inside opaque sandboxed frames. The iOS app does not load or display third-party advertising.
 
 ### Private Pattern Lab
 
@@ -333,7 +329,7 @@ These databases, caches, and generated model artifacts are operational state and
 
 FastAPI serves an allowlisted set of Terms, Privacy, Refund, Risk Disclaimer, Contact, and Methodology pages. Browser signup links Terms, Privacy, and the research-risk disclosure. Flutter Account links Privacy choices, Privacy Policy, Terms, Risk Disclaimer, Methodology, and Contact in an external browser.
 
-The pages document product behavior but are not a substitute for professional legal or market-data licensing review. Their claims must stay synchronized with the actual account, provider-key, advertising, and data-retention implementation.
+The pages document product behavior but are not a substitute for professional legal or market-data licensing review. Their claims must stay synchronized with the actual account, provider-key, browser-advertising, and data-retention implementation.
 
 ## 18. Explicitly not implemented
 

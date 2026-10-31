@@ -2,6 +2,80 @@
 
 This is an append-only, research-only record of candidate-profile evidence. A passing entry permits a profile to be selectable in Quant Lab; it does not establish live performance, suitability, or permission to place an order.
 
+## 2026-09-13 — TBA 8 broad 350-name robustness study
+
+A second panel was frozen from the repository's predeclared broad U.S. liquid
+research universe rather than the original 43-stock panel. It requested about
+350 symbols from 2002 through 2025 and recorded every failed or incomplete
+download. Twelve declared years were evaluated with deterministic samples of
+up to 100 fully covered stocks per year: 2006, 2007, 2009, 2011, 2013, 2015,
+2017, 2019, 2021, 2023, 2024 and 2025. TBA 5 and TBA 8 used identical symbols,
+dates, costs, benchmark, risk-free input, execution and shared risk supervisor.
+
+| Metric | TBA 5 | TBA 8 |
+| --- | ---: | ---: |
+| Mean excess Sharpe | 1.081 | 1.088 |
+| Minimum annual excess Sharpe | -0.404 | -0.331 |
+| Mean annual beta-adjusted alpha | -0.520% | +0.066% |
+| Negative-alpha years | 5 / 12 | 5 / 12 |
+| Mean annualized return | 16.33% | 16.74% |
+| Mean annualized volatility | 14.62% | 14.47% |
+| Mean annualized turnover | 14.96 | 12.31 |
+| Mean gross exposure | 0.844 | 0.805 |
+| Worst annual maximum drawdown | -25.89% | -22.65% |
+
+TBA 8 passes the narrow paired robustness rule: both mean and minimum Sharpe
+improved. It is not release-ready and fails the requested consistency target.
+The new layer reduced turnover by roughly 18%, reduced exposure, improved the
+worst drawdown by 3.24 percentage points and added 0.586 percentage points of
+mean annual alpha, but did not reduce the count of negative-alpha years.
+
+The result isolates the central limitation. TBA 8 averaged 0.74 market beta
+against a benchmark that returned 23.42% annually in these sampled years, so
+its 16.74% average return was close to beta-implied performance rather than
+independent alpha. It failed differently in two environments: it lost money in
+sideways/whipsaw years such as 2011 and 2015, while in the narrow leadership of
+2023 it returned 9.02% against a 39.89% SPY/QQQ benchmark. More volatility caps,
+stops or confidence scaling cannot solve both forecast failures. The missing
+research target is benchmark- and factor-aware security selection with explicit
+breadth/leadership state, tested on a point-in-time universe. This is a proposed
+next hypothesis, not authorization to add it automatically.
+
+Exact annual results and fingerprints are in
+`docs/TBA8_BROAD_RESULTS_2026-09-13.json`; data coverage and download failures
+are in `docs/TBA8_BROAD_PANEL_MANIFEST_2026-09-13.json`. This remains a
+current-survivor robustness study rather than unbiased historical evidence.
+
+## 2026-09-13 — TBA 8 integrated forecast-confidence and capacity candidate
+
+TBA 8 was rebuilt on the TBA 5 residual-momentum structure and the newer shared
+10% marginal-risk contribution cap. The only added behaviors are 25% causal
+score persistence, bounded downscaling of nonpositive raw ridge forecasts, and
+a causal liquidity-capacity ceiling based on prior 20-session median dollar
+volume. The code also estimates forecast error and round-trip cost for tuning
+and audit. A positive cost-gate multiplier was not promoted: development tests
+showed that it reduced Sharpe, so the frozen TBA 8 setting uses forecast sign
+for its 50% confidence scale and does not pretend costs are an active alpha
+filter. Unsupported news, fundamental, options and order-book inputs were not
+added.
+
+The development grid used ten previously designated years. TBA 8's selected
+variant (25% persistence, zero cost multiplier, 50% weak-edge scale) produced
+1.410 mean annual excess Sharpe, 0.100 minimum annual Sharpe, ten of ten positive
+Sharpe years, 2.047% mean annual alpha, and four negative-alpha years. The TBA 5
+control produced 1.375 mean Sharpe, 0.055 minimum Sharpe, and 2.064% mean alpha.
+
+The selected configuration was then held fixed for all five unused eligible
+years remaining in the frozen current-survivor panel: 2009, 2012, 2018, 2020 and
+2024. Against identical TBA 5 trials, TBA 8 changed mean Sharpe from 0.414 to
+0.397, minimum annual Sharpe from -0.498 to -0.355, and mean annual alpha from
+-7.526% to -6.892%. Both had three positive-Sharpe years and four negative-alpha
+years. Decision: retain TBA 8 as an unconfirmed, private research candidate. It
+improved downside behavior and alpha magnitude on this small check but did not
+improve the primary mean-Sharpe measure and is nowhere near the requested 5%
+consistent-alpha target. Exact evidence is in
+`docs/TBA8_INTEGRATED_RESULTS_2026-09-13.json`.
+
 ## 2026-09-13 — TBA risk supervisor implementation: awaiting frozen OOS panel
 
 A TBA-only portfolio risk supervisor was added without changing normal Minerva. It controls correlation-cluster weight, positive marginal variance contribution, high-correlation regimes, effective-bet concentration, completed-return realized volatility, volatility acceleration, expected shortfall, rolling drawdown, and gradual recovery. Each control can only reduce risk, uses information available by the previous completed close, and is included in the research configuration and daily audit.
