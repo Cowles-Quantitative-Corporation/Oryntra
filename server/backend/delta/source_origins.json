@@ -1,0 +1,58 @@
+{
+  "server/backend/delta/native/source_engine.cpp": {
+    "source": "delta-v15-volume-window-runner-preparation-v31/source_engine.cpp",
+    "source_sha256": "cd011dabed41121514a003c8abdf18a18787afb0a30e04d1449bae2b848583dc"
+  },
+  "server/backend/delta/native/source_worker.cpp": {
+    "source": "delta-v15-volume-window-runner-preparation-v31/source_worker.cpp",
+    "source_sha256": "f500f2375eae0cd9e12791d882e2d6b1da1a8eeb3205ffd56fd830a503795720"
+  },
+  "server/backend/delta/native/source_caps.hpp": {
+    "source": "delta-v15-volume-window-runner-preparation-v31/source_caps.hpp",
+    "source_sha256": "2194391ca6200ab090c1247f2e28a86f8ca96aa575faadce3333ca4d84454bac"
+  },
+  "server/backend/delta/native/parser_scratch.hpp": {
+    "source": "delta-v15-volume-window-runner-preparation-v31/parser_scratch.hpp",
+    "source_sha256": "473889fac1c512fafbb3629782bcf62d80fa80d1b75a96ff284d9bd3eb46b3f3"
+  },
+  "server/backend/delta/native/accepted_state_view.hpp": {
+    "source": "delta-v15-volume-window-runner-preparation-v31/accepted_state_view.hpp",
+    "source_sha256": "e21771e150ec385ee13e8af1165af5245c1cc55005607494711b9123aeb568fc"
+  },
+  "server/backend/delta/native/streaming_digest.hpp": {
+    "source": "delta-v15-volume-window-runner-preparation-v31/streaming_digest.hpp",
+    "source_sha256": "c58feafe8c3f545ca3eae03f087f442f881835c5f8ce396458e8c4a4de6d687a"
+  },
+  "server/tests/research/delta/native_cap_tests.cpp": {
+    "source": "delta-v15-volume-window-runner-preparation-v31/cap_tests.cpp",
+    "source_sha256": "26d28f107f7596aa178c8436fc92ec9d8d53c6cc093a69882dd81b108cea70c4"
+  },
+  "server/tests/research/delta/native_parser_tests.cpp": {
+    "source": "delta-v15-volume-parser-reuse-candidate-v27/parser_tests.cpp",
+    "source_sha256": "88509d552d315ee2099146728f6c976708c53bdc610a4b1c6c1f664f9fa21bc1"
+  },
+  "server/backend/delta/volume/reference.py": {
+    "source": "delta-v15-trade-volume-singleton-v3/reference.py",
+    "source_sha256": "38bb82db02e62786dbe813dfdb146cd762c1e7879e5222886ff65c4ed1d64702"
+  },
+  "server/backend/delta/volume/source_reference.py": {
+    "source": "delta-v15-volume-window-runner-preparation-v31/source_reference.py",
+    "source_sha256": "cee6f717bc1a511633c8190bf4d6fe7925694a99f0fd3b40afa85529b0bb1bfb"
+  },
+  "server/backend/delta/volume/features.py": {
+    "source": "delta-v15-volume-uncertainty-clock-repair-v33/features.py",
+    "source_sha256": "c2e6d52fac15208ba7d647dd6253abff05b5832cf1a9f95359d544b1e5031d16"
+  },
+  "server/backend/delta/volume/projector.py": {
+    "source": "delta-v15-native-artifact-feature-projector-v34/projector.py",
+    "source_sha256": "a48a95dece838a234b3b83661024abaaf33fd3e8e61b094b95444dc466eb4f8f"
+  },
+  "server/tests/research/delta/test_features.py": {
+    "source": "delta-v15-volume-uncertainty-clock-repair-v33/test_features.py",
+    "adaptation": "package imports; exclude private historical-file diff test, retain behavioral negatives"
+  },
+  "server/tests/research/delta/test_projector.py": {
+    "source": "delta-v15-native-artifact-feature-projector-v34/test_projector.py",
+    "adaptation": "package imports; exclude private historical-file diff test, retain behavioral negatives"
+  }
+}
