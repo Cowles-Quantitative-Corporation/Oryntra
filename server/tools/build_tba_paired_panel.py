@@ -11,9 +11,14 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
+import sys
 
 import pandas as pd
 import yfinance as yf
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from backend.research_universe import BROAD_US_LIQUID_UNIVERSE
 
 
 DEFAULT_STOCKS = (
@@ -35,11 +40,17 @@ def main() -> None:
     parser.add_argument("--start", default="1999-01-01")
     parser.add_argument("--end", default="2026-01-01", help="Exclusive end date")
     parser.add_argument("--stocks", default=",".join(DEFAULT_STOCKS))
+    parser.add_argument(
+        "--broad-universe",
+        action="store_true",
+        help="Use the repository's predeclared broad U.S. liquid research universe instead of --stocks",
+    )
     args = parser.parse_args()
     outputs = (args.bars_output, args.risk_free_output, args.manifest_output)
     if any(path.exists() for path in outputs):
         parser.error("An output already exists; choose new paths to preserve the frozen panel")
-    stocks = tuple(dict.fromkeys(symbol.strip().upper() for symbol in args.stocks.split(",") if symbol.strip()))
+    stock_source = BROAD_US_LIQUID_UNIVERSE if args.broad_universe else args.stocks.split(",")
+    stocks = tuple(dict.fromkeys(symbol.strip().upper() for symbol in stock_source if symbol.strip()))
     requested = stocks + BENCHMARKS + (RISK_FREE_PROXY,)
     downloaded = yf.download(
         list(requested), start=args.start, end=args.end, auto_adjust=True,

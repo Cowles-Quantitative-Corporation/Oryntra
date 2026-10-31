@@ -28,9 +28,10 @@ _PERIOD_CALENDAR_DAYS: dict[str, int | None] = {
     "3mo": 110,
     "6mo": 210,
     "1y": 400,
-    "2y": 730,
-    "5y": 730,
-    "all": 730,
+    "2y": 800,
+    "5y": 1900,
+    "10y": 3800,
+    "all": 7300,
 }
 
 
@@ -58,8 +59,8 @@ def normalize_period(value: str | None) -> str:
 
 def normalize_provider_preference(value: str | None) -> str:
     provider = str(value or "auto").strip().lower()
-    if provider not in {"auto", "cache_only", "polygon", "twelvedata"}:
-        raise ValueError("Choose cache_only, auto, polygon, or twelvedata as the data provider.")
+    if provider not in {"auto", "cache_only", "polygon", "twelvedata", "yfinance"}:
+        raise ValueError("Choose cache_only, auto, polygon, twelvedata, or yfinance as the data provider.")
     return provider
 
 
@@ -82,6 +83,8 @@ def _frame_from_rows(rows: Sequence[Any]) -> pd.DataFrame:
             columns=["Open", "High", "Low", "Close", "Volume", "VWAP", "Transactions"]
         )
     records: list[dict[str, Any]] = []
+    adjusted_flags: list[bool] = []
+    providers: set[str] = set()
     for row in rows:
         try:
             records.append(
@@ -98,6 +101,16 @@ def _frame_from_rows(rows: Sequence[Any]) -> pd.DataFrame:
                     ),
                 }
             )
+            try:
+                adjusted_flags.append(bool(int(row["adjusted"])))
+            except Exception:
+                pass
+            try:
+                provider = str(row["provider"] or "").strip()
+                if provider:
+                    providers.add(provider)
+            except Exception:
+                pass
         except Exception:
             continue
     if not records:
@@ -108,6 +121,14 @@ def _frame_from_rows(rows: Sequence[Any]) -> pd.DataFrame:
     frame = frame.sort_values("timestamp").set_index("timestamp")
     if getattr(frame.index, "tz", None) is not None:
         frame.index = frame.index.tz_convert(None)
+    if adjusted_flags:
+        all_adjusted = bool(all(adjusted_flags))
+        frame.attrs["all_adjusted"] = all_adjusted
+        frame.attrs["adjusted_rows"] = int(sum(adjusted_flags))
+        frame.attrs["row_count_with_adjustment_metadata"] = int(len(adjusted_flags))
+        frame.attrs["price_basis"] = "adjusted_close" if all_adjusted else "mixed_or_unadjusted_close"
+    if providers:
+        frame.attrs["providers"] = sorted(providers)
     return frame
 
 
@@ -353,6 +374,57 @@ class MarketDataRepository:
             frame = frame.loc[frame.index >= cutoff]
         return frame
 
+    def load_adjusted(
+        self,
+        ticker: str,
+        *,
+        period: str = "all",
+        start_date: str | None = None,
+        end_date: str | None = None,
+    ) -> pd.DataFrame:
+        """Return only rows explicitly stored as adjusted/total-return compatible.
+
+        This is intentionally stricter than ``load_local``.  Legacy Control caches
+        can contain a mixture of old unadjusted rows and newer adjusted rows under
+        the same ticker.  Beta must never infer that the whole history is adjusted
+        from a ticker-level summary; it trains only on rows whose stored provenance
+        explicitly says ``adjusted=1``.
+        """
+        symbol = normalize_ticker(ticker)
+        clean_period = normalize_period(period)
+        params: list[Any] = [symbol]
+        clauses = ["ticker = ? COLLATE NOCASE", "timeframe = '1d'", "adjusted = 1"]
+        if start_date:
+            clauses.append("substr(timestamp, 1, 10) >= ?")
+            params.append(str(start_date)[:10])
+        if end_date:
+            clauses.append("substr(timestamp, 1, 10) <= ?")
+            params.append(str(end_date)[:10])
+        conn = get_connection()
+        try:
+            rows = conn.execute(
+                f"""
+                SELECT timestamp, open, high, low, close, volume,
+                       vwap, transactions, provider, adjusted
+                  FROM ohlcv_bars
+                 WHERE {' AND '.join(clauses)}
+                 ORDER BY timestamp ASC
+                """,
+                params,
+            ).fetchall()
+        finally:
+            conn.close()
+        frame = _frame_from_rows(rows)
+        if frame.empty or start_date:
+            return frame
+        days = _PERIOD_CALENDAR_DAYS[clean_period]
+        if days is not None:
+            cutoff = frame.index.max() - pd.Timedelta(days=int(days))
+            frame = frame.loc[frame.index >= cutoff].copy()
+            frame.attrs["all_adjusted"] = True
+            frame.attrs["price_basis"] = "adjusted_close"
+        return frame
+
     @staticmethod
     def _history_quality(
         frame: pd.DataFrame,
@@ -575,8 +647,9 @@ class MarketDataRepository:
             "6mo": "6mo",
             "1y": "1y",
             "2y": "2y",
-            "5y": "2y",
-            "all": "2y",
+            "5y": "5y",
+            "10y": "10y",
+            "all": "max",
         }[normalize_period(period)]
         ticker_obj = yf.Ticker(ticker)
         try:
@@ -683,43 +756,53 @@ class MarketDataRepository:
 
         negative = self._negative_cache(symbol)
         if negative and not force_refresh:
-            if local is not None and not local.empty and allow_stale_on_error:
-                metadata = self._metadata(
-                    symbol,
-                    local,
-                    period=clean_period,
-                    source="stale_cache_negative_fallback",
-                    provider=str(self.cache_summary(symbol).get("providers") or "local"),
-                    from_cache=True,
-                    fallback_used=False,
-                    minimum_bars=minimum_bars,
-                    max_stale_days=stale_days,
-                    warning=f"Recent provider lookup failed: {negative['reason']}",
+            # Provider failures are scoped to the provider that produced them.
+            # A failed paid-provider lookup must not block an explicitly selected
+            # Yahoo request (or vice versa). Auto may honor any recent failure.
+            negative_provider = str(negative.get("provider") or "").strip().lower()
+            negative_applies = selected_provider == "auto" or negative_provider in {"", selected_provider}
+            if negative_applies:
+                if local is not None and not local.empty and allow_stale_on_error:
+                    metadata = self._metadata(
+                        symbol,
+                        local,
+                        period=clean_period,
+                        source="stale_cache_negative_fallback",
+                        provider=str(self.cache_summary(symbol).get("providers") or "local"),
+                        from_cache=True,
+                        fallback_used=False,
+                        minimum_bars=minimum_bars,
+                        max_stale_days=stale_days,
+                        warning=f"Recent {negative_provider or 'provider'} lookup failed: {negative['reason']}",
+                    )
+                    return HistoryResult(symbol, local, self._info(symbol), metadata)
+                raise ValueError(
+                    f"Recent lookup for '{symbol}' failed and is temporarily cached: "
+                    f"{negative['reason']}"
                 )
-                return HistoryResult(symbol, local, self._info(symbol), metadata)
-            raise ValueError(
-                f"Recent lookup for '{symbol}' failed and is temporarily cached: "
-                f"{negative['reason']}"
-            )
 
         errors: list[str] = []
         fetched = False
         if selected_provider in {"auto", "polygon"}:
-            try:
-                polygon_key = supplied_keys.get("polygon")
-                if not polygon_key and not allow_platform_provider_keys:
-                    raise PolygonAPIError("No Polygon API key is saved for this account. Add one in Settings or use cached data.")
-                self._fetch_polygon(symbol, clean_period, api_key=polygon_key)
-                fetched = True
-            except (PolygonAPIError, ValueError) as exc:
-                errors.append(str(exc))
-                self._log_fetch(symbol, clean_period, "ticker_fallback", "polygon_ticker_fallback", "failed", error=str(exc))
+            polygon_key = supplied_keys.get("polygon")
+            if not polygon_key and not allow_platform_provider_keys:
+                if selected_provider == "polygon":
+                    errors.append("No Polygon API key is saved for this account. Add one in API & Automation or use cached data.")
+            else:
+                try:
+                    self._fetch_polygon(symbol, clean_period, api_key=polygon_key)
+                    fetched = True
+                except (PolygonAPIError, ValueError) as exc:
+                    errors.append(str(exc))
+                    self._log_fetch(symbol, clean_period, "ticker_fallback", "polygon_ticker_fallback", "failed", error=str(exc))
         if not fetched and selected_provider in {"auto", "twelvedata"}:
             twelve_key = supplied_keys.get("twelvedata")
             if not twelve_key and not allow_platform_provider_keys:
-                errors.append("No Twelve Data API key is saved for this account. Add one in Settings or use cached data.")
+                if selected_provider == "twelvedata":
+                    errors.append("No Twelve Data API key is saved for this account. Add one in API & Automation or use cached data.")
             elif not twelvedata_available(twelve_key):
-                errors.append("Twelve Data is not configured for this account or server.")
+                if selected_provider == "twelvedata":
+                    errors.append("Twelve Data is not configured for this account or server.")
             else:
                 try:
                     self._fetch_twelvedata(symbol, clean_period, api_key=twelve_key)
@@ -727,9 +810,10 @@ class MarketDataRepository:
                 except (TwelveDataAPIError, ValueError) as exc:
                     errors.append(str(exc))
                     self._log_fetch(symbol, clean_period, "ticker_fallback", "twelvedata_ticker_fallback", "failed", error=str(exc))
-        if not fetched and selected_provider == "auto" and os.getenv("ORYNTRA_ENABLE_YFINANCE_FALLBACK", "0").strip().lower() in {"1", "true", "yes", "on"}:
+        if not fetched and selected_provider in {"auto", "yfinance"}:
             try:
                 self._fetch_yfinance(symbol, clean_period)
+                fetched = True
             except Exception as exc:
                 errors.append(str(exc))
 
@@ -751,7 +835,7 @@ class MarketDataRepository:
             return HistoryResult(symbol, refreshed, self._info(symbol), metadata)
 
         reason = errors[-1] if errors else f"No usable daily history for '{symbol}'."
-        self._set_negative_cache(symbol, reason)
+        self._set_negative_cache(symbol, reason, provider=selected_provider)
         if local is not None and not local.empty and allow_stale_on_error:
             metadata = self._metadata(
                 symbol,

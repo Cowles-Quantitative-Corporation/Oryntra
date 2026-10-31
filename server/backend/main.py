@@ -13,14 +13,14 @@ from .database import init_db, get_app_counter
 from .legal_operator import render_legal_template
 from .market_cache import start_market_cache_worker, status as market_cache_status
 from .phase4_scheduler import start_phase4_scheduler
-from .routes import analysis, watchlist, paper_trading, ai_explain, backtest, patterns, auth, dev_tools, pro, intelligence, quant, portfolio_lab, debug_access, cqc_entitlements, control_plane
+from .routes import analysis, watchlist, paper_trading, ai_explain, backtest, patterns, auth, billing, demo, dev_tools, pro, intelligence, quant, portfolio_lab, debug_access, cqc_entitlements, control_plane, beta, qoptima
 from .routes import universal
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
 LEGAL_DIR = os.path.join(FRONTEND_DIR, "legal")
 
-APP_VERSION = "1.2.0"
+APP_VERSION = "1.1.0-rc1"
 PUBLIC_ENGINE = "v8"
 PUBLIC_ENGINE_LABEL = "V8 evidence engine"
 
@@ -72,6 +72,30 @@ def render_frontend_html(source: str) -> str:
         r"(/static/js/app\.js)(?:\?v=[^\"']*)?",
         lambda match: f"{match.group(1)}?v={asset_version}",
         html,
+    )
+
+
+def frontend_control_asset_version(filename: str) -> str:
+    """Return a deterministic cache-buster for a private Control asset."""
+    path = os.path.join(FRONTEND_DIR, "control", "static", filename)
+    try:
+        return str(os.stat(path).st_mtime_ns)
+    except OSError:
+        return APP_VERSION
+
+def render_control_html(source: str) -> str:
+    """Pin the private Control JS bundle to the exact files in this build.
+
+    WKWebView/Safari can retain /control-static assets across app upgrades even
+    when /control itself is fresh.  Versioning the script URL prevents a new
+    Control page (for example a new QPO preset button) from running against an
+    obsolete cached control.js that has no matching click handlers.
+    """
+    asset_version = frontend_control_asset_version("control.js")
+    return re.sub(
+        r"(/control-static/control\.js)(?:\?v=[^\"']*)?",
+        lambda match: f"{match.group(1)}?v={asset_version}",
+        source,
     )
 
 
@@ -131,7 +155,9 @@ async def oryntra_release_headers(request, call_next):
     response.headers.update(SECURITY_HEADERS)
     if (
         request.url.path == "/"
+        or request.url.path == "/control"
         or request.url.path.startswith("/static/")
+        or request.url.path.startswith("/control-static/")
         or request.url.path.startswith("/legal/")
         or request.url.path.startswith("/api/")
     ):
@@ -139,6 +165,8 @@ async def oryntra_release_headers(request, call_next):
     return response
 
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
+app.include_router(billing.router, prefix="/api/billing", tags=["Billing"])
+app.include_router(demo.router, prefix="/api/demo", tags=["Demo"])
 app.include_router(intelligence.router, prefix="/api/intelligence", tags=["Market Intelligence"])
 app.include_router(watchlist.router, prefix="/api/watchlist", tags=["Watchlist"])
 app.include_router(paper_trading.router, prefix="/api/paper", tags=["Paper Trading"])
@@ -163,6 +191,8 @@ if _private_research:
     app.include_router(universal.router, prefix="/api/universal", tags=["Universal Research"])
     app.include_router(quant.router, prefix="/api/quant", tags=["Quant Lab"])
     app.include_router(control_plane.router, prefix="/api/control", tags=["CQC Private Control"])
+    app.include_router(beta.router, prefix="/api/control", tags=["CQC Model C / Beta"])
+    app.include_router(qoptima.router, prefix="/api/control/qoptima", tags=["CQC QOptima"])
 
 # The public API exposes only frozen historical demonstrations. Full custom
 # Quant Lab controls are always an internal, server-authorized capability.
@@ -186,7 +216,9 @@ async def serve_control_plane():
     if not _private_research:
         raise HTTPException(status_code=404, detail="Not found")
     path = os.path.join(FRONTEND_DIR, "control", "index.html")
-    return FileResponse(path, headers=NO_CACHE_HEADERS)
+    with open(path, "r", encoding="utf-8") as handle:
+        html = render_control_html(handle.read())
+    return HTMLResponse(html, headers=NO_CACHE_HEADERS)
 
 
 @app.get("/", include_in_schema=False)
@@ -257,6 +289,18 @@ async def app_version():
             },
         },
         "subscription_offers_enabled": env_bool("ORYNTRA_SUBSCRIPTION_OFFERS_ENABLED", True),
+        "home_video": {
+            "enabled": bool(
+                env_bool("ORYNTRA_HOME_VIDEO_ENABLED", False)
+                and os.getenv("ORYNTRA_HOME_VIDEO_URL", "").strip()
+            ),
+            "type": os.getenv("ORYNTRA_HOME_VIDEO_TYPE", "embed").strip().lower() if os.getenv("ORYNTRA_HOME_VIDEO_TYPE", "embed").strip().lower() in {"embed", "mp4"} else "embed",
+            "url": os.getenv("ORYNTRA_HOME_VIDEO_URL", "").strip(),
+            "poster_url": os.getenv("ORYNTRA_HOME_VIDEO_POSTER_URL", "").strip(),
+            "title": os.getenv("ORYNTRA_HOME_VIDEO_TITLE", "See Oryntra in action").strip() or "See Oryntra in action",
+            "caption": os.getenv("ORYNTRA_HOME_VIDEO_CAPTION", "A short guided product demo.").strip(),
+            "autoplay": env_bool("ORYNTRA_HOME_VIDEO_AUTOPLAY", False),
+        },
         "turnstile": {
             "enabled": turnstile_enabled,
             "site_key": turnstile_site_key if turnstile_enabled else "",

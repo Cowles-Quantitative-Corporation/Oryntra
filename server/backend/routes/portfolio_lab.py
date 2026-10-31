@@ -16,14 +16,23 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, ConfigDict, Field
 
 from ..database import get_connection
-from ..internal_access import require_cqc_internal_operator
 from ..universal_engine import ENGINE_ID, ENGINE_VERSION, UniversalConfig, portfolio_targets
 from ..universal_position_policy import PositionPolicyConfig
 from ..universal_research import run_universal
+from .auth import require_active_subscription
 from .universal import History, parse_histories
 
 router = APIRouter()
 _run_slots = asyncio.Semaphore(1)
+_PUBLIC_ACTIONS = {"BUY": "INCREASE", "SELL": "EXIT", "TRIM": "REDUCE", "HOLD": "UNCHANGED"}
+
+
+def _public_directive(row: dict) -> dict:
+    public = dict(row)
+    public["action"] = _PUBLIC_ACTIONS.get(str(row.get("action", "HOLD")).upper(), "UNCHANGED")
+    return public
+
+
 def _default_configuration() -> UniversalConfig:
     # These are research defaults, not claimed profitable settings.  The
     # lifecycle is explicit here because Portfolio Lab is its intended ledger.
@@ -60,13 +69,13 @@ def _directive_rows(report: dict, targets: pd.DataFrame, prices: pd.DataFrame, c
         target, before = float(latest[symbol]), float(prior[symbol])
         if target > before + 1e-6:
             action = "BUY"
-            rationale = "The completed-close target weight increased; any simulated fill is next session's open."
+            rationale = "The completed-close study weight increased; the historical simulation applies that change at the next session's open."
         elif target < before - 1e-6:
             action = "SELL" if target <= 1e-6 else "TRIM"
-            rationale = "The completed-close target weight decreased; this is a hypothetical next-session adjustment."
+            rationale = "The completed-close study weight decreased; the historical simulation applies that change at the next session's open."
         else:
             action = "HOLD"
-            rationale = "The completed-close target weight did not change enough to create a new research directive."
+            rationale = "The completed-close study weight did not change enough to create a new hypothetical allocation event."
         price = float(prices.iloc[-1][symbol])
         state = states.get(symbol, {})
         rows.append({
@@ -114,8 +123,8 @@ def _run_decision(request: PortfolioDecisionRequest) -> tuple[dict, list[dict]]:
 
 @router.post("/run-upload")
 async def run_upload(payload: PortfolioDecisionRequest, request: Request):
-    """CQC-internal hypothetical research ledger; unavailable to subscribers."""
-    user = require_cqc_internal_operator(request)
+    """Subscriber research ledger; never personalized advice or broker execution."""
+    user = require_active_subscription(request)
     try:
         async with _run_slots:
             report, directives = await asyncio.to_thread(_run_decision, payload)
@@ -124,8 +133,10 @@ async def run_upload(payload: PortfolioDecisionRequest, request: Request):
             "ok": True, "run_id": run_id, "label": payload.label.strip(),
             "as_of": report["universe"]["end"], "engine": {"id": ENGINE_ID, "version": ENGINE_VERSION},
             "configuration_fingerprint": report["config_fingerprint"], "dataset_fingerprint": report["dataset_fingerprint"],
-            "directives": directives,
-            "execution_note": "Research-only: directives are hypothetical, use completed-close information, and model next-session execution. No broker order was created.",
+            "directives": [_public_directive(row) for row in directives],
+            "execution_note": "Educational hypothetical study only—not financial advice or a recommendation. It uses completed-close information and models next-session timing; no broker order was created.",
+            "not_financial_advice": True,
+            "personalized": False,
             "position_policy": report["position_policy"],
             "position_policy_execution": {
                 "status": report["position_policy_execution"].get("status", "active_research_ledger"),
@@ -140,8 +151,8 @@ async def run_upload(payload: PortfolioDecisionRequest, request: Request):
 
 @router.get("/runs")
 async def runs(request: Request):
-    """Return CQC-internal research-ledger records, never raw bars."""
-    user = require_cqc_internal_operator(request)
+    """Return the subscriber's research-ledger records, never raw bars."""
+    user = require_active_subscription(request)
     conn = get_connection()
     try:
         run_rows = conn.execute(
@@ -159,8 +170,8 @@ async def runs(request: Request):
                 "dataset_fingerprint": row["dataset_fingerprint"],
                 "configuration_fingerprint": hashlib.sha256(str(row["configuration_json"]).encode()).hexdigest(),
                 "as_of": row["as_of_date"], "created_at": row["created_at"],
-                "directives": [{**dict(item), "lifecycle": json.loads(item["lifecycle_json"])} for item in directives],
+                "directives": [_public_directive({**dict(item), "lifecycle": json.loads(item["lifecycle_json"])}) for item in directives],
             })
-        return {"runs": result, "raw_market_data_persisted": False}
+        return {"runs": result, "raw_market_data_persisted": False, "not_financial_advice": True, "personalized": False}
     finally:
         conn.close()

@@ -229,8 +229,8 @@ SYSTEM_CHAPTERS = [
     (
         "7. CLIENT, MOBILE, AND OPERATIONS",
         [
-            "The browser client is a static workspace served by FastAPI. Its user-facing areas are Scanner, Watchlist, Paper trades, Backtest, Quant Lab, and Settings. The same bundle also contains signed-in onboarding, browser-only provider-key storage, AI explanations, theme persistence, optional advertising, and a hidden private Pattern Lab panel. index.html establishes the structure, app.js owns state and API interaction, and the two stylesheets supply the presentation. The maintenance site is deliberately independent, while legal pages are served through an explicit allowlist.",
-            "The ios-app directory is a Flutter client plus the iOS runner and widget integration. After sign-in and provider setup, its five navigation destinations are Scanner, Watchlist, Paper, Quant Lab, and Account. Mobile-only services add secure session and provider-key storage, consent-gated AdMob support, scan-result notifications, daily research reminders, tracked-symbol alerts, background time for Quant Lab requests, local saved Quant Lab reports, a TradingView chart, and an iOS home-screen widget updated from the latest scan. Native Swift and Xcode configuration bridge these services. A successful backend test does not validate device permissions, widget refresh, signing, or App Store behavior.",
+            "The browser client is a static workspace served by FastAPI. Its user-facing areas are Scanner, Watchlist, Paper trades, Backtest, Quant Lab, and Settings. The same bundle also contains signed-in onboarding, browser-only provider-key storage, AI explanations, theme persistence, and a hidden private Pattern Lab panel. index.html establishes the structure, app.js owns state and API interaction, and the two stylesheets supply the presentation. The maintenance site is deliberately independent, while legal pages are served through an explicit allowlist.",
+            "The ios-app directory is a Flutter client plus the iOS runner and widget integration. After sign-in and provider setup, its five navigation destinations are Scanner, Watchlist, Paper, Quant Lab, and Account. Mobile-only services add secure session and provider-key storage, scan-result notifications, daily research reminders, tracked-symbol alerts, background time for Quant Lab requests, local saved Quant Lab reports, a TradingView chart, and an iOS home-screen widget updated from the latest scan. Native Swift and Xcode configuration bridge these services. A successful backend test does not validate device permissions, widget refresh, signing, or App Store behavior.",
             "Operational tools exist for cache inspection and warming, research execution, bias auditing, training, database-related safeguards, and local launch. These tools are intentionally explicit rather than magical. They should be run from the server directory with the correct environment, and destructive deployment actions must preserve credentials, data, generated models, training history, and the virtual environment. A service that listens on a port is not automatically healthy; check the real health response and the intended user flow.",
         ],
     ),
@@ -324,7 +324,6 @@ FILE_NOTES = {
     "server/maintenance_site/static/js/maintenance.js": "This client script supports the small maintenance-mode experience. Its limited scope is intentional: an outage or operator-mode page should have fewer moving parts than the normal workspace.",
     "server/maintenance_site/static/js/theme-init.js": "This is the maintenance site's early theme initializer. It maintains a consistent visual preference without importing the main application's larger stateful browser code.",
     "server/requirements.txt": "This dependency manifest defines the Python packages required to run the backend and its research features. Version changes can affect numerical results, provider behavior, and deployment reproducibility, so dependency updates deserve their own validation rather than being treated as housekeeping.",
-    "server/shared/ad_slots.json": "This configuration defines named advertising placement metadata separate from templates and application logic. It allows the server to reason about enabled slots without hard-coding placement decisions throughout the frontend.",
     "server/oryntra.code-workspace": "This editor workspace file groups the server project for local development. It does not affect production behavior, but it can encode useful workspace-level conventions for contributors.",
     "server/tests/conftest.py": "This test support file prepares shared fixtures and import behavior for the backend suite. It is part of the testing environment itself, so a change can affect many tests even when no product module has changed.",
     "server/tests/test_analysis_access_policy.py": "This regression suite verifies analysis-access and quota policy. Its value is that it tests a product boundary the browser must not be able to bypass.",
@@ -337,7 +336,6 @@ FILE_NOTES = {
     "server/tests/test_quant_research.py": "This suite checks core Quant Lab mechanics and report outputs. It should be expanded whenever a sleeve, timing rule, cost treatment, or risk diagnostic changes because aggregate performance alone is not a sufficient regression signal.",
     "server/tests/test_research_pipeline.py": "This suite covers the handoff among research preparation, candidate-model work, and the surrounding evaluation pipeline. It protects the evidence workflow from becoming disconnected after a refactor.",
     "server/tests/test_v8_engine.py": "This suite checks the V8 candidate-scoring path separately from the public V7 path. That separation matters because experimental comparisons must not silently change the labeled public engine.",
-    "server/tests/test_ads_configuration.py": "This suite proves web advertising is blank and disabled by default and requires explicit enablement before AdSense markup or slots are considered active.",
     "server/tests/test_corporate_quant_system.py": "This suite proves corporate/macro facts obey their availability timestamps and verifies the corporate Quant profile returns structured regime, liquidity, attribution, and health outputs.",
     "server/tests/test_paper_trade_routes.py": "This route-level regression check confirms an authenticated owner can reach the supported paper-trade deletion contract.",
     "server/tests/test_provider_credentials.py": "This suite verifies per-user encrypted provider-key storage, key redaction, and the retirement of server-side HTTP key storage in browser-direct mode.",
@@ -636,9 +634,6 @@ def mobile_file_story(path: Path) -> str:
         return f"This service implements {focus}. Keeping this work behind a service boundary lets screens remain focused on presentation and makes platform-specific behavior explicit; any change needs both a Flutter check and the relevant device or browser test."
     if "/widgets/" in value:
         focus = {
-            "adaptive_banner": "the platform-neutral banner-ad widget contract",
-            "adaptive_banner_mobile": "the mobile banner-ad implementation",
-            "adaptive_banner_web": "the web fallback or web-specific banner treatment",
             "common": "shared visual primitives used by more than one screen",
             "glass": "the reusable translucent visual treatment used by the mobile interface",
             "tradingview_chart": "the platform-neutral chart widget contract",
@@ -651,7 +646,6 @@ def mobile_file_story(path: Path) -> str:
     specific = {
         "analysis_options.yaml": "This is the Dart analyzer configuration inherited from Flutter's recommended lint set; it defines the static-quality rules applied by `flutter analyze`.",
         "build_ipa.sh": "This release helper cleans the Flutter project, restores packages and CocoaPods, builds the iOS release, and creates the Xcode archive/export path for App Store delivery.",
-        "configure_admob.sh": "This helper validates and inserts the configured AdMob application identifier into the iOS Runner property list.",
         "configure_widget_target.rb": "This Ruby/xcodeproj helper creates or repairs the OryntraWidget target, source membership, entitlements, app-group capability, and embedding relationship.",
         "prepare_ios_project.sh": "This helper restores Flutter/CocoaPods dependencies and runs the widget-target configuration before the workspace is archived.",
         "pubspec.yaml": "This Flutter manifest declares the app version, SDK constraints, dependencies, bundled icon, and platform packages used by the client.",
@@ -716,7 +710,7 @@ def support_file_story(path: Path, text: str) -> str:
         return "This ignore policy keeps credentials, databases, model artifacts, market caches, virtual environments, generated Flutter settings, build output, and machine-local state out of version control. It is part of the repository's privacy and deployment-safety boundary."
     if value.startswith("server/frontend/legal/") or value.startswith("server/maintenance_site/legal/"):
         page = path.stem.replace("-", " ")
-        return f"This {page} document is a policy-facing page served by the product. Its statements must remain consistent with actual data, account, subscription, advertising, and research behavior; legal wording should not be changed merely as interface copy."
+        return f"This {page} document is a policy-facing page served by the product. Its statements must remain consistent with actual data, account, subscription, and research behavior; legal wording should not be changed merely as interface copy."
     if value.startswith("server/frontend/") and path.suffix == ".html":
         return "This HTML document provides a browser-facing structural surface. Its markup is intentionally documented at the interaction-contract level rather than reproduced: client identifiers, forms, dialogs, and accessibility labels must remain compatible with the browser application that consumes them."
     if value.startswith("server/maintenance_site/static/css/"):
@@ -782,7 +776,7 @@ def environment_inventory(files: Iterable[Path]) -> list[str]:
         text = source_text(path)
         if text is None:
             continue
-        names.update(re.findall(r"\b(?:ORYNTRA|POLYGON|TWELVEDATA|ADSENSE|WEB_ADS|PORT|PUBLIC_[A-Z_]+)_[A-Z0-9_]+\b", text))
+        names.update(re.findall(r"\b(?:ORYNTRA|POLYGON|TWELVEDATA|PORT|PUBLIC_[A-Z_]+)_[A-Z0-9_]+\b", text))
         names.update(re.findall(r"os\.getenv\([\"']([A-Z0-9_]+)", text))
     return sorted(name for name in names if "KEY" not in name or name in {"POLYGON_API_KEY", "TWELVEDATA_API_KEY"})
 

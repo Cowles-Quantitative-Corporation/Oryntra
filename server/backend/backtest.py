@@ -26,7 +26,7 @@ class BacktestRequest(BaseModel):
     period: str = "2y"
     min_score: float = 55.0
     setups: list[str] = Field(default_factory=list)
-    engine_mode: str = "official"
+    engine_mode: str = "v8"
     data_source: str = "cache_first"
     min_history: int = 220
     max_hold_candles: int = 20

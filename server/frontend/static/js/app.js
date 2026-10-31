@@ -15,6 +15,82 @@ function apiFetch(url, options = {}) {
 
 
 const IS_PRO_BUILD = false;
+
+const STRIPE_TRIAL_DAYS = 7;
+const DEMO_TICKERS = Object.freeze(['AAPL', 'NVDA', 'TSLA', 'MSFT', 'SPY']);
+let stripeReturnHandled = false;
+let demoMode = false;
+
+async function startStripeCheckout(planCode) {
+  if (!currentUser) {
+    closeSubscriptionModal();
+    openAuthModal('signup');
+    return;
+  }
+  try {
+    const result = await API.billing.checkout(planCode);
+    if (!result?.url) throw new Error('Stripe did not return a checkout link.');
+    window.location.assign(result.url);
+  } catch (error) {
+    showError(error?.message || 'Checkout is temporarily unavailable.');
+  }
+}
+
+async function openStripeBillingPortal() {
+  if (!currentUser) { openAuthModal('login'); return; }
+  if (!currentUser.subscription) { showSubscriptionModal('membership'); return; }
+  try {
+    const result = await API.billing.portal();
+    if (!result?.url) throw new Error('Stripe did not return a billing portal link.');
+    window.location.assign(result.url);
+  } catch (error) {
+    showError(error?.message || 'Billing management is temporarily unavailable.');
+  }
+}
+
+function cleanStripeReturnQuery() {
+  try {
+    const url = new URL(window.location.href);
+    ['checkout', 'session_id', 'plan'].forEach(key => url.searchParams.delete(key));
+    window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
+  } catch (_) {}
+}
+
+async function handleStripeReturn() {
+  if (stripeReturnHandled) return;
+  const params = new URLSearchParams(window.location.search);
+  const state = params.get('checkout');
+  if (!state) return;
+  stripeReturnHandled = true;
+  if (state === 'cancelled') {
+    showError('Checkout canceled. Your current plan was not changed.');
+    cleanStripeReturnQuery();
+    return;
+  }
+  const sessionId = params.get('session_id');
+  if (state !== 'success' || !sessionId) { cleanStripeReturnQuery(); return; }
+  if (!currentUser) {
+    showError('Sign in to finish linking your Stripe subscription.');
+    openAuthModal('login');
+    stripeReturnHandled = false;
+    return;
+  }
+  try {
+    showError('Finishing your subscription setup…');
+    const result = await API.billing.checkoutStatus(sessionId);
+    await refreshAuthState();
+    const providerState = String(result?.subscription?.provider_state || '').toLowerCase();
+    const planName = result?.subscription?.plan_name || currentUser?.subscription?.plan_name || 'Your plan';
+    showError(providerState === 'trialing'
+      ? `${planName} 7-day free trial is active.`
+      : `${planName} is active.`);
+    window.setTimeout(hideError, 4500);
+  } catch (error) {
+    showError(error?.message || 'Checkout completed, but Oryntra could not refresh billing yet. Try reloading in a moment.');
+  } finally {
+    cleanStripeReturnQuery();
+  }
+}
 const AUTH_TOKEN_KEY = 'oryntra_auth_token';
 const AUTH_USER_KEY = 'oryntra_auth_user';
 const AUTH_TOKEN_COOKIE = 'oryntra_client_session';
@@ -128,7 +204,7 @@ function initThemeSettings() {
   }
 }
 
-const APP_VERSION = '1.1.3';
+const APP_VERSION = '1.1.0-rc1';
 const APP_RELEASE_KEY = 'oryntra_client_release';
 const PUBLIC_ANALYSIS_ENGINE = 'v8';
 
@@ -171,6 +247,7 @@ let subscriptionModalContext = 'membership';
 let runtimeCapabilities = {
   partner_ads: {enabled:false, placements:{native:false, desktop:false, mobile:false}},
   subscription_offers_enabled: false,
+  home_video: {enabled:false, type:'embed', url:'', poster_url:'', title:'', caption:'', autoplay:false},
   turnstile: {enabled:false, site_key:''},
 };
 let pendingAnalysisIntent = null;
@@ -301,6 +378,12 @@ const API = {
     body: JSON.stringify({ticker, period, provider, bars, model})
   }).then(apiJson),
 
+  minervaScanUploaded: (target_ticker, provider, histories) => apiFetch('/api/intelligence/minerva-scan-upload', {
+    method: 'POST',
+    headers: authHeaders(true),
+    body: JSON.stringify({target_ticker, provider, histories})
+  }).then(apiJson),
+
   explain: (ticker, analysis, question=null) => apiFetch(`/api/ai/explain`, {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
@@ -325,11 +408,6 @@ const API = {
     runs: () => apiFetch('/api/portfolio-lab/runs', {headers:authHeaders(false), cache:'no-store'}).then(apiJson),
   },
 
-  debug: {
-    access: () => apiFetch('/api/internal/debug/access', {headers:authHeaders(false), cache:'no-store'}).then(apiJson),
-    subscription: (plan) => apiFetch('/api/internal/debug/subscription', {method:'POST', headers:authHeaders(true), body:JSON.stringify({plan})}).then(apiJson),
-  },
-
   backtest: {
     runUploaded: (data) => apiFetch('/api/backtest/run-upload', {method:'POST', headers:authHeaders(true), body:JSON.stringify(data)}).then(apiJson),
   },
@@ -337,6 +415,17 @@ const API = {
   intelligence: {
     status: () => apiFetch('/api/intelligence/status', {headers:authHeaders(false), cache:'no-store'}).then(apiJson),
     quota: () => apiFetch('/api/intelligence/quota', {headers:authHeaders(false), cache:'no-store'}).then(apiJson),
+  },
+
+  billing: {
+    checkout: (plan_code) => apiFetch('/api/billing/checkout', {method:'POST', headers:authHeaders(true), body:JSON.stringify({plan_code})}).then(apiJson),
+    checkoutStatus: (session_id) => apiFetch(`/api/billing/checkout-status?session_id=${encodeURIComponent(session_id)}`, {headers:authHeaders(false), cache:'no-store'}).then(apiJson),
+    portal: () => apiFetch('/api/billing/portal', {method:'POST', headers:authHeaders(false)}).then(apiJson),
+    status: () => apiFetch('/api/billing/status', {cache:'no-store'}).then(apiJson),
+  },
+  demo: {
+    status: () => apiFetch('/api/demo/status', {cache:'no-store'}).then(apiJson),
+    scan: (ticker) => apiFetch(`/api/demo/scan/${encodeURIComponent(ticker)}`, {cache:'no-store'}).then(apiJson),
   },
 
   auth: {
@@ -457,7 +546,7 @@ function mountPartnerAdvertisement(slotId, markup) {
   frame.title = 'Advertisement';
   frame.loading = 'lazy';
   frame.referrerPolicy = 'no-referrer';
-  frame.setAttribute('sandbox', 'allow-scripts allow-popups');
+  frame.setAttribute('sandbox', 'allow-scripts');
   frame.srcdoc = markup;
   slot.append(frame);
   slot.dataset.loaded = 'true';
@@ -465,7 +554,7 @@ function mountPartnerAdvertisement(slotId, markup) {
 
 function initPartnerAdvertisements() {
   clearPartnerAdvertisements();
-  if (!currentUser || !runtimeCapabilities.partner_ads?.enabled) return;
+  if (!currentUser || hasActiveSubscription(currentUser) || !runtimeCapabilities.partner_ads?.enabled) return;
   const placements = runtimeCapabilities.partner_ads?.placements || {};
   const region = document.getElementById('partnerAdvertising');
   const enabledSlots = [
@@ -496,7 +585,6 @@ document.addEventListener('DOMContentLoaded', () => {
   loadSearchCounter();
   initDevTools();
   initSettingsPage();
-  initOwnerDebugMenu();
   initAccessibility();
 });
 
@@ -531,7 +619,6 @@ function initAccessibility() {
         if (modal.id === 'authModal') closeAuthModal();
         if (modal.id === 'paperModal') closeModal();
         if (modal.id === 'subscriptionModal') closeSubscriptionModal();
-        if (modal.id === 'ownerDebugModal') closeAccessibleDialog(modal);
         return;
       }
       if (event.key === 'Tab') {
@@ -561,92 +648,6 @@ function initAccessibility() {
     }
   });
 }
-
-function mountOwnerDebugMenu() {
-  if (document.getElementById('ownerDebugModal')) return;
-  document.body.insertAdjacentHTML('beforeend', `<div class="modal-overlay" id="ownerDebugModal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="ownerDebugTitle"><div class="modal-box owner-debug-box"><button class="oryntra-auth-close" id="ownerDebugClose" type="button" aria-label="Close debug menu">×</button><p class="eyebrow">Owner diagnostic controls</p><h2 id="ownerDebugTitle">Workspace entitlement</h2><p class="auth-modal-subtitle">This changes only the signed-in account’s owner test entitlement. It does not create a payment, App Store purchase, or customer subscription.</p><label>Subscription test state<select id="ownerDebugPlan"><option value="actual">Use actual billing state</option><option value="base">Base</option><option value="pro">Oryntra Pro</option><option value="max_bundle">Max Bundle</option></select></label><p id="ownerDebugStatus" class="form-footnote">Checking access…</p><button class="button button-primary" id="ownerDebugApply" type="button">Apply test entitlement</button></div></div>`);
-  document.getElementById('ownerDebugClose')?.addEventListener('click', () => closeAccessibleDialog(document.getElementById('ownerDebugModal')));
-  document.getElementById('ownerDebugApply')?.addEventListener('click', applyOwnerDebugPlan);
-}
-
-function ensureOwnerDebugButton() {
-  let button = document.getElementById('ownerDebugButton');
-  if (button) return button;
-  const anchor = document.querySelector('.sidebar-bottom .sidebar-version, .sidebar-bottom .sidebar-meta');
-  if (!anchor) return null;
-  button = document.createElement('button');
-  button.id = 'ownerDebugButton';
-  button.type = 'button';
-  button.hidden = true;
-  button.className = 'nav-item';
-  button.title = 'Owner controls · Command-Shift-O';
-  button.textContent = '◆ Owner controls';
-  anchor.insertAdjacentElement('beforebegin', button);
-  return button;
-}
-
-async function openOwnerDebugMenu() {
-  if (!currentUser) return;
-  try {
-    const access = await API.debug.access();
-    if (!access?.enabled) return;
-    mountOwnerDebugMenu();
-    const plan = String(access.test_override?.plan_code || 'actual').toLowerCase();
-    const select = document.getElementById('ownerDebugPlan');
-    if (select) select.value = ['base', 'pro', 'max_bundle'].includes(plan) ? plan : 'actual';
-    const status = document.getElementById('ownerDebugStatus');
-    if (status) status.textContent = access.test_override ? `Current test state: ${access.test_override.plan_name}.` : 'Using actual billing state.';
-    openAccessibleDialog(document.getElementById('ownerDebugModal'), select);
-  } catch (_) {
-    // A normal account should not be able to distinguish this from no menu.
-  }
-}
-
-async function applyOwnerDebugPlan() {
-  const select = document.getElementById('ownerDebugPlan');
-  const status = document.getElementById('ownerDebugStatus');
-  const button = document.getElementById('ownerDebugApply');
-  if (!select || !button) return;
-  button.disabled = true;
-  try {
-    const response = await API.debug.subscription(select.value);
-    currentUser = {...currentUser, subscription: response.subscription || null};
-    storeCachedAuthUser(currentUser);
-    setAuthUI(currentUser);
-    if (status) status.textContent = response.test_override ? `Test state applied: ${response.test_override.plan_name}.` : 'Actual billing state restored.';
-    refreshAnalysisAccess({force:true, silent:true}).catch(() => {});
-  } catch (_) {
-    if (status) status.textContent = 'The debug entitlement could not be changed.';
-  } finally {
-    button.disabled = false;
-  }
-}
-
-function initOwnerDebugMenu() {
-  ensureOwnerDebugButton()?.addEventListener('click', openOwnerDebugMenu);
-  document.addEventListener('keydown', event => {
-    const macShortcut = event.metaKey && event.shiftKey && event.code === 'KeyO';
-    const legacyShortcut = event.ctrlKey && event.shiftKey && event.altKey && event.code === 'KeyO';
-    if (macShortcut || legacyShortcut) {
-      event.preventDefault();
-      openOwnerDebugMenu();
-    }
-  });
-}
-
-async function refreshOwnerDebugAvailability() {
-  const button = ensureOwnerDebugButton();
-  if (!button) return;
-  button.hidden = true;
-  if (!currentUser) return;
-  try {
-    const access = await API.debug.access();
-    button.hidden = !access?.enabled;
-  } catch (_) {
-    button.hidden = true;
-  }
-}
-
 
 function mountIdentityProviderOptions() {
   const form = document.getElementById('authForm');
@@ -678,7 +679,7 @@ function mountSubscriptionStructure() {
   modal.setAttribute('aria-labelledby', 'subscriptionTitle');
   const features = [
     ['V8 scanner & evidence cards', 'Included', 'Included', 'Included'],
-    ['Minerva baseline Quant Lab', '—', 'Included', 'Included'],
+    ['Minerva baseline Scanner + Quant Lab', '—', 'Included', 'Included'],
     ['Daily scanner reviews', '10 / day', '200 / day', 'Unlimited'],
     ['Watchlist & paper journal', '20 symbols', 'Unlimited', 'Unlimited'],
     ['Historical research demonstrations', 'Included', 'Included', 'Included'],
@@ -688,7 +689,7 @@ function mountSubscriptionStructure() {
     ['Rule Mirror Pro', '✕', '✕', 'Included'],
   ];
   const rows = features.map(([feature, base, pro, max]) => `<tr><th scope="row">${escapeHtml(feature)}</th><td>${escapeHtml(base)}</td><td>${escapeHtml(pro)}</td><td>${escapeHtml(max)}</td></tr>`).join('');
-  modal.innerHTML = `<div class="modal-box subscription-shell"><button class="oryntra-auth-close" id="subscriptionClose" type="button" aria-label="Close subscription page">×</button><p class="eyebrow">Oryntra membership</p><h2 id="subscriptionTitle">Research software access.</h2><p id="subscriptionCopy" class="auth-modal-subtitle">Subscriptions are temporarily unavailable while checkout is under maintenance. Any future subscription provides software access only—not CQC equity, profits, trading participation, or a managed strategy.</p><button class="button button-primary subscription-free-continue" id="subscriptionFreeContinue" type="button">Continue with free V8</button><div class="subscription-plan-headings"><section><span>BASE</span><b>Research essentials</b><small>V8 scanner and bounded historical research.</small><strong class="subscription-current-plan">Current free workspace</strong></section><section><span>PRO</span><b>Oryntra Pro</b><small>Expanded workspace capacity and validation-gated candidate updates.</small><strong class="subscription-price">$6.99 / month</strong><button class="button button-primary subscription-buy" data-subscription-maintenance type="button">Buy Pro</button></section><section><span>MAX BUNDLE</span><b>Oryntra Pro + Rule Mirror Pro</b><small>Expanded access across both products.</small><strong class="subscription-price">$10.99 / month</strong><button class="button button-secondary subscription-buy" data-subscription-maintenance type="button">Buy Max Bundle</button></section></div><p class="subscription-appstore-note">$1 cheaper per month if bought through App Store.</p><div class="subscription-compare-scroll"><table class="subscription-compare"><thead><tr><th>Feature</th><th>Base</th><th>Pro</th><th>Max bundle</th></tr></thead><tbody>${rows}</tbody></table></div><p class="subscription-footnote">Research candidates remain gated by validation and are never unlocked merely by payment.</p></div>`;
+  modal.innerHTML = `<div class="modal-box subscription-shell"><button class="oryntra-auth-close" id="subscriptionClose" type="button" aria-label="Close subscription page">×</button><p class="eyebrow">Oryntra membership</p><h2 id="subscriptionTitle">Research software access.</h2><p id="subscriptionCopy" class="auth-modal-subtitle">Start paid access with a 7-day free trial. A payment method is required; you will not be charged today. After the trial, the selected plan renews monthly unless canceled before renewal. Subscriptions provide software access only—not CQC equity, profits, trading participation, or a managed strategy.</p><button class="button button-primary subscription-free-continue" id="subscriptionFreeContinue" type="button">Continue with free V8</button><div class="subscription-plan-headings"><section><span>BASE</span><b>Research essentials</b><small>V8 scanner and bounded historical research.</small><strong class="subscription-current-plan">Current free workspace</strong></section><section><span>PRO</span><b>Oryntra Pro</b><small>Expanded workspace capacity and validation-gated candidate updates.</small><strong class="subscription-price">7 days free · then $6.99 / month</strong><button class="button button-primary subscription-buy" data-stripe-checkout="pro" type="button">Start 7-day free trial</button></section><section><span>MAX BUNDLE</span><b>Oryntra Pro + Rule Mirror Pro</b><small>Expanded access across both products.</small><strong class="subscription-price">7 days free · then $10.99 / month</strong><button class="button button-secondary subscription-buy" data-stripe-checkout="max_bundle" type="button">Start 7-day free trial</button></section></div><p class="subscription-appstore-note">Cancel before the trial ends to avoid the first charge. Taxes may apply where required.</p><div class="subscription-compare-scroll"><table class="subscription-compare"><thead><tr><th>Feature</th><th>Base</th><th>Pro</th><th>Max bundle</th></tr></thead><tbody>${rows}</tbody></table></div><p class="subscription-footnote">Research candidates remain gated by validation and are never unlocked merely by payment.</p></div>`;
 }
 
 function estCalendarDate() {
@@ -700,7 +701,7 @@ function estCalendarDate() {
 }
 
 function showDailyScannerOffer(user, intent) {
-  if (!runtimeCapabilities.subscription_offers_enabled || !user?.id || intent?.type !== 'scan') return false;
+  if (hasActiveSubscription(user) || !runtimeCapabilities.subscription_offers_enabled || !user?.id || intent?.type !== 'scan') return false;
   const key = `oryntra_subscription_offer_seen_${user.id}_${estCalendarDate()}`;
   try {
     if (localStorage.getItem(key)) return false;
@@ -711,36 +712,10 @@ function showDailyScannerOffer(user, intent) {
   return true;
 }
 
-function mountMinervaModelGate() {
-  ['quantModel', 'settingsQuantModel'].forEach(id => {
-    const select = document.getElementById(id);
-    if (!select || select.dataset.minervaGateMounted) return;
-    if (!select.querySelector('option[value="minerva_v1"]')) {
-      const option = new Option('Minerva · Pro research preview', 'minerva_v1');
-      option.dataset.access = 'subscription';
-      select.append(option);
-    }
-    select.dataset.minervaGateMounted = 'true';
-    let lastAvailable = select.value;
-    select.addEventListener('change', () => {
-      if (select.value !== 'minerva_v1') {
-        lastAvailable = select.value;
-        return;
-      }
-      select.value = lastAvailable;
-      if (!hasActiveSubscription()) {
-        showSubscriptionModal('minerva_v1');
-        return;
-      }
-      showSubscriptionModal('minerva_unreleased');
-    });
-  });
-}
-
 const WORKSPACE_MODEL_KEY = 'oryntra_workspace_model';
 const WORKSPACE_MODELS = [
   ['v8', 'V8 Official · Scanner · Free'],
-  ['minerva_baseline', 'Minerva baseline · Quant Lab · Pro / Max'],
+  ['minerva_baseline', 'Minerva baseline · Scanner + Quant Lab · Pro / Max'],
 ];
 
 function workspaceModel() {
@@ -761,9 +736,6 @@ function chooseWorkspaceModel(value) {
     }
     safeStorageSet(WORKSPACE_MODEL_KEY, value);
     currentPatternMode = value;
-    // V8 remains the single-ticker scanner engine. Minerva has a frozen,
-    // multi-symbol Quant Lab implementation, so do not substitute it into a
-    // scanner result or present a cosmetic selector.
     const quantModel = document.getElementById('quantModel');
     if (quantModel) quantModel.value = 'minerva_baseline';
     const settingsModel = document.getElementById('settingsQuantModel');
@@ -772,7 +744,6 @@ function chooseWorkspaceModel(value) {
     syncWorkspaceModelControls(value);
     updatePatternModePill();
     updateSettingsEngineDisplay();
-    document.querySelector('[data-tab="quant"]')?.click();
     return;
   }
   safeStorageSet(WORKSPACE_MODEL_KEY, value);
@@ -790,8 +761,7 @@ function hasActiveSubscription(user=currentUser) {
 
 function mountWorkspaceModelControls() {
   currentPatternMode = workspaceModel();
-  document.querySelectorAll('.tab-panel > .page-header').forEach(header => {
-    if (header.parentElement?.id === 'tab-portfolio') return;
+  document.querySelectorAll('#tab-scanner > .page-header, #tab-quant > .page-header').forEach(header => {
     if (header.querySelector('[data-workspace-model]')) return;
     const select = document.createElement('select');
     select.dataset.workspaceModel = 'true';
@@ -838,14 +808,171 @@ function beginIdentityProviderSignIn(provider) {
   window.location.assign(`/api/auth/oauth/${encodeURIComponent(provider)}/start?intent=${encodeURIComponent(authMode)}&accept_legal=${acceptLegal ? 'true' : 'false'}`);
 }
 
+
+function setPublicStartVisible(visible) {
+  const start = document.getElementById('publicStartPage');
+  if (start) start.hidden = !visible;
+}
+
+function updateTrialSurfaces(user=currentUser) {
+  const freeSignedIn = Boolean(user && !hasActiveSubscription(user));
+  const sidebarCard = document.getElementById('sidebarTrialCard');
+  if (sidebarCard) sidebarCard.hidden = !freeSignedIn;
+  const firstRunTrial = document.getElementById('firstRunTrialBtn');
+  if (firstRunTrial) firstRunTrial.hidden = !freeSignedIn;
+}
+
+function firstRunStorageKey() {
+  return currentUser?.id ? `oryntra_first_run_seen_${currentUser.id}` : '';
+}
+
+function dismissFirstRunWelcome() {
+  const panel = document.getElementById('firstRunWelcome');
+  if (panel) panel.hidden = true;
+  const key = firstRunStorageKey();
+  if (key) safeStorageSet(key, '1');
+}
+
+function maybeShowFirstRunWelcome() {
+  const panel = document.getElementById('firstRunWelcome');
+  if (!panel || !currentUser || demoMode) {
+    if (panel) panel.hidden = true;
+    return;
+  }
+  const key = firstRunStorageKey();
+  if (!key || safeStorageGet(key)) {
+    panel.hidden = true;
+    return;
+  }
+  const providerReady = Boolean(browserProviderKeys?.polygon || browserProviderKeys?.twelvedata);
+  panel.hidden = !providerReady;
+}
+
+function setDemoNavigationState(enabled) {
+  document.querySelectorAll('.primary-nav [data-tab]').forEach(button => {
+    const locked = enabled && button.dataset.tab !== 'scanner';
+    button.classList.toggle('demo-locked-nav', locked);
+    button.setAttribute('aria-disabled', String(locked));
+    if (locked) button.title = 'Create a free account to use this workspace.';
+    else if (button.title === 'Create a free account to use this workspace.') button.removeAttribute('title');
+  });
+}
+
+function renderDemoExplanation(data) {
+  const textEl = document.getElementById('aiText');
+  const loadingEl = document.getElementById('aiLoading');
+  if (loadingEl) loadingEl.style.display = 'none';
+  if (!textEl) return;
+  const setup = String(data?.setup?.setup_type || 'market condition').replace(/_/g, ' ').toLowerCase();
+  const trend = String(data?.trend || 'mixed').toLowerCase();
+  const score = Number(data?.trade_plan?.quality_score || 0);
+  textEl.innerHTML = `<strong>Demo explanation</strong><br><br>This fixed illustrative dataset produced a <strong>${escapeHtml(setup)}</strong> context with a ${escapeHtml(trend)} trend and a model-quality score of ${Number.isFinite(score) ? score.toFixed(0) : '—'}. The purpose of demo mode is to show how Oryntra organizes evidence—not to represent the current market or predict a future return.<br><br>Create a free account and connect your own eligible data provider to analyze real symbols.`;
+  textEl.style.display = '';
+}
+
+async function runDemoScan(ticker='AAPL') {
+  const symbol = sanitizeTickerSymbol(ticker || 'AAPL');
+  if (!DEMO_TICKERS.includes(symbol)) {
+    showError(`Demo mode supports ${DEMO_TICKERS.join(', ')}. Create a free account to research other symbols.`);
+    return;
+  }
+  const input = document.getElementById('tickerInput');
+  if (input) input.value = symbol;
+  currentTicker = symbol;
+  currentPeriod = '1y';
+  showLoading(true);
+  hideError();
+  hideResults();
+  try {
+    animateLoadingSteps();
+    const data = await API.demo.scan(symbol);
+    currentAnalysis = data;
+    renderResults(data);
+    loadTradingView(symbol, currentInterval, data.exchange);
+    const chartNote = document.getElementById('chartSourceNote');
+    if (chartNote) chartNote.textContent = 'Live TradingView reference · demo cards use simulated display data';
+    renderDemoExplanation(data);
+    const add = document.getElementById('addToWatchlistBtn');
+    if (add) add.style.display = 'none';
+    showResults();
+  } catch (error) {
+    showError(error?.message || 'The demo analysis could not be loaded.');
+  } finally {
+    showLoading(false);
+  }
+}
+
+function enterDemoMode(ticker='AAPL') {
+  demoMode = true;
+  setPublicStartVisible(false);
+  document.body.classList.remove('auth-gated');
+  document.body.classList.add('demo-mode');
+  document.querySelector('.app-shell')?.setAttribute('aria-hidden', 'false');
+  const banner = document.getElementById('demoModeBanner');
+  if (banner) banner.hidden = false;
+  const workspaceName = document.getElementById('workspaceName');
+  const workspaceSubtitle = document.getElementById('workspaceSubtitle');
+  if (workspaceName) workspaceName.textContent = 'Demo workspace';
+  if (workspaceSubtitle) workspaceSubtitle.textContent = 'Fixed illustrative dataset';
+  const state = document.getElementById('authStateText');
+  const btn = document.getElementById('authOpenBtn');
+  if (state) state.textContent = 'DEMO';
+  if (btn) {
+    btn.innerHTML = '<span id="authStateText">DEMO</span><b>CREATE ACCOUNT</b>';
+  }
+  document.getElementById('sidebarTrialCard')?.setAttribute('hidden', '');
+  document.getElementById('firstRunWelcome')?.setAttribute('hidden', '');
+  setDemoNavigationState(true);
+  activateScannerForDemo();
+  runDemoScan(ticker);
+}
+
+function activateScannerForDemo() {
+  const scannerBtn = document.getElementById('nav-scanner');
+  if (scannerBtn) scannerBtn.click();
+}
+
+function exitDemoMode({showStart=true} = {}) {
+  demoMode = false;
+  currentAnalysis = null;
+  currentTicker = '';
+  document.body.classList.remove('demo-mode');
+  const banner = document.getElementById('demoModeBanner');
+  if (banner) banner.hidden = true;
+  setDemoNavigationState(false);
+  hideResults();
+  hideError();
+  if (!currentUser) {
+    document.body.classList.add('auth-gated');
+    document.querySelector('.app-shell')?.setAttribute('aria-hidden', 'true');
+    if (showStart) setPublicStartVisible(true);
+  }
+}
+
 function initAuth() {
   mountIdentityProviderOptions();
   mountQuantModelCatalog();
   mountWorkspaceModelControls();
   mountSubscriptionStructure();
   refreshIdentityProviderOptions();
+  document.getElementById('publicSignInBtn')?.addEventListener('click', () => openAuthModal('login'));
+  document.getElementById('publicCreateBtn')?.addEventListener('click', () => openAuthModal('signup'));
+  document.getElementById('publicDemoBtn')?.addEventListener('click', () => enterDemoMode('AAPL'));
+  document.querySelectorAll('[data-public-demo-ticker]').forEach(button => {
+    button.addEventListener('click', () => enterDemoMode(button.dataset.publicDemoTicker || 'AAPL'));
+  });
+  document.getElementById('demoCreateAccountBtn')?.addEventListener('click', () => openAuthModal('signup'));
+  document.getElementById('demoExitBtn')?.addEventListener('click', () => exitDemoMode({showStart:true}));
+  document.getElementById('firstRunAnalyzeBtn')?.addEventListener('click', () => {
+    dismissFirstRunWelcome();
+    const input = document.getElementById('tickerInput');
+    if (input) input.value = 'AAPL';
+    runScan('AAPL');
+  });
+  document.getElementById('firstRunDismissBtn')?.addEventListener('click', dismissFirstRunWelcome);
+
   const authBtn = document.getElementById('authOpenBtn');
-  if (authBtn) authBtn.addEventListener('click', () => currentUser ? logoutUser() : openAuthModal('login'));
+  if (authBtn) authBtn.addEventListener('click', () => currentUser ? logoutUser() : openAuthModal(demoMode ? 'signup' : 'login'));
 
   const cancel = document.getElementById('authCancel');
   if (cancel) cancel.addEventListener('click', closeAuthModal);
@@ -864,6 +991,7 @@ function initAuth() {
   document.getElementById('continueToOryntra')?.addEventListener('click', () => {
     closeProviderSavedChoice();
     closeProviderOnboarding();
+    maybeShowFirstRunWelcome();
     resumePendingAnalysisIntent();
   });
   document.getElementById('providerOnboardingLogout')?.addEventListener('click', async () => { closeProviderOnboarding(); await logoutUser(); openAuthModal('login'); });
@@ -876,35 +1004,20 @@ function initAuth() {
   });
   const betaPreviewAuthBtn = document.getElementById('betaPreviewAuthBtn');
   if (betaPreviewAuthBtn) betaPreviewAuthBtn.addEventListener('click', () => openAuthModal(currentUser ? 'login' : 'signup'));
-  document.querySelectorAll('[data-subscription-maintenance]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const copy = document.getElementById('subscriptionCopy');
-      if (copy) copy.textContent = 'Subscriptions under maintenance. Check back again later.';
+  if (!document.body.dataset.stripeCheckoutDelegated) {
+    document.body.dataset.stripeCheckoutDelegated = 'true';
+    document.addEventListener('click', event => {
+      const button = event.target.closest('[data-stripe-checkout]');
+      if (!button) return;
+      event.preventDefault();
+      startStripeCheckout(button.dataset.stripeCheckout);
     });
-  });
-  document.querySelectorAll('.plan-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      if (!currentUser) {
-        closeSubscriptionModal();
-        openAuthModal('signup');
-        return;
-      }
-      try {
-        const res = await API.auth.subscribe(btn.dataset.plan);
-        applyAuthResponse(res);
-        closeSubscriptionModal();
-        showError('Plan activated for testing. Replace this mock unlock with Stripe before real paid launch.');
-        setTimeout(hideError, 3500);
-      } catch (e) {
-        showError(String(e));
-      }
-    });
-  });
+  }
 
   // Do not reveal the workspace based on browser cache.  The API session must
   // verify first so a logged-out visitor cannot access even a transient shell.
   setAuthUI(null);
-  refreshAuthState();
+  refreshAuthState().then(() => handleStripeReturn()).catch(() => {});
 }
 
 function loadCachedAuthUser() {
@@ -936,22 +1049,25 @@ async function refreshAuthState() {
       currentUser = res.user;
       storeCachedAuthUser(currentUser);
       setAuthUI(currentUser);
-      loadPersistedProviderKeys().then(() => refreshProviderCredentialSettings()).catch(() => {});
+      loadPersistedProviderKeys().then(() => { refreshProviderCredentialSettings(); maybeShowFirstRunWelcome(); }).catch(() => {});
       refreshAnalysisAccess({silent:true}).catch(() => {});
-      return;
+      return currentUser;
     }
     authToken = '';
     safeStorageRemove(AUTH_TOKEN_KEY);
     deleteClientCookie(AUTH_TOKEN_COOKIE);
     storeCachedAuthUser(null);
     setAuthUI(null);
+    return null;
   } catch (_) {
     setAuthUI(null);
+    return null;
   }
 }
 
 function setAuthUI(user) {
   currentUser = user || null;
+  window.setTimeout(() => renderBillingSettings(currentUser), 0);
   const signedIn = Boolean(currentUser);
   document.body.classList.toggle('auth-gated', !signedIn);
   document.querySelector('.app-shell')?.setAttribute('aria-hidden', String(!signedIn));
@@ -959,15 +1075,31 @@ function setAuthUI(user) {
   const btn = document.getElementById('authOpenBtn');
   if (!user) {
     clearPartnerAdvertisements();
-    refreshOwnerDebugAvailability();
-    if (state) state.textContent = 'SIGNED OUT';
-    if (btn) btn.textContent = 'LOGIN';
     analysisAccessState = {ready:false, policy:null, quota:null};
     renderAnalysisAccess();
     renderPortfolioLabAccess();
-    openAuthModal('login');
+    updateTrialSurfaces(null);
+    if (demoMode) {
+      document.body.classList.remove('auth-gated');
+      document.body.classList.add('demo-mode');
+      setPublicStartVisible(false);
+      document.querySelector('.app-shell')?.setAttribute('aria-hidden', 'false');
+      return;
+    }
+    document.body.classList.remove('demo-mode');
+    document.body.classList.add('auth-gated');
+    setPublicStartVisible(true);
+    closeAuthModal();
+    if (state) state.textContent = 'SIGNED OUT';
+    if (btn) btn.innerHTML = '<span id="authStateText">SIGNED OUT</span><b>LOGIN</b>';
     return;
   }
+  demoMode = false;
+  document.body.classList.remove('demo-mode', 'auth-gated');
+  setPublicStartVisible(false);
+  document.getElementById('demoModeBanner')?.setAttribute('hidden', '');
+  setDemoNavigationState(false);
+  updateTrialSurfaces(user);
   const plan = user.subscription ? (user.subscription.plan_name || user.subscription.plan_code || 'ACTIVE') : 'FREE';
   if (state) state.textContent = `${user.email} · ${plan}`;
   if (btn) btn.textContent = 'LOGOUT';
@@ -977,7 +1109,6 @@ function setAuthUI(user) {
   if (workspaceSubtitle) workspaceSubtitle.textContent = 'Private research workspace';
   closeAuthModal();
   initPartnerAdvertisements();
-  refreshOwnerDebugAvailability();
   renderAnalysisAccess();
   renderPortfolioLabAccess();
 }
@@ -1041,9 +1172,9 @@ function mountTurnstile() {
 }
 
 function closeAuthModal() {
-  if (!currentUser) return;
   const modal = document.getElementById('authModal');
   closeAccessibleDialog(modal);
+  if (!currentUser && !demoMode) setPublicStartVisible(true);
 }
 
 function setProviderOnboardingMessage(message, warning=false) {
@@ -1253,16 +1384,13 @@ function showSubscriptionModal(context='membership') {
   const copy = document.getElementById('subscriptionCopy');
   if (context === 'minerva_v1') {
     if (title) title.textContent = 'Minerva access';
-    if (copy) copy.textContent = 'Minerva is reserved for active subscribers. Membership and checkout will be configured here after the subscription experience is designed.';
-  } else if (context === 'minerva_unreleased') {
-    if (title) title.textContent = 'Minerva validation in progress';
-    if (copy) copy.textContent = 'Your subscription is recognized. Minerva is still a private research candidate, so it cannot run in the workspace until its validation and release gate is complete.';
+    if (copy) copy.textContent = 'Minerva is reserved for active subscribers. Start a 7-day free trial of Oryntra Pro or CQC Max to unlock eligible subscriber-only research features.';
   } else if (context === 'daily_offer') {
     if (title) title.textContent = 'V8 is ready to scan.';
     if (copy) copy.textContent = 'V8 remains free. You can close this comparison or continue below and your scan will start—no plan selection required.';
   } else {
     if (title) title.textContent = 'Choose the research workspace.';
-    if (copy) copy.textContent = 'Compare the workspaces below. Subscriptions are temporarily unavailable while checkout is under maintenance.';
+    if (copy) copy.textContent = 'Compare the workspaces below. Oryntra Pro and CQC Max both begin with a 7-day free trial.';
   }
   openAccessibleDialog(modal, document.getElementById('subscriptionClose'));
 }
@@ -1280,6 +1408,11 @@ function initTabs() {
   const labels = {scanner: 'Market scanner', watchlist: 'Watchlist', paper: 'Paper trades', backtest: 'Historical backtest', quant: 'Systematic research', portfolio: 'Portfolio Lab', settings: 'Settings'};
   const activate = btn => {
     const tab = btn.dataset.tab;
+    if (demoMode && tab !== 'scanner') {
+      showError('Demo mode includes the scanner only. Create a free account to unlock the full workspace.');
+      openAuthModal('signup');
+      return;
+    }
     tabs.forEach(item => {
       const selected = item === btn;
       item.classList.toggle('active', selected);
@@ -1577,6 +1710,51 @@ function renderQuantCurve(points) {
   return `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true"><polyline class="${values.at(-1) >= values[0] ? 'quant-curve-up' : 'quant-curve-down'}" points="${line}" /></svg>`;
 }
 
+function resolvePublicMediaUrl(raw) {
+  const value = String(raw || '').trim();
+  if (!value) return '';
+  try {
+    const url = new URL(value, window.location.origin);
+    if (url.origin === window.location.origin || url.protocol === 'https:') return url.href;
+  } catch (_) {}
+  return '';
+}
+
+function renderPublicHomeVideo(config = runtimeCapabilities.home_video) {
+  const section = document.getElementById('publicHomeVideoSection');
+  const frame = document.getElementById('publicHomeVideoFrame');
+  if (!section || !frame) return;
+  frame.replaceChildren();
+  const url = resolvePublicMediaUrl(config?.url);
+  if (!config?.enabled || !url) {
+    section.hidden = true;
+    return;
+  }
+  setText('publicHomeVideoTitle', config.title || 'See Oryntra in action');
+  setText('publicHomeVideoCaption', config.caption || 'A short guided product demo.');
+  if (config.type === 'mp4') {
+    const video = document.createElement('video');
+    video.controls = true;
+    video.playsInline = true;
+    video.preload = 'metadata';
+    video.src = url;
+    const poster = resolvePublicMediaUrl(config.poster_url);
+    if (poster) video.poster = poster;
+    if (config.autoplay) { video.autoplay = true; video.muted = true; }
+    frame.append(video);
+  } else {
+    const iframe = document.createElement('iframe');
+    iframe.src = url;
+    iframe.title = config.title || 'Oryntra product demo';
+    iframe.loading = 'lazy';
+    iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+    iframe.allow = `accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share`;
+    iframe.allowFullscreen = true;
+    frame.append(iframe);
+  }
+  section.hidden = false;
+}
+
 async function initRuntimeCapabilities() {
   try {
     const runtime = await API.runtime();
@@ -1584,9 +1762,11 @@ async function initRuntimeCapabilities() {
       ...runtimeCapabilities,
       ...runtime,
       partner_ads: {...runtimeCapabilities.partner_ads, ...(runtime?.partner_ads || {})},
+      home_video: {...runtimeCapabilities.home_video, ...(runtime?.home_video || {})},
       turnstile: {...runtimeCapabilities.turnstile, ...(runtime?.turnstile || {})},
     };
     initPartnerAdvertisements();
+    renderPublicHomeVideo(runtimeCapabilities.home_video);
     mountTurnstile();
     const privateResearch = Boolean(runtime?.private_research_routes);
     const devPanel = document.getElementById('devLabPanel');
@@ -1793,7 +1973,7 @@ async function runPortfolioLab() {
 }
 
 function initPortfolioLab() {
-  document.getElementById('portfolioAccessBtn')?.addEventListener('click', () => showSubscriptionModal('membership'));
+  document.getElementById('portfolioOptionsBtn')?.addEventListener('click', () => showSubscriptionModal('membership'));
   document.getElementById('portfolioRunBtn')?.addEventListener('click', runPortfolioLab);
   renderPortfolioLabAccess();
 }
@@ -1919,6 +2099,10 @@ async function runScan(ticker = null, period = null) {
 
   currentTicker = raw;
   currentPeriod = period || currentPeriod;
+  if (demoMode) {
+    await runDemoScan(raw);
+    return;
+  }
   const scanIntent = {type:'scan', ticker:raw, period:currentPeriod};
   if (showDailyScannerOffer(currentUser, scanIntent)) return;
   const allowed = await requireAnalysisAccess(scanIntent);
@@ -1929,9 +2113,24 @@ async function runScan(ticker = null, period = null) {
 
   try {
     animateLoadingSteps();
-    const market = await fetchDirectMarketBars(raw, currentPeriod, 'auto', 320);
-    const data = await API.scanUploaded(raw, currentPeriod, market.provider, market.bars, PUBLIC_ANALYSIS_ENGINE);
+    const selectedModel = workspaceModel();
+    let data;
+    if (selectedModel === 'minerva_baseline') {
+      const peerSeed = ['SPY', 'QQQ', 'AAPL', 'MSFT', 'NVDA', 'AMZN'];
+      const universe = [raw, ...peerSeed.filter(symbol => symbol !== raw)].slice(0, 5);
+      const provider = directProviderFor('auto');
+      const histories = [];
+      for (const symbol of universe) {
+        const market = await fetchDirectMarketBars(symbol, '5y', provider, 758);
+        histories.push({ticker: symbol, bars: market.bars});
+      }
+      data = await API.minervaScanUploaded(raw, provider, histories);
+    } else {
+      const market = await fetchDirectMarketBars(raw, currentPeriod, 'auto', 320);
+      data = await API.scanUploaded(raw, currentPeriod, market.provider, market.bars, PUBLIC_ANALYSIS_ENGINE);
+    }
     currentAnalysis = data;
+    dismissFirstRunWelcome();
     if (Number.isFinite(Number(data.search_counter))) {
       updateSearchCounter(data.search_counter);
     } else {
@@ -1941,6 +2140,8 @@ async function runScan(ticker = null, period = null) {
     }
     renderResults(data);
     loadTradingView(raw, currentInterval, data.exchange);
+    const chartNote = document.getElementById('chartSourceNote');
+    if (chartNote) chartNote.textContent = '';
     generateAI(data);
     document.getElementById('addToWatchlistBtn').style.display = '';
     showResults();
@@ -1948,7 +2149,10 @@ async function runScan(ticker = null, period = null) {
     console.error('Oryntra scan failed:', err);
     if (['MARKET_DATA_LICENSE_REQUIRED','PUBLIC_ANALYSIS_DISABLED','SUBSCRIPTION_REQUIRED','DAILY_ANALYSIS_LIMIT_REACHED'].includes(err?.code)) {
       await refreshAnalysisAccess({silent:true, force:true}).catch(() => {});
-      showError(err.message || 'Analysis is not available for this account.');
+      showError(
+        err.message || 'Analysis is not available for this account.',
+        {trial: err?.code === 'DAILY_ANALYSIS_LIMIT_REACHED' || err?.code === 'SUBSCRIPTION_REQUIRED'}
+      );
       return;
     }
     let msg = typeof err === 'string' ? err : (err && err.message ? err.message : 'Couldn\'t analyze that ticker.');
@@ -2030,7 +2234,23 @@ function renderLabBasedGrade(grade) {
     </section>`;
 }
 
+function renderModelResearchSummary(d) {
+  const el = document.getElementById('modelResearchSummary');
+  if (!el) return;
+  const minerva = d?.minerva || {};
+  if (d?.model_profile !== 'minerva_baseline' || !minerva.status) {
+    el.hidden = true;
+    el.replaceChildren();
+    return;
+  }
+  const weight = Number(minerva.target_study_weight_pct || 0);
+  const symbols = Array.isArray(minerva.comparison_symbols) ? minerva.comparison_symbols.join(', ') : '—';
+  el.innerHTML = `<div><p class="eyebrow">Premium research model</p><h3>Minerva baseline</h3><p>${escapeHtml(minerva.note || 'Frozen cross-sectional research baseline.')}</p></div><div class="model-research-stats"><span><small>Study weight</small><b>${Number.isFinite(weight) ? weight.toFixed(2) : '0.00'}%</b></span><span><small>Universe</small><b>${escapeHtml(String(minerva.universe_size || '—'))} symbols</b></span><span><small>Window</small><b>${escapeHtml(minerva.evaluation_start || '—')} → ${escapeHtml(minerva.evaluation_end || '—')}</b></span></div><details><summary>Comparison universe</summary><code>${escapeHtml(symbols)}</code></details>`;
+  el.hidden = false;
+}
+
 function renderResults(d) {
+  renderModelResearchSummary(d);
   const labGradeHtml = renderLabBasedGrade(d.lab_based_grade || d.lab_grade || d.grade_lab_based);
   const tp    = d.trade_plan || {};
   const plan  = tp;
@@ -2060,7 +2280,11 @@ function renderResults(d) {
   const srcEl = document.getElementById('rDataSource');
   if (srcEl) {
     const tf = d.timeframe ? ` · ${String(d.timeframe).toUpperCase()}` : '';
-    srcEl.textContent = `SERVER-SIDE DERIVED ANALYSIS${tf} · CHART BY TRADINGVIEW`;
+    srcEl.textContent = d.demo_mode
+      ? `SIMULATED DEMO DISPLAY${tf} · FIXED DATASET`
+      : d.model_profile === 'minerva_baseline'
+        ? `MINERVA BASELINE${tf} · CROSS-SECTIONAL RESEARCH`
+        : `SERVER-SIDE DERIVED ANALYSIS${tf} · CHART BY TRADINGVIEW`;
   }
 
   const setupColor = setupColorMap(setup.setup_type, tp.direction);
@@ -2712,6 +2936,25 @@ function setAppEngine(mode, opts={}) {
   }
 }
 
+function renderBillingSettings(user=currentUser) {
+  const status = document.getElementById('settingsBillingStatus');
+  const detail = document.getElementById('settingsBillingDetail');
+  if (!status || !detail) return;
+  const sub = user?.subscription || null;
+  if (!sub) {
+    status.textContent = 'FREE';
+    detail.textContent = 'Start a 7-day free trial or manage an existing paid plan.';
+    return;
+  }
+  status.textContent = sub.plan_name || sub.plan_code || 'ACTIVE';
+  const state = String(sub.provider_state || '').toLowerCase();
+  if (state === 'trialing' && sub.trial_end) {
+    detail.textContent = `Free trial active through ${sub.trial_end} · Manage payment method, plan, or cancellation in Stripe.`;
+  } else {
+    detail.textContent = 'Manage payment method, invoices, plan changes, or cancellation in Stripe.';
+  }
+}
+
 function initSettingsPage() {
   const select = document.getElementById('settingsEngineSelect');
   if (select) {
@@ -2721,7 +2964,9 @@ function initSettingsPage() {
   initQuantSettings();
   initProviderCredentialSettings();
   initThemeSettings();
+  document.getElementById('settingsBillingBtn')?.addEventListener('click', openStripeBillingPortal);
   document.getElementById('settingsDeleteAccountBtn')?.addEventListener('click', deleteCurrentAccount);
+  renderBillingSettings();
   updateSettingsEngineDisplay();
 }
 
@@ -4081,14 +4326,20 @@ function showResults() {
   if (bioFooter) bioFooter.style.display = '';
 }
 
-function showError(msg) {
+function showError(msg, options = {}) {
   const banner = document.getElementById('errorBanner');
-  document.getElementById('errorText').textContent = msg;
-  banner.style.display = 'flex';
+  const text = document.getElementById('errorText');
+  if (text) text.textContent = msg;
+  const trial = document.getElementById('errorTrialBtn');
+  if (trial) trial.hidden = !Boolean(options.trial && currentUser && !hasActiveSubscription(currentUser));
+  if (banner) banner.style.display = 'flex';
 }
 
 function hideError() {
-  document.getElementById('errorBanner').style.display = 'none';
+  const banner = document.getElementById('errorBanner');
+  if (banner) banner.style.display = 'none';
+  const trial = document.getElementById('errorTrialBtn');
+  if (trial) trial.hidden = true;
 }
 
 let loadingStepIndex = 0;
@@ -4111,7 +4362,6 @@ function animateLoadingSteps() {
 
 
 document.addEventListener('DOMContentLoaded', () => {
-  initAuth();
   const newPaperTradeBtn = document.getElementById('newPaperTradeBtn');
   if (newPaperTradeBtn) {
     newPaperTradeBtn.addEventListener('click', () => {

@@ -151,10 +151,8 @@ class AuthSecurityTests(unittest.TestCase):
             _require_model_access({"subscription": None}, MINERVA_MODEL_ID)
         self.assertEqual(raised.exception.status_code, 402)
         self.assertEqual(raised.exception.detail["code"], "MODEL_SUBSCRIPTION_REQUIRED")
-        with self.assertRaises(HTTPException) as unreleased:
-            _require_model_access({"subscription": {"plan_code": "pro"}}, MINERVA_MODEL_ID)
-        self.assertEqual(unreleased.exception.status_code, 409)
-        self.assertEqual(unreleased.exception.detail["code"], "MODEL_RESEARCH_NOT_RELEASED")
+        # The local product update releases this frozen profile to paid users.
+        _require_model_access({"subscription": {"plan_code": "pro"}}, MINERVA_MODEL_ID)
 
     def test_scanner_accepts_only_the_shared_workspace_model_catalog(self):
         self.assertEqual(IntelligenceScanRequest(ticker="AAPL", model="v8").model, "v8")

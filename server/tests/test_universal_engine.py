@@ -695,6 +695,13 @@ def test_blueprint_route_requires_auth_and_does_not_claim_live_activation(monkey
     import backend.database as database
     from backend.routes.auth import router as auth_router
     from backend.routes.universal import router
+    # The optional vendor seed stays local; exercise lookups with invented data.
+    import backend.universal_taxonomy as taxonomy
+    seed = tmp_path / "synthetic-seed.json"
+    seed.write_text(json.dumps({"universe": [{"security_id": "fixture-a", "symbol": "AAPL"}],
+                               "exposures": [{"security_id": "fixture-a", "family_id": "information_technology", "source": "SYNTHETIC_TEST_ONLY"}]}))
+    monkeypatch.setattr(taxonomy, "SEED_SNAPSHOT_PATH", seed)
+    taxonomy._seed_index.cache_clear()
     monkeypatch.setattr(database, "DB_PATH", str(tmp_path / "blueprint.db"))
     database.init_db()
     app = FastAPI()

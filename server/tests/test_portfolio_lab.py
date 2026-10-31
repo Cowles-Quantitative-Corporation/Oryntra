@@ -19,7 +19,7 @@ def _bars() -> list[dict]:
     ]
 
 
-def test_portfolio_lab_is_internal_only_and_never_unlocked_by_a_subscription(monkeypatch, tmp_path):
+def test_portfolio_lab_requires_an_active_subscription(monkeypatch, tmp_path):
     monkeypatch.setattr(database, "DB_PATH", str(tmp_path / "portfolio.db"))
     monkeypatch.setenv("ORYNTRA_BROWSER_DIRECT_ANALYSIS_ENABLED", "true")
     monkeypatch.setattr(portfolio_lab, "_run_decision", lambda _: (
@@ -35,16 +35,19 @@ def test_portfolio_lab_is_internal_only_and_never_unlocked_by_a_subscription(mon
         signup = client.post("/api/auth/signup", json={"email": "pro@example.com", "password": "strong-password", "accept_legal": True})
         token = signup.json()["token"]
         blocked = client.post("/api/portfolio-lab/run-upload", headers={"Authorization": f"Bearer {token}"}, json=request)
-        assert blocked.status_code == 404
+        assert blocked.status_code == 402
         conn = database.get_connection()
         conn.execute("INSERT INTO subscriptions (user_id, plan_code, plan_name, status) VALUES (1, 'pro', 'Oryntra Pro', 'ACTIVE')")
         conn.commit()
         conn.close()
-        still_blocked = client.post("/api/portfolio-lab/run-upload", headers={"Authorization": f"Bearer {token}"}, json=request)
-        assert still_blocked.status_code == 404
+        allowed = client.post("/api/portfolio-lab/run-upload", headers={"Authorization": f"Bearer {token}"}, json=request)
+        assert allowed.status_code == 200
+        assert allowed.json()["not_financial_advice"] is True
+        assert allowed.json()["personalized"] is False
+        assert allowed.json()["directives"][0]["action"] == "INCREASE"
 
 
-def test_portfolio_lab_requires_server_provisioned_internal_operator(monkeypatch, tmp_path):
+def test_portfolio_lab_does_not_accept_internal_access_without_a_subscription(monkeypatch, tmp_path):
     monkeypatch.setattr(database, "DB_PATH", str(tmp_path / "portfolio-internal.db"))
     monkeypatch.setenv("ORYNTRA_CQC_INTERNAL_RESEARCH_ENABLED", "true")
     monkeypatch.setattr(portfolio_lab, "_run_decision", lambda _: (
@@ -64,4 +67,4 @@ def test_portfolio_lab_requires_server_provisioned_internal_operator(monkeypatch
         conn.commit()
         conn.close()
         response = client.post("/api/portfolio-lab/run-upload", headers={"Authorization": f"Bearer {token}"}, json=request)
-    assert response.status_code == 200, response.text
+    assert response.status_code == 402, response.text

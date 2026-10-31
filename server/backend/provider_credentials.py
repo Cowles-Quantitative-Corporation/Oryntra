@@ -15,7 +15,7 @@ from fastapi import HTTPException
 
 from .database import get_connection
 
-SUPPORTED_PROVIDERS = {"polygon", "twelvedata"}
+SUPPORTED_PROVIDERS = {"polygon", "twelvedata", "fred"}
 
 
 def _cipher() -> Fernet:
@@ -69,7 +69,7 @@ def ensure_provider_credential_schema() -> None:
 def _provider(value: str) -> str:
     provider = str(value or "").strip().lower()
     if provider not in SUPPORTED_PROVIDERS:
-        raise HTTPException(status_code=422, detail="Choose Polygon or Twelve Data.")
+        raise HTTPException(status_code=422, detail="Choose Polygon, Twelve Data, or FRED.")
     return provider
 
 
