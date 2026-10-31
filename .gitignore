@@ -101,3 +101,7 @@ __MACOSX/
 
 # Optional large provider taxonomy seed remains a local input.
 /server/data/universal_taxonomy/financedatabase_seed_25000.json
+
+# Superseded public-page backups are retained locally.
+/server/frontend/legal/archive/
+/server/frontend/legal/pre-1.1-legal-backup/
