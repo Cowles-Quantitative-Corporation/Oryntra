@@ -11,3 +11,5 @@ Portability changes replace dated-directory import bootstraps with explicit pack
 Raw vendor files, price/model/prediction caches, raw-source launchers and private audit records remain local. The archive reader/process supervisor is not yet a portable canonical runtime and is intentionally not exposed by this package. Source packaging and synthetic checks do not establish improved forecasts, Sharpe, live readiness or licensed redistribution rights.
 
 The `journal` package retains synthetic-only durable, deduplicated reconciliation evidence. It has no broker integration and does not migrate legacy journals implicitly. Concurrency, post-commit failure and recovery tests use temporary invented journals.
+
+The `diagnostics` package provides explicit decimal arithmetic, covariance/envelope diagnostics, a synthetic transaction ledger and admission checks. Policies in its tests are invented fixtures. No private account receipt adapter is installed, and diagnostic success does not authorize execution.

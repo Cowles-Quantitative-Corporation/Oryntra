@@ -66,5 +66,33 @@
   "server/tests/research/delta/test_durability.py": {
     "source": "delta-v15-disabled-adapter-v2/test_durability.py",
     "source_sha256": "9228268168191f9c5073c4e1e718d155e4cc59b3afeb9e98c58917cf5e464134"
+  },
+  "server/backend/delta/diagnostics/arithmetic_policy.py": {
+    "source": "delta-v15-diagnostic-v2/arithmetic_policy.py",
+    "source_sha256": "4083ac4b85638c1b393beaddf9bb445c585a5800c990cdd0bd9012395006f45f"
+  },
+  "server/backend/delta/diagnostics/risk_math.py": {
+    "source": "delta-v15-diagnostic-v2/risk_math.py",
+    "source_sha256": "9d8cfa9c5370b7bec39f6e9eb6585b516fe72c5384ca32b265c514226fe067f6"
+  },
+  "server/backend/delta/diagnostics/diagnostic_gate.py": {
+    "source": "delta-v15-diagnostic-v2/diagnostic_gate.py",
+    "source_sha256": "259ad9d42fffface85290ff370572038d0f5abae25b9e65715e122039b290432"
+  },
+  "server/backend/delta/diagnostics/synthetic_ledger.py": {
+    "source": "delta-v15-diagnostic-v2/synthetic_ledger.py",
+    "source_sha256": "64099a8cc8c5c626bb3a7c8748e4afdd5fbd6f50e802caefcbaedb8a7d168fbc"
+  },
+  "server/backend/delta/diagnostics/transaction_adapter.py": {
+    "source": "delta-v15-diagnostic-v2/transaction_adapter.py",
+    "source_sha256": "1fe4f4afe6c69e92c9f58b1a4bfbca89534837e99732037c2baa06788ecae7bd"
+  },
+  "server/tests/research/delta/test_diagnostics.py": {
+    "source": "delta-v15-diagnostic-v2/test_diagnostics.py",
+    "source_sha256": "c724384754cd78669c95079109b0865733566f8740d4be8a6d8e20544b04cd9e"
+  },
+  "server/tests/research/delta/test_revision_guards.py": {
+    "source": "delta-v15-diagnostic-v2/test_revision_guards.py",
+    "source_sha256": "45755cadc727e40c888354c56dad9fadfcf1db9e868f13b421db173e82274c3f"
   }
 }
