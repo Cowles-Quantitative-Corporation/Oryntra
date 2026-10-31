@@ -22,6 +22,7 @@ from .universal_factor_model import factor_model_contract
 from .universal_optimizer import optimizer_contract
 from .universal_phase3 import phase3_contract, realized_security_attribution
 from .alpha_v1 import alpha_v1_contract
+from .alpha_v12 import alpha_v12_contract
 
 
 def run_universal(histories: dict[str, pd.DataFrame], config: UniversalConfig = UniversalConfig(),
@@ -156,7 +157,7 @@ def run_universal(histories: dict[str, pd.DataFrame], config: UniversalConfig = 
         source_hash.update(pd.util.hash_pandas_object(fundamental_acceleration_scores.reindex(prices.index).sort_index(axis=1), index=True).values.tobytes())
     if uses_corporate_overlay:
         source_hash.update(pd.util.hash_pandas_object(fundamental_observed, index=True).values.tobytes())
-    if config.alpha_model == "walk_forward_ridge" and learning_panels is not None:
+    if config.alpha_model in {"walk_forward_ridge", "alpha_v12"} and learning_panels is not None:
         for panel_source in learning_panels:
             source_hash.update(pd.util.hash_pandas_object(panel_source, index=True).values.tobytes())
     for name, factor_panel in (("factor_sector_labels", factor_sector_labels), ("factor_size_scores", factor_size_scores),
@@ -171,12 +172,12 @@ def run_universal(histories: dict[str, pd.DataFrame], config: UniversalConfig = 
     exposure = held.iloc[-1]
     scorecard = consistency_scorecard(net, benchmark_returns, risk_free, prior_strategy=prior_net)
     code_hash = hashlib.sha256()
-    for module in ("universal_engine.py", "universal_learning.py", "universal_fundamentals.py", "portfolio_execution.py", "alpha_evaluation.py", "alpha_consistency.py", "universal_position_policy.py", "universal_risk_supervisor.py", "universal_risk_v201.py", "universal_risk_v202.py", "universal_risk_v203.py", "universal_factor_model.py", "universal_optimizer.py", "universal_phase3.py", "alpha_v1.py", "universal_institutional_decision.py", "universal_yearly_protocol.py", "universal_market_context.py", "universal_taxonomy.py", "universe_selection.py", "universal_research_blueprint.py", "universal_research.py", "minerva.py", "minerva_corporate.py", "quant_research.py"):
+    for module in ("universal_engine.py", "universal_learning.py", "universal_fundamentals.py", "portfolio_execution.py", "alpha_evaluation.py", "alpha_consistency.py", "universal_position_policy.py", "universal_risk_supervisor.py", "universal_risk_v201.py", "universal_risk_v202.py", "universal_risk_v203.py", "universal_factor_model.py", "universal_optimizer.py", "universal_phase3.py", "alpha_v1.py", "alpha_v12.py", "universal_institutional_decision.py", "universal_yearly_protocol.py", "universal_market_context.py", "universal_taxonomy.py", "universe_selection.py", "universal_research_blueprint.py", "universal_research.py", "minerva.py", "minerva_corporate.py", "quant_research.py"):
         code_hash.update(module.encode())
         code_hash.update(Path(__file__).with_name(module).read_bytes())
     return {"engine": ENGINE_ID, "engine_version": ENGINE_VERSION, "code_fingerprint": code_hash.hexdigest(), "configuration": asdict(config), "engine_configuration": asdict(config),
             "config_fingerprint": config.fingerprint, "dataset_fingerprint": source_hash.hexdigest(),
-            "alpha_model": (alpha_v1_contract(config.alpha_v1) if config.alpha_model == "alpha_v1" else {"id": config.alpha_model, "status": "existing_research_path"}),
+            "alpha_model": (alpha_v1_contract(config.alpha_v1) if config.alpha_model == "alpha_v1" else alpha_v12_contract(config.alpha_v12) if config.alpha_model == "alpha_v12" else {"id": config.alpha_model, "status": "existing_research_path"}),
             "universe": {"symbols": list(prices.columns), "start": str(evaluation_index[0].date()), "end": str(evaluation_index[-1].date()), "sessions": len(net),
                          "eligibility": {"mode": "point_in_time_mask" if universe_eligibility is not None else "static_input_unverified",
                                          "eligible_name_observations": int(universe_eligibility.reindex(evaluation_index).to_numpy().sum()) if universe_eligibility is not None else None,

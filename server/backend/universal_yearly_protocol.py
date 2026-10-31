@@ -120,7 +120,7 @@ def run_seeded_yearly_trials(histories: dict[str, pd.DataFrame], config: Univers
                              corporate_facts: list[dict] | None = None,
                              declared_years: Iterable[int] | None = None) -> dict:
     """Run fixed-config cash-reset trials. Results are descriptive and research-only."""
-    minimum_warmup = max(253, config.ridge_training_sessions if config.alpha_model == "walk_forward_ridge" else 253)
+    minimum_warmup = max(253, config.ridge_training_sessions if config.alpha_model == "walk_forward_ridge" else (config.alpha_v12.anchor_training_sessions + config.alpha_v12.horizon_sessions + 1 if config.alpha_model == "alpha_v12" and config.alpha_v12.include_tba_anchor else 253))
     if protocol.warmup_sessions < minimum_warmup:
         raise ValueError("Annual-study warmup must cover the selected model's completed-history requirement")
     availability = eligible_years(histories, benchmark, risk_free, protocol)
