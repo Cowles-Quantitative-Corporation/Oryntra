@@ -1,1 +1,67 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Oryntra Billing</title><style>body{max-width:860px;margin:auto;padding:36px 20px;background:#07110d;color:#e8f2ed;font:16px/1.65 system-ui,sans-serif}a{color:#8de0b4}h1,h2{line-height:1.2}.note{border-left:4px solid #d6a24b;background:#172219;padding:16px}</style></head><body><p><a href="/">Oryntra</a></p><h1>Billing and Subscription Policy</h1><p>Effective {{LEGAL_EFFECTIVE_DATE}}</p><div class="note">{{LEGAL_OPERATOR_STATEMENT}}<br>{{LEGAL_OWNERSHIP_STATEMENT}}<br><br>Public checkout is currently unavailable. Plan labels, comparisons, and owner test states are not purchases or investment products.</div><p>If software subscriptions are introduced, the actual checkout will disclose price, renewal, included limits, cancellation, and applicable refund information before purchase. A subscription never conveys CQC equity, profit share, investment participation, or a right to proprietary trading results. If an iOS digital subscription is offered, the applicable Apple purchase flow and policies will govern that purchase.</p><p>For billing questions, contact <a href="mailto:{{LEGAL_CONTACT_EMAIL}}">{{LEGAL_CONTACT_EMAIL}}</a>.</p></body></html>
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#03070c">
+<meta name="description" content="Billing, cancellation, trial, and refund terms for Oryntra AI subscriptions.">
+<title>Billing & Subscription Policy | Oryntra AI</title>
+
+<style>
+:root{color-scheme:dark;--bg:#03070c;--panel:#07131f;--border:rgba(56,207,243,.24);--accent:#38cff3;--text:#eaf5ff;--muted:#a9bdcc;--warn:#fb7185;--ok:#2dd4bf}
+*{box-sizing:border-box}
+body{margin:0;padding:28px 16px;background:radial-gradient(circle at top,rgba(56,207,243,.10),transparent 34rem),var(--bg);color:var(--text);font:16px/1.72 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.shell{max-width:980px;margin:auto;background:rgba(7,19,31,.97);border:1px solid var(--border);border-radius:24px;overflow:hidden;box-shadow:0 28px 90px rgba(0,0,0,.35)}
+header{padding:34px;border-bottom:1px solid rgba(255,255,255,.1)}
+main{padding:34px}
+h1{font-size:clamp(2.2rem,6vw,3.8rem);margin:0 0 10px;line-height:1.05}
+h2{margin:32px 0 10px;padding-top:22px;border-top:1px solid rgba(255,255,255,.1)}
+h3{margin:20px 0 8px}
+.kicker{color:var(--accent);font-weight:800;letter-spacing:.14em;text-transform:uppercase;font-size:.78rem}
+.meta,.muted{color:var(--muted)}
+.notice,.warning,.success{padding:16px 18px;border-radius:14px;margin:18px 0}
+.notice{background:rgba(56,207,243,.08);border:1px solid var(--border)}
+.warning{background:rgba(251,113,133,.08);border:1px solid rgba(251,113,133,.45)}
+.success{background:rgba(45,212,191,.07);border:1px solid rgba(45,212,191,.3)}
+a{color:var(--accent)}
+li{margin:7px 0}
+code{background:rgba(255,255,255,.07);padding:.1rem .35rem;border-radius:5px}
+.toc{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 18px;padding:18px;border:1px solid rgba(255,255,255,.1);border-radius:16px;margin-bottom:28px}
+.toc a{text-decoration:none}
+footer{padding:22px 34px;border-top:1px solid rgba(255,255,255,.1);color:var(--muted)}
+footer nav{display:flex;flex-wrap:wrap;gap:12px 18px}
+@media(max-width:620px){header,main,footer{padding:22px}.shell{border-radius:18px}}
+</style>
+
+</head><body><article class="shell">
+<header><div class="kicker">Oryntra AI</div><h1>Billing & Subscription Policy</h1><div class="meta">Effective {{LEGAL_EFFECTIVE_DATE}} · Version 1.1</div></header>
+<main>
+
+<div class="notice"><strong>Web subscriptions are processed through Stripe.</strong> Eligible new Oryntra Pro and CQC Max subscriptions begin with a 7-day free trial.</div>
+<div class="notice"><strong>{{LEGAL_OPERATOR_STATEMENT}}</strong><br>{{LEGAL_OWNERSHIP_STATEMENT}}</div>
+<h2>1. Current plans</h2>
+<p>Oryntra Pro is currently $6.99 per month on the web. CQC Max is currently $10.99 per month on the web. A payment method is required for the 7-day free trial. Unless canceled before the trial ends, the selected plan begins billing at the displayed monthly price and renews monthly until canceled. Taxes may apply where required.</p>
+<p>Free access may have lower usage limits and may include advertising. Paid access may include higher limits, premium features such as Portfolio Lab where specified, and an ad-free experience where the applicable plan states that benefit.</p>
+<h2>2. Cancellation</h2>
+<p>Canceling during the trial prevents the first recurring charge. Canceling after billing begins prevents future renewal. Unless otherwise stated at cancellation, access continues through the end of the current paid billing period.</p>
+<h2>3. Refunds</h2>
+<p>Completed subscription charges are not automatically refundable merely because a subscription is canceled after billing. Refunds, credits, or corrections may be provided where required by law or where Oryntra determines that a billing error occurred. If a purchase is made through an app store or another platform, that platform’s refund and cancellation rules control.</p>
+<h2>4. Plan and price changes</h2>
+<p>Oryntra may change plan features, quotas, or prices prospectively. Material changes to a paid subscription should be communicated before the affected renewal where reasonably possible. The checkout page and customer portal show the terms applicable to a specific subscription.</p>
+<h2>5. No investment interest</h2>
+<p>A subscription purchases software access only. It does not provide equity, profit sharing, revenue sharing, investment participation, ownership in CQC research, or a right to any proprietary trading result.</p>
+<h2>6. Test entitlements</h2>
+<p>Developer, owner, beta, diagnostic, or manually assigned test entitlements are not purchases and do not create a customer payment, contract, subscription, refund right, or investment interest.</p>
+<h2>7. Billing questions</h2>
+<p>For billing questions, contact <a href="mailto:{{LEGAL_CONTACT_EMAIL}}">{{LEGAL_CONTACT_EMAIL}}</a>. Do not email passwords, provider API keys, payment-card information, or authentication codes.</p>
+
+</main>
+<footer><nav>
+<a href="/">Oryntra</a>
+<a href="/legal/terms">Terms</a>
+<a href="/legal/privacy">Privacy</a>
+<a href="/legal/risk-disclaimer">Risk</a>
+<a href="/legal/methodology">Methodology</a>
+<a href="/legal/refund">Billing</a>
+<a href="/legal/contact">Contact</a>
+</nav></footer>
+</article></body></html>

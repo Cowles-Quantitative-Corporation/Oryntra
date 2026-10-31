@@ -15,9 +15,9 @@ def test_all_public_legal_routes_use_the_canonical_preformation_operator_copy(mo
 
 def test_formed_assignment_flag_switches_only_the_configured_public_statement(monkeypatch):
     monkeypatch.setenv("ORYNTRA_CQC_FORMED_AND_IP_ASSIGNED", "true")
-    monkeypatch.setenv("ORYNTRA_LEGAL_CONTACT_EMAIL", "legal@cowlesquantcorp.com")
+    monkeypatch.setenv("ORYNTRA_LEGAL_CONTACT_EMAIL", "admin@cowlesquantcorp.com")
     with TestClient(app) as client:
         response = client.get("/legal/terms")
     assert response.status_code == 200
     assert "Oryntra is owned and operated by Cowles Quantitative Corporation, a Florida corporation." in response.text
-    assert "legal@cowlesquantcorp.com" in response.text
+    assert "admin@cowlesquantcorp.com" in response.text

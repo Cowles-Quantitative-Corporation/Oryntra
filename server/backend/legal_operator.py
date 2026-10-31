@@ -35,7 +35,7 @@ def _env_bool(name: str) -> bool:
 def legal_operator() -> LegalOperator:
     return LegalOperator(
         effective_date=os.getenv("ORYNTRA_LEGAL_EFFECTIVE_DATE", "September 8, 2026").strip(),
-        contact_email=os.getenv("ORYNTRA_LEGAL_CONTACT_EMAIL", "legal@cowlesquantcorp.com").strip(),
+        contact_email=os.getenv("ORYNTRA_LEGAL_CONTACT_EMAIL", "admin@cowlesquantcorp.com").strip(),
         formed_and_assigned=_env_bool("ORYNTRA_CQC_FORMED_AND_IP_ASSIGNED"),
     )
 

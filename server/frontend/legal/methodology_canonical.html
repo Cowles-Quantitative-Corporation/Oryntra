@@ -1,1 +1,78 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Oryntra Methodology</title><style>body{max-width:860px;margin:auto;padding:36px 20px;background:#07110d;color:#e8f2ed;font:16px/1.65 system-ui,sans-serif}a{color:#8de0b4}h1,h2{line-height:1.2}.note{border-left:4px solid #d6a24b;background:#172219;padding:16px}</style></head><body><p><a href="/">Oryntra</a></p><h1>Methodology and Limits</h1><p>Effective {{LEGAL_EFFECTIVE_DATE}}</p><div class="note">{{LEGAL_OPERATOR_STATEMENT}}<br>{{LEGAL_OWNERSHIP_STATEMENT}}<br><br>Oryntra explains software mechanics and research evidence; it does not claim validated alpha, future performance, or personal suitability.</div><h2>Public research</h2><p>Public scanner outputs show deterministic evidence, setup context, patterns, and hypothetical rule-derived scenario levels. Public Quant Lab demonstrations use frozen published profiles and fixed constraints. They do not use a user’s account value, holdings, income, objectives, tax status, or risk tolerance.</p><h2>Internal research</h2><p>CQC internal research, when enabled, is separately authorized server-side and is not a subscriber feature. Its research artifacts, configuration controls, and ledgers are not public product outputs.</p><h2>Limitations</h2><p>Inputs can be missing, delayed, stale, adjusted, or incorrect. Data rights are separate from product ownership. Historical testing depends on a declared universe, dates, assumptions, costs, and implementation choices; it cannot establish future profitability.</p></body></html>
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#03070c">
+<meta name="description" content="How Oryntra AI research features work and the limits of their outputs.">
+<title>Methodology & Limits | Oryntra AI</title>
+
+<style>
+:root{color-scheme:dark;--bg:#03070c;--panel:#07131f;--border:rgba(56,207,243,.24);--accent:#38cff3;--text:#eaf5ff;--muted:#a9bdcc;--warn:#fb7185;--ok:#2dd4bf}
+*{box-sizing:border-box}
+body{margin:0;padding:28px 16px;background:radial-gradient(circle at top,rgba(56,207,243,.10),transparent 34rem),var(--bg);color:var(--text);font:16px/1.72 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.shell{max-width:980px;margin:auto;background:rgba(7,19,31,.97);border:1px solid var(--border);border-radius:24px;overflow:hidden;box-shadow:0 28px 90px rgba(0,0,0,.35)}
+header{padding:34px;border-bottom:1px solid rgba(255,255,255,.1)}
+main{padding:34px}
+h1{font-size:clamp(2.2rem,6vw,3.8rem);margin:0 0 10px;line-height:1.05}
+h2{margin:32px 0 10px;padding-top:22px;border-top:1px solid rgba(255,255,255,.1)}
+h3{margin:20px 0 8px}
+.kicker{color:var(--accent);font-weight:800;letter-spacing:.14em;text-transform:uppercase;font-size:.78rem}
+.meta,.muted{color:var(--muted)}
+.notice,.warning,.success{padding:16px 18px;border-radius:14px;margin:18px 0}
+.notice{background:rgba(56,207,243,.08);border:1px solid var(--border)}
+.warning{background:rgba(251,113,133,.08);border:1px solid rgba(251,113,133,.45)}
+.success{background:rgba(45,212,191,.07);border:1px solid rgba(45,212,191,.3)}
+a{color:var(--accent)}
+li{margin:7px 0}
+code{background:rgba(255,255,255,.07);padding:.1rem .35rem;border-radius:5px}
+.toc{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 18px;padding:18px;border:1px solid rgba(255,255,255,.1);border-radius:16px;margin-bottom:28px}
+.toc a{text-decoration:none}
+footer{padding:22px 34px;border-top:1px solid rgba(255,255,255,.1);color:var(--muted)}
+footer nav{display:flex;flex-wrap:wrap;gap:12px 18px}
+@media(max-width:620px){header,main,footer{padding:22px}.shell{border-radius:18px}}
+</style>
+
+</head><body><article class="shell">
+<header><div class="kicker">Oryntra AI</div><h1>Methodology & Limits</h1><div class="meta">Effective {{LEGAL_EFFECTIVE_DATE}} · Version 1.1</div></header>
+<main>
+
+<div class="success"><strong>Design boundary:</strong> This page explains Oryntra’s software mechanics and research limits. It does not claim validated alpha, future performance, or personal suitability.</div>
+<div class="notice"><strong>{{LEGAL_OPERATOR_STATEMENT}}</strong><br>{{LEGAL_OWNERSHIP_STATEMENT}}</div>
+<h2>1. Research inputs</h2>
+<p>Oryntra features may analyze market bars and other information supplied by an enabled provider, a browser-direct user flow, a fixed demo dataset, or user-entered research settings. Coverage, timestamps, adjustments, corporate actions, delays, and availability vary by source. Missing, stale, corrected, or incorrect inputs can materially change outputs.</p>
+<h2>2. Scanner and derived features</h2>
+<p>The Scanner may calculate rule-based technical measures such as moving-average relationships, momentum, volatility, trend state, participation, support/resistance context, structure, pattern evidence, and hypothetical planning levels. Derived values are research calculations, not official quotes or executable prices.</p>
+<h2>3. Quant Lab</h2>
+<p>Quant Lab may evaluate fixed or selected research profiles, historical scenarios, cross-sectional evidence, benchmarks, costs, and portfolio constraints. Results depend on the selected universe, dates, assumptions, data source, rebalance schedule, transaction-cost assumptions, and implementation details.</p>
+<h2>4. Portfolio Lab</h2>
+<p>Portfolio Lab is a premium research feature that may save hypothetical allocations, next-session actions, directives, and reproducibility metadata. It does not connect to a brokerage, transmit an order, monitor an external account, or create a live portfolio.</p>
+<h2>5. Minerva</h2>
+<p>Where enabled, Minerva performs comparative or cross-sectional research using a multi-symbol universe. Its ranks, scores, or classifications depend on the exact universe, data timestamp, model version, and available inputs. Minerva output is not a personalized portfolio recommendation.</p>
+<h2>6. Demo mode and TradingView</h2>
+<p>The public demo uses fixed simulated or illustrative display data. TradingView may separately display a live or delayed chart for the same symbol. The chart is a visual reference supplied independently by TradingView and is not evidence that the simulated demo calculation used TradingView data.</p>
+<h2>7. Public data boundary</h2>
+<p>Oryntra is designed to return derived research rather than a downloadable raw market-data feed. Browser-direct research paths process uploaded bars for the requested calculation and are designed not to persist raw uploaded OHLCV unless a feature clearly states otherwise. Third-party provider terms and data rights remain separate from product ownership.</p>
+<h2>8. Validation and research limits</h2>
+<p>Historical testing, holdouts, benchmarks, paper records, and robustness studies are diagnostics—not proof of future profitability or reliability. Research can fail out of sample, degrade as markets change, or appear stronger because of data, selection, or implementation choices. Oryntra may keep experimental or internal models separate from public product features.</p>
+<h2>9. Known limitations</h2>
+<ul>
+<li>Technical and historical evidence is backward-looking and regime-dependent.</li>
+<li>Pattern thresholds can generate false positives and false negatives.</li>
+<li>Data corrections and corporate actions can change historical results.</li>
+<li>Multiple derived features can be correlated and are not independent confirmation.</li>
+<li>Cross-sectional results can change when the universe changes.</li>
+<li>Embedded charts may differ from Oryntra calculations because of source, timing, session, or adjustment differences.</li>
+<li>Historical and simulated performance does not predict future performance.</li>
+</ul>
+
+</main>
+<footer><nav>
+<a href="/">Oryntra</a>
+<a href="/legal/terms">Terms</a>
+<a href="/legal/privacy">Privacy</a>
+<a href="/legal/risk-disclaimer">Risk</a>
+<a href="/legal/methodology">Methodology</a>
+<a href="/legal/refund">Billing</a>
+<a href="/legal/contact">Contact</a>
+</nav></footer>
+</article></body></html>
