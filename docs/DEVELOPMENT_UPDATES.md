@@ -136,3 +136,19 @@ wrong-type inputs across all 74 columns, representative numeric/bool/null types,
 prior partial-state preservation, explicit missing-price strings and native bridge
 cleanup before P adoption. Source price arithmetic and grouping behavior remain
 unchanged for valid inputs; no new acquisition or empirical run.
+
+
+## Delta tiny-archive authentication/completion — local review pending
+
+Connected accepted byte authentication to the decoder/native bridge for tiny
+single-frame synthetic archives. Consumed compressed bytes are independently
+hashed under descriptor custody and decoded immutably; exact frame/CSV/row checks
+precede native F. Final identity/deadline checks reject late changes before an
+archive result can return. Shared resource-sample validation leaves the existing
+byte authenticator's tested behavior unchanged. No real archive was read.
+
+The helper is deliberately not a general multi-frame/raw export runner: 1 MiB
+compressed, 2 MiB decoded and 4096 rows, with unchanged sampled/cooperative guards.
+Tests cover corruption/truncation/trailing frames, identity mutation at final
+callbacks, clock latency, I/O failure, cancellation and owned cleanup. This diff
+is separate from the already published exact Arrow decoder and awaits review.

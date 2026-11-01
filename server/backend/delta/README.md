@@ -1,6 +1,6 @@
 # Delta engineering research
 
-Canonical source for the checked-integer reported-volume worker, exact Python oracle, unknown-side uncertainty intervals and disabled artifact projector. No raw archive ingestion route, trading route, account adapter or model activation is installed. A disabled in-memory Arrow decoder is described below. `model_vector()` remains disabled.
+Canonical source for the checked-integer reported-volume worker, exact Python oracle, unknown-side uncertainty intervals and disabled artifact projector. No production archive ingestion route, trading route, account adapter or model activation is installed. A disabled in-memory Arrow decoder is described below. `model_vector()` remains disabled.
 
 The native worker is the accepted opening-minute engineering implementation. Its fixed profile hash and caps describe one engineering scope; they do not qualify arbitrary data or a production capacity. Existing pinned private artifacts remain where they were created. The projector retains their exact acceptance identities and accepts invented test fixtures only through its explicit synthetic flag. No artifact payload is bundled.
 
@@ -198,3 +198,41 @@ and the documented numeric missing-price sentinel remain explicit source
 encodings, subject to normal book/trade validation. No aggregate all/any operation
 may silently skip a null into an emitted group. Invalid batches latch the decoder
 and abort the bridge before any P adoption from that batch.
+
+## Disabled tiny-archive authentication/completion integration
+
+`decoding.archive.decode_small_archive` is the next bounded engineering helper:
+one known-content-size Zstandard frame, at most 1 MiB compressed / 2 MiB decoded /
+4096 rows, all explicit before consumption. It rejects concatenated/trailing or
+truncated frames, unknown/oversized content declarations, quotes, invalid headers,
+row widths/counts and decoder failures. It is not the full vendor archive reader
+or permission to process real exports. Existing multi-frame archives exceed this
+narrow scope; no full-session capacity or source-completeness qualification follows.
+
+The accepted byte authenticator is reused first. A new held regular non-symlink
+file is then identity-checked and its exact consumed bytes independently hashed
+before decoding. The immutable compressed buffer, not a reopened pathname receipt,
+feeds decompression and CSV/Arrow conversion. The descriptor stays held through
+native completion. Final descriptor and post-close pathname checks, after the
+last resource callbacks, plus a final clock-only deadline check precede return.
+The receipt is a validation-time snapshot, never perpetual pathname authority.
+
+No native F completion is requested until frame/CSV/group/row checks pass. A late
+identity/resource error still aborts the client and returns no archive result,
+even if its native F was previously acknowledged. Models/trades remain disabled.
+The existing synchronous cleanup/propagation and best-effort telemetry limits
+apply; no crash or repeated-interruption cleanup guarantee is added.
+
+A mandatory external source-resource probe and the native client's own sampled
+checks remain distinct. The source probe must attest its current ownership phase
+(including parent-only after verified child release); this helper does not supply
+or attest that OS sampler. Shared `_checked_resource_sample` preserves the old
+512 MiB / 2 GiB reserve / 250 ms uncertainty checks. Wall limits remain cooperative,
+at most 600 seconds. The old byte-authenticator call counts and final checks are
+covered unchanged by its 36 tests. Tiny-buffer bounds are not a peak-RSS guarantee.
+
+Arrow/Zstandard tests use only freshly created temporary synthetic archives in
+the existing research environment. No dependency installed, actual vendor file,
+reserved target, new prediction, score or source profile activation. The returned
+source hash authenticates supplied bytes, not upstream capture/PIT or valid use
+rights. This local increment awaits independent review before publication.

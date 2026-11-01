@@ -37,6 +37,28 @@ def _integer(value: int, minimum: int = 0) -> bool:
     return type(value) is int and minimum <= value <= 2**63 - 1
 
 
+def _checked_resource_sample(probe, deadline_ns):
+    now = time.monotonic_ns()
+    if now >= deadline_ns:
+        raise SourceReadError("WALL_LIMIT")
+    sample = probe()
+    after = time.monotonic_ns()
+    if (type(sample) is not ResourceSample
+            or not all(_integer(v) for v in (
+                sample.observed_ns, sample.combined_rss_bytes,
+                sample.disk_free_bytes))
+            or not now <= sample.observed_ns <= after
+            or after - now > 250_000_000):
+        raise SourceReadError("RESOURCE_SAMPLE_UNCERTAIN")
+    if after >= deadline_ns:
+        raise SourceReadError("WALL_LIMIT")
+    if sample.combined_rss_bytes > 512 * 1024 * 1024:
+        raise SourceReadError("SAMPLED_MEMORY_LIMIT")
+    if sample.disk_free_bytes < 2 * 1024**3:
+        raise SourceReadError("DISK_RESERVE")
+    return sample
+
+
 def authenticate_source(
     path: Path,
     *,
@@ -69,24 +91,7 @@ def authenticate_source(
 
     def guard() -> None:
         nonlocal checks, peak
-        now = time.monotonic_ns()
-        if now >= deadline_ns:
-            raise SourceReadError("WALL_LIMIT")
-        sample = probe()
-        after = time.monotonic_ns()
-        if (type(sample) is not ResourceSample
-                or not all(_integer(v) for v in (
-                    sample.observed_ns, sample.combined_rss_bytes,
-                    sample.disk_free_bytes))
-                or not now <= sample.observed_ns <= after
-                or after - now > 250_000_000):
-            raise SourceReadError("RESOURCE_SAMPLE_UNCERTAIN")
-        if after >= deadline_ns:
-            raise SourceReadError("WALL_LIMIT")
-        if sample.combined_rss_bytes > 512 * 1024 * 1024:
-            raise SourceReadError("SAMPLED_MEMORY_LIMIT")
-        if sample.disk_free_bytes < 2 * 1024**3:
-            raise SourceReadError("DISK_RESERVE")
+        sample = _checked_resource_sample(probe, deadline_ns)
         checks += 1
         peak = max(peak, sample.combined_rss_bytes)
 
