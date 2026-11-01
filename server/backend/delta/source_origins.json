@@ -94,5 +94,20 @@
   "server/tests/research/delta/test_revision_guards.py": {
     "source": "delta-v15-diagnostic-v2/test_revision_guards.py",
     "source_sha256": "45755cadc727e40c888354c56dad9fadfcf1db9e868f13b421db173e82274c3f"
+  },
+  "server/backend/delta/runtime/owned_process.py": {
+    "source": "delta-v15-volume-window-runner-preparation-v31/owned_process.py",
+    "source_sha256": "3797f73d57b78f82c3ccbb6003b9775e5e2118629066f9486a1ad1f06c4aa505",
+    "adaptation": "Explicit canonical helper path/hash and disabled spawn; monitor guard ceilings retained. No raw/native runner integration."
+  },
+  "server/backend/delta/runtime/supervision.py": {
+    "source": "delta-v15-volume-window-runner-preparation-v31/supervision.py",
+    "source_sha256": "9694c6e5b1a14351a1120576e54350699cd9eb06a5721f1480ee86f1eadcf7cb",
+    "adaptation": "Explicit canonical helper path/hash and disabled spawn; monitor guard ceilings retained. No raw/native runner integration."
+  },
+  "server/backend/delta/runtime/owned_rss.c": {
+    "source": "delta-v15-volume-window-runner-preparation-v31/owned_rss.c",
+    "source_sha256": "d3430fa690b7ecaa8837ecab3871674ed10519a2fe37ab0bf060b8c016ddac63",
+    "adaptation": "Explicit canonical helper path/hash and disabled spawn; monitor guard ceilings retained. No raw/native runner integration."
   }
 }

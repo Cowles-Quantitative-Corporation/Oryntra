@@ -61,3 +61,20 @@ Final deadline repair F-SRC-02 adds a monotonic-clock check after final path sta
 with no additional resource callback. A controlled-clock regression covers both
 normal completion and a stat returning at the exact deadline; expired completion
 rejects while preserving the final identity snapshot semantics.
+
+
+## Delta owned-worker runtime — local review pending
+
+Ported accepted unreaped-leader/group cleanup and parent-plus-owned-child sampled
+RSS supervision into `server/backend/delta/runtime`. The macOS C helper remains
+byte-identical; Python now uses explicit helper path/hash rather than a dated
+artifact-directory dylib. Spawning remains disabled by default. Limits cannot
+exceed the existing 512 MiB sampled RSS, 25 ms polling or 250 ms uncertainty bounds.
+
+Focused synthetic tests cover successful completion, child failure, a surviving
+forked descendant after exit zero, external reaping without signaling, uncertain
+group release, library pins, sample identity/gap/RSS boundaries and watchdog stop.
+No raw data, native capacity run, new prediction or scoring occurred. Protocol
+transport, durable telemetry and archive-decoder integration remain separate;
+these primitives are not a live consumer or hard resource-enforcement service.
+This uncommitted increment awaits independent review before publication.
