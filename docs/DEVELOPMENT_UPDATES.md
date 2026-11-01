@@ -152,3 +152,56 @@ compressed, 2 MiB decoded and 4096 rows, with unchanged sampled/cooperative guar
 Tests cover corruption/truncation/trailing frames, identity mutation at final
 callbacks, clock latency, I/O failure, cancellation and owned cleanup. This diff
 is separate from the already published exact Arrow decoder and awaits review.
+
+## Delta forecasting reassessment — decision draft, no empirical execution
+
+The accepted tiny-archive increment is published separately. Further raw/native
+capacity work is deferred: the canonical opening-minute worker cannot itself
+produce 5m/30m forecasting contexts, while the earlier accepted research pipeline
+already produced and scored them with a failed 0.2894116% screen. Existing cached
+completed bars retain activity counts with causal closure checks. See
+[the forecasting gap and proposed existing-data study](DELTA_FORECASTING_GAP.md).
+This is a reviewable development-only activity/magnitude question, not permission
+to read targets, fit a new variant or unlock reserved periods. No new code layer
+or raw replay was added merely to continue engineering.
+
+
+### Delta fixed activity/magnitude study: TRAIN freeze, EVAL paused
+
+Implemented the approved exposed-April cached-bar comparison in
+`backend.delta.research`, with exact identity/clock checks, fixed three-versus-seven
+inputs, fourteen models and paired balanced losses. Ten synthetic tests pass.
+TRAIN completed 4560 magnitudes / fourteen reopened models, retaining 4994 EVAL
+feature keys. A pre-value enum failure is preserved. EVAL scoring is paused:
+schema inspection parsed one existing EVAL file before freeze, although only
+field names/counts were output. This deviation needs explicit review; no clean
+access-order claim, fresh-holdout or trading-economics conclusion is made. See
+[the decision and execution checkpoint](DELTA_FORECASTING_GAP.md).
+
+### Delta magnitude continuation completed: descriptive screen passes
+
+One independently allowed continuation reused the exact 14 frozen models and
+4994 EVAL targets. Balanced magnitude MSE reduction is 9.9765546%; all seven
+names, eleven dates and both fixed halves improve, with zero negative forecasts.
+This remains contaminated reused-April development because a full EVAL JSON was
+parsed before freeze. Keys/counts-only and no influence are author assertions,
+not independently proven history. The scorer preserves this limitation. There
+is no directional, economic, Sharpe or trading qualification. Author checked
+19,976 exact errors and 77 cells; 11 focused / 190 broader tests pass, optional
+skips explicit. Independent result audit is next; no parameter search or model
+activation. See [the complete result and limits](DELTA_FORECASTING_GAP.md).
+
+### Delta magnitude arithmetic independently accepted; qualified publication
+
+Independent result review verified 4994 identities, 19,976 exact errors, 77
+balanced cells and fourteen frozen models. The magnitude comparison's 9.976554629%
+MSE reduction is distinct from the earlier signed-return 0.2894116% **FAIL**.
+Baseline/challenger improvements against the TRAIN-mean magnitude reference are
+0.40243%/10.33883%. This publication includes source, synthetic tests and the
+[sanitized findings and limitations](DELTA_FORECASTING_GAP.md), without targets,
+fitted models, cache exports, private-path receipts or vault content.
+The complete April 16 EVAL JSON was parsed before freeze: evidence remains
+contaminated descriptive development, with no clean-validation, directional
+alpha, profit or Sharpe implication. The next dependency is a reviewed genuinely
+unconsumed out-of-time cohort for the unchanged magnitude question, not another
+April parameter search or immediate release of reserved data. No model is enabled.
