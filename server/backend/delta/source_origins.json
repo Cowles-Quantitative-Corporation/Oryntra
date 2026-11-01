@@ -134,5 +134,37 @@
     "source": "delta-v15-volume-incremental-synthetic-v7/state_digest.py",
     "source_sha256": "95071366c49c997a67758d470ade7e1de59806cf833ffb0df740e6707005fdd8",
     "adaptation": "Byte-identical accepted state digest."
+  },
+  "server/backend/delta/decoding/book_arrays.py": {
+    "source": "delta-v15-full-session-mark-data-v1/book_arrays.py",
+    "source_sha256": "c052972321a77de8efd30c54b93ba8c25acc52286ff5e1c08bba78bffefb82b3",
+    "adaptation": "Canonical relative types/imports; disabled in-memory batches; failed decoder latch and fixed engineering bridge only. No raw reader or source qualification."
+  },
+  "server/backend/delta/decoding/decoder.py": {
+    "source": "delta-v15-recorded-tape-quality-latch-repair-v2/decoder.py",
+    "source_sha256": "44073bad9e19afe4eeb40f8ad40110a9e1a87729325d283a46378797386e2f52",
+    "adaptation": "Canonical relative types/imports; disabled in-memory batches; failed decoder latch and fixed engineering bridge only. No raw reader or source qualification."
+  },
+  "server/backend/delta/decoding/adapter.py": {
+    "source": "delta-v15-trade-volume-singleton-v3/adapter.py",
+    "source_sha256": "d59a815c9e9a957fcf34a73d2cce5305923f45affb16eda0cb2e487be93f192f",
+    "adaptation": "Canonical relative types/imports; disabled in-memory batches; failed decoder latch and fixed engineering bridge only. No raw reader or source qualification."
+  },
+  "server/backend/delta/decoding/bridge.py": {
+    "source": "delta-v15-volume-window-runner-preparation-v31/consumer.py",
+    "source_sha256": "f7e892d5c522aeafa8d0027d9a391dbc342077b38f81545c18f740b07bb51f63",
+    "adaptation": "Canonical relative types/imports; disabled in-memory batches; failed decoder latch and fixed engineering bridge only. No raw reader or source qualification."
+  },
+  "server/backend/delta/decoding/schema.py": {
+    "source": "delta-v15-l2-readiness-first-clock-repair-v2/engine.py",
+    "source_sha256": "b541198838ac027a0b570f1bd9abc615296c4774ddf39af40d2e8a8b72983adb",
+    "adaptation": "Canonical relative types/imports; disabled in-memory batches; failed decoder latch and fixed engineering bridge only. No raw reader or source qualification."
+  },
+  "server/backend/delta/decoding/types.py": {
+    "source": "delta_factor_cache_window_v1.py",
+    "source_sha256": "dd4ff99843a238163690f8ea8e8760b3b1658f41da5ffc62dd0c65e62a3e9745",
+    "additional_source": "delta-v15-recorded-tape-quality-latch-repair-v2/producer.py",
+    "additional_source_sha256": "341386c153b92e210ee9717d6b23851256df689869162213581d0c784485552b",
+    "adaptation": "Extract only accepted CompactBook/Trade/Group dataclasses, no forecast producer."
   }
 }

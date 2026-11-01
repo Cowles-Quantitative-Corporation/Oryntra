@@ -111,3 +111,28 @@ registration occurs before return and outer initialization catches BaseException
 for cleanup followed by propagation. Tests cover KeyboardInterrupt and SystemExit
 without source data. Monitor/helper/recorder constructors were inspected for
 owned-resource handoff; no broader crash-durability claim is added.
+
+
+## Delta in-memory decoder integration — local review pending
+
+Added the disabled exact Arrow decoder, compact typed group adapter and bridge to
+the published supervised native client. Reused full-book validation, physical-row
+lineage, F_LAST grouping, quality taint, reset/count and reported-side semantics.
+Synthetic partition tests traverse Arrow batches through actual native ACKs and
+prove identical snapshots/stream digests. Partial EOF, invalid batches and
+cancellation abort the owned client with no completed result.
+
+This is supplied-batch engineering, not archive qualification: no raw loader,
+file-descriptor transfer, real data/target access, forecast/model activation or
+new score. PyArrow tests run separately in the existing research environment;
+repository tests explicitly skip them when unavailable. No package installation,
+new subscription or capacity expansion. This new diff awaits independent review
+before publication; prior protocol repair was published separately.
+
+
+F-DEC-01 prepublication repair adds full physical-column string/null validation
+before casts or group mutation. Regressions cover mixed-null and large-string
+wrong-type inputs across all 74 columns, representative numeric/bool/null types,
+prior partial-state preservation, explicit missing-price strings and native bridge
+cleanup before P adoption. Source price arithmetic and grouping behavior remain
+unchanged for valid inputs; no new acquisition or empirical run.

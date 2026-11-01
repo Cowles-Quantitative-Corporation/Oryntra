@@ -1,6 +1,6 @@
 # Delta engineering research
 
-Canonical source for the checked-integer reported-volume worker, exact Python oracle, unknown-side uncertainty intervals and disabled artifact projector. No decoder/data ingestion route, trading route, account adapter or model activation is installed. `model_vector()` remains disabled.
+Canonical source for the checked-integer reported-volume worker, exact Python oracle, unknown-side uncertainty intervals and disabled artifact projector. No raw archive ingestion route, trading route, account adapter or model activation is installed. A disabled in-memory Arrow decoder is described below. `model_vector()` remains disabled.
 
 The native worker is the accepted opening-minute engineering implementation. Its fixed profile hash and caps describe one engineering scope; they do not qualify arbitrary data or a production capacity. Existing pinned private artifacts remain where they were created. The projector retains their exact acceptance identities and accepts invented test fixtures only through its explicit synthetic flag. No artifact payload is bundled.
 
@@ -148,3 +148,53 @@ uncertainty is retained; no unrelated identity is signaled and no success is
 claimed. Neither interruption nor system exit is converted into normal success.
 The low-level registration hook is needed by callers that require a cleanup
 reference before the constructor result is assigned.
+
+## Disabled in-memory Arrow decoder and native bridge
+
+`decoding.decoder.ArrowDecoder` reuses accepted full-depth exact-price validators,
+per-symbol F_LAST grouping and permanent source flags14 quality latch. It accepts
+only supplied all-string RecordBatches with the fixed 74-column April MBP10 schema;
+it never opens a file, decompresses an archive or fetches data. `types` extracts the
+accepted compact-book/Trade/Group shapes without importing any forecast producer.
+The adapter uses exact canonical type identity rather than dated-file inspection.
+Physical indices and true row counts remain separate across interleaved symbols;
+unknown N mass is never classified. Raw C actions are book cancellation, not an
+invented trade-bust notice. Failure/cancellation latches the decoder; partial EOF
+or unmatched occurrences cannot be silently resumed or called complete.
+
+`decoding.bridge.DecodedVolumeBridge` feeds supplied batches of at most 512 rows
+to an already acquired fixed-profile supervised client. It samples resources
+before/after decoding and sends only wholly contained opening-minute groups;
+pre/open-straddling and out-of-slice groups are excluded, not clipped. Snapshots
+include equal-clock completions and fire on the first strictly later completion.
+Caller-declared end of batches flushes the schedule only after group/occurrence
+conservation checks. Use the client context around bridge creation/operations;
+the bridge does not acquire or transfer ownership of a child. Any bridge error
+aborts the borrowed client and re-raises; cleanup uncertainty is secondary evidence.
+
+Completion qualifies **provided batches only**, not a real archive EOF/hash,
+capture completeness, original availability or correction lineage. The returned
+`source_bytes_authenticated` is false. There is no file-descriptor handoff from
+`authenticate_source`, raw CSV/Zstandard loader, inherited archive certificate or
+accepted v31 right-censored prefix reader here. No full-session/source run or
+model influence is enabled. The current calendar/schema/profile is April1
+engineering scope, not general April–July qualification. Full-batch validation is
+source rejection behavior, not a new predictive-availability rule.
+
+PyArrow is an optional decoding dependency already present in the local research
+environment; it is not imported by the base package. No dependency was installed.
+The repository pytest environment lacks it and explicitly skips Arrow tests. Run
+those tests in the existing Arrow environment using unittest discovery with
+`-p test_arrow_decoder.py` and `-p test_decoded_bridge.py`; record this separately
+from the repository test result. Tests create invented RecordBatches and temporary
+ASan/UBSan native/helper builds, never read raw source data. Optional Arrow lazy
+initialization occurs before child acquisition, preserving the 250ms sample gap
+rather than loosening it.
+
+F-DEC-01 repair: before any conversion or group mutation, every expected column
+must have exact Arrow `string` type and actual null_count zero. Nullable schema
+metadata alone is not a rejection; present Arrow null values are. Empty strings
+and the documented numeric missing-price sentinel remain explicit source
+encodings, subject to normal book/trade validation. No aggregate all/any operation
+may silently skip a null into an emitted group. Invalid batches latch the decoder
+and abort the bridge before any P adoption from that batch.
