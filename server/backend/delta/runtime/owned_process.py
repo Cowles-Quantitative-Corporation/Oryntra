@@ -1,13 +1,27 @@
 """Keep owned session leader unreaped until group custody is settled."""
 import subprocess,os,time,signal,errno,threading
 class OwnedProcess(subprocess.Popen):
- def __init__(self,*a,enabled=False,group_state=None,**kw):
+ def __init__(self,*a,enabled=False,group_state=None,on_created=None,**kw):
   if enabled is not True:raise ValueError("DISABLED_OWNED_PROCESS")
   if not callable(group_state):raise ValueError("OWNED_GROUP_INSPECTOR_REQUIRED")
   if not all(hasattr(os,n)for n in("waitid","WNOWAIT","P_PID")):raise ValueError("OWNED_CUSTODY_PLATFORM_UNSUPPORTED")
+  if on_created is not None and not callable(on_created):raise ValueError("OWNED_REGISTRATION_CALLBACK")
   self._group_state=group_state
   if kw.get('start_new_session') is not True:raise ValueError('OWNED_NEW_SESSION_REQUIRED')
-  self._custody_lock=threading.RLock();self._released=False;super().__init__(*a,**kw)
+  self._custody_lock=threading.RLock();self._released=False
+  try:
+   super().__init__(*a,**kw)
+   if on_created is not None:on_created(self)
+  except BaseException as primary:
+   if getattr(self,'_child_created',False):
+    try:self.cleanup_owned_group()
+    except BaseException as secondary:primary.add_note('OWNED_CONSTRUCTOR_CLEANUP_UNCERTAIN:'+type(secondary).__name__)
+   for name in('stdin','stdout','stderr'):
+    stream=getattr(self,name,None)
+    if stream is not None:
+     try:stream.close()
+     except BaseException as secondary:primary.add_note('OWNED_CONSTRUCTOR_STREAM_CLOSE_UNCERTAIN:'+type(secondary).__name__)
+   raise
  def poll(self):
   with self._custody_lock:
    if self._released:return self.returncode

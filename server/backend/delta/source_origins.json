@@ -98,7 +98,7 @@
   "server/backend/delta/runtime/owned_process.py": {
     "source": "delta-v15-volume-window-runner-preparation-v31/owned_process.py",
     "source_sha256": "3797f73d57b78f82c3ccbb6003b9775e5e2118629066f9486a1ad1f06c4aa505",
-    "adaptation": "Explicit canonical helper path/hash and disabled spawn; monitor guard ceilings retained. No raw/native runner integration."
+    "adaptation": "Explicit helper/group inspector and disabled spawn; constructor cancellation cleanup and pre-return registration. Unchanged owned-group signaling/custody rules."
   },
   "server/backend/delta/runtime/supervision.py": {
     "source": "delta-v15-volume-window-runner-preparation-v31/supervision.py",
@@ -109,5 +109,30 @@
     "source": "delta-v15-volume-window-runner-preparation-v31/owned_rss.c",
     "source_sha256": "d3430fa690b7ecaa8837ecab3871674ed10519a2fe37ab0bf060b8c016ddac63",
     "adaptation": "Explicit canonical helper path/hash and disabled spawn; monitor guard ceilings retained. No raw/native runner integration."
+  },
+  "server/backend/delta/runtime/_transport.py": {
+    "source": "delta-v15-volume-window-runner-preparation-v31/transport_v17.py",
+    "source_sha256": "ac8ff54da7de57eb5b2291d884866e3f8a5d3371e81e2680272e504d37d32ba3",
+    "adaptation": "Canonical relative imports; explicit binary/runtime/helper identities; bounded abort persistence and telemetry success gate. No source reader/decoder."
+  },
+  "server/backend/delta/runtime/_multiplex.py": {
+    "source": "delta-v15-volume-window-runner-preparation-v31/mux_base.py",
+    "source_sha256": "9d13c8e1c68ddd5b4bb054ad9c97cf481a8f4a6daff23046ff8c2be125833498",
+    "adaptation": "Canonical relative imports; explicit binary/runtime/helper identities; bounded abort persistence and telemetry success gate. No source reader/decoder."
+  },
+  "server/backend/delta/runtime/client.py": {
+    "source": "delta-v15-volume-window-runner-preparation-v31/supervised_client.py",
+    "source_sha256": "afb90423037381ae7021023ac41a17e0cc5709bf05779e17f8ec5c66b8255309",
+    "adaptation": "Canonical relative imports; explicit binary/runtime/helper identities; bounded abort persistence and telemetry success gate. No source reader/decoder."
+  },
+  "server/backend/delta/runtime/failure_telemetry.py": {
+    "source": "delta-v15-volume-window-runner-preparation-v31/failure_telemetry.py",
+    "source_sha256": "8eb55f45ef7e108b8e01f11eaeafa7e2e30db71f3dd3f83718cd3e1c4d89db7e",
+    "adaptation": "Canonical relative imports; explicit binary/runtime/helper identities; bounded abort persistence and telemetry success gate. No source reader/decoder."
+  },
+  "server/backend/delta/runtime/state_digest.py": {
+    "source": "delta-v15-volume-incremental-synthetic-v7/state_digest.py",
+    "source_sha256": "95071366c49c997a67758d470ade7e1de59806cf833ffb0df740e6707005fdd8",
+    "adaptation": "Byte-identical accepted state digest."
   }
 }

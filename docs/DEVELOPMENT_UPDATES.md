@@ -78,3 +78,36 @@ No raw data, native capacity run, new prediction or scoring occurred. Protocol
 transport, durable telemetry and archive-decoder integration remain separate;
 these primitives are not a live consumer or hard resource-enforcement service.
 This uncommitted increment awaits independent review before publication.
+
+
+## Delta protocol acknowledgment and failure telemetry — local review pending
+
+Added a disabled supervised I/P/S/F client around the published owned-child
+primitives. It reuses accepted lane/frame/prefix/root checks, exact Python oracle,
+state adoption after ACK and bounded first-cause telemetry. Tests exercise the
+actual native worker with two invented groups and 14 snapshots, plus adversarial
+ACKs and persistence faults. No raw source/target values or capacity trial.
+
+Failure evidence distinguishes attempted, acknowledged and adopted progress;
+persistence is bounded best effort, without fsync/atomic crash-durability claims.
+Missing or uncertain final ACK cannot complete. Explicit executable/runtime/helper
+identities replace dated-directory imports. Archive decoder wiring and new model
+influence remain absent. This new behavior is uncommitted pending independent
+review and must not be included in the previously approved runtime publication.
+
+
+Prepublication F-PROT-01 repair separates provisional protocol completion from
+verified custody completion and handles KeyboardInterrupt/SystemExit during final
+validation with synchronous cleanup and propagation. Synthetic live-watchdog
+fixtures inject cancellation across ACK/wait, supervision, stop, group check,
+telemetry, release and readback boundaries. This does not add crash durability or
+activate raw decoding, forecasts or live trading. Prior rejected scope preserved.
+
+
+F-PROT-02 repair handles initialization cancellation after valid I ACK and checks
+adjacent acquisition boundaries: child creation, registration and monitor thread
+startup. Owned child construction cleans known resources on interruption; client
+registration occurs before return and outer initialization catches BaseException
+for cleanup followed by propagation. Tests cover KeyboardInterrupt and SystemExit
+without source data. Monitor/helper/recorder constructors were inspected for
+owned-resource handoff; no broader crash-durability claim is added.

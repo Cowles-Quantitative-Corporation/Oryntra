@@ -90,3 +90,61 @@ Next integration is a reviewed native-protocol client binding these primitives
 to the worker's final acknowledgment and sticky failure telemetry. Archive decode,
 raw feeds, model activation and live trading remain absent. No default source
 profile or empirical workload is enabled by importing this package.
+
+## Disabled ACK/state-adoption client and bounded failure evidence
+
+`runtime.client.SupervisedClient` now connects the accepted bounded transport to
+owned-worker supervision. It is disabled by default, requires an explicit
+hash-checked native executable, reader, `FailureRecorder` and declared runtime
+manifest identity. The fixed engineering source/profile/lanes/snapshot schedule
+match the existing native worker. Those dormant caps are not newly qualified
+full-session limits or authority to feed raw data. No data path or decoder is
+installed. Tests use sparse invented frames with the existing source namespace
+as a protocol constraint, not a claim of recorded observations.
+
+Each I/P/S/F ACK binds global sequence, lane, request-frame SHA, cumulative stream
+prefix, expected lane digest and aggregate root. S also compares the full oracle
+snapshot. Pending Python state is adopted only after validation. Missing,
+unsolicited, reordered, mismatched or uncertain ACKs poison the entire client;
+there is no partial restart or replay queue. `finish()` needs matching F, clean
+exit/group custody, final monitor checks and a clear telemetry latch. There is
+no successful completion merely because the worker exited zero.
+
+First cause and last attempted/ACK/adopted state are captured before cleanup.
+Foreground failure or context exit attempts one exclusive, bounded 4 KiB failure
+record after cleanup. Capture itself has no callback I/O; a watchdog failure is
+only in memory until foreground abort/exit persists it. The accepted recorder
+reports `WRITTEN_NO_FSYNC_OR_ATOMIC_FAILURE_GUARANTEE`: this is best-effort saved
+evidence, not guaranteed crash durability. Persist failure retains the primary
+cause and `UNAVAILABLE_OR_PARTIAL_WRITE`, never a completion claim. Repeated abort
+does not replace the first record. The caller must provide a dedicated existing
+output directory; no raw bytes, prices or credentials belong in this telemetry.
+
+The runtime-manifest digest binds a declared identity through the wire/root; the
+client does not attest every file referenced by that manifest. Binary hash checks
+are local snapshot checks, not a hostile concurrent replacement defense. New
+executables need independently reviewed identities. Native supervisor callbacks,
+ACK and adopted state are timestamped views, not a single atomic global snapshot.
+No new score, policy, source subscription or forecast/trade consumer is enabled.
+
+
+Cancellation repair: protocol-F completion is provisional (`protocol_finished`),
+not authoritative `finished`. The client sets its verified-completion flag only
+after final supervision, custody release and result readback. `finish()` catches
+`BaseException` for synchronous cleanup and then re-raises the original interrupt
+or system exit. Context exit requires verified release rather than trusting a
+provisional flag. A second interruption of cleanup is recorded as secondary;
+this is not a guarantee of cleanup under repeated interruption or process crash.
+No further resource callback is introduced after verification to manufacture a
+completion. Failure remains fail-closed even after the leader was already reaped.
+
+Constructor cancellation repair: initialization uses the same cleanup-and-reraise
+path as finalization. `OwnedProcess` protects a known created child if Popen or
+registration is interrupted, and invokes `on_created` before returning so the
+client retains custody across the assignment/configuration handoff. The monitor
+already registers through `on_created` before its initial sample/thread start.
+If low-level creation or a second interruption leaves custody uncertain, cleanup
+uncertainty is retained; no unrelated identity is signaled and no success is
+claimed. Neither interruption nor system exit is converted into normal success.
+The low-level registration hook is needed by callers that require a cleanup
+reference before the constructor result is assigned.
