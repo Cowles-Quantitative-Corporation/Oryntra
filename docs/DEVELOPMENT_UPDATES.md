@@ -28,3 +28,36 @@ Synthetic and engineering checks establish the checked behavior, not predictive 
 ## Local verification
 
 From `server`, run `PYTHONPATH=. python -m pytest tests`. Optional Gamma model tests use `requirements-research.txt`. Delta native checks retain C++17, ASan and UBSan on macOS; see the package README. From `ios-app`, run `flutter analyze` and `flutter test`. These checks do not sign, deploy or publish a mobile build.
+
+
+## Delta portable reader increment — local review pending
+
+Added disabled byte-authentication and file-descriptor custody in
+`server/backend/delta/volume/source_reader.py`, with temporary synthetic tests in
+`server/tests/research/delta/test_source_reader.py`. Exact size/hash/EOF and final
+identity are checked under mandatory sampled resource guards; descriptor-close
+and final-guard failures cannot return a completion receipt. The reader emits
+metadata only, not decoded feed events. No process supervisor, raw-source runner,
+forecast/trading activation or historical workload is installed or executed.
+
+Bounds remain 600 seconds cooperative wall, 512 MiB sampled combined RSS, 2 GiB
+free-space reserve and 1 MiB reads. OS probe authenticity and unsampled peaks are
+not guaranteed; full process-tree supervision remains unfinished. Review and
+synthetic tests precede publication of this increment. Existing dataset and
+immutable research artifacts remain at their local paths. No public legal or
+business terms changed.
+
+
+Reader prepublication repair F-SRC-01 revalidates the held descriptor after the
+last in-custody probe and the pathname after the final post-close probe. Late
+replacements, in-place writes/truncation, unlink and symlink swaps now reject;
+primary I/O errors retain secondary close evidence. Receipt identity is a
+last-check snapshot, never a guarantee against later external changes. Focused
+tests pass; the full Delta checks use the repository pytest environment plus the
+existing research environment for its installed sklearn comparison. No new
+dependency, source run or publication accompanies the local repair.
+
+Final deadline repair F-SRC-02 adds a monotonic-clock check after final path stat,
+with no additional resource callback. A controlled-clock regression covers both
+normal completion and a stat returning at the exact deadline; expired completion
+rejects while preserving the final identity snapshot semantics.
