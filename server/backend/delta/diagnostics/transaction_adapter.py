@@ -4,9 +4,9 @@ This is not called by v1.4 or any broker. It provides inspectable B06 contract
 evidence, not acceptance of the B02/B03 trade-affecting adapter.
 """
 from copy import deepcopy
-from backend.delta.diagnostics.diagnostic_gate import evaluate,decimal
+from backend.delta.diagnostics.diagnostic_gate import evaluate,decimal,fee
 from backend.delta.diagnostics.risk_math import digest,ns
-from backend.delta.diagnostics.arithmetic_policy import controlled,SPEC
+from backend.delta.diagnostics.arithmetic_policy import controlled,SPEC,validate_external
 
 
 @controlled
@@ -29,6 +29,25 @@ def admit_synthetic(ledger,market_snapshot,proposal,profile,cov,scenarios,*,eval
                                         step=o.get('step','1'),limit=o['limit'],at_ns=state['clock'],
                                         status='CANCEL_PENDING' if o['status']=='CANCEL_PENDING' else 'OPEN'))
     first=evaluate(snapshot,proposal,profile,cov,scenarios,evaluation_time)
+    if first['decision']=='NOT_EVALUABLE':return first
+    # The pure gate uses one profile fee for every pending parent. Do not expose
+    # that valuation or reserve a new order when stored commitments differ.
+    # Mapping blockers above deliberately retain precedence over this check.
+    unresolved=[o for o in state['orders'].values() if o['status']!='TERMINAL']
+    if unresolved:
+        def fee_contract(spec):
+            fee(decimal('0'),spec)  # Reuse the existing aggregation/domain rules.
+            return (spec['aggregation'],*(validate_external(spec[k])
+                    for k in ('rate','minimum','quantum')))
+        try:
+            incoming=fee_contract(profile['fee'])
+            stored=[fee_contract(o['fee']) for o in unresolved]
+        except (ValueError,KeyError,TypeError,ArithmeticError) as exc:
+            return dict(decision='NOT_EVALUABLE',missing=['INVALID_PENDING_FEE_CONTRACT:'+str(exc)],
+                        metrics={},action_authorized=False)
+        if any(contract!=incoming for contract in stored):
+            return dict(decision='NOT_EVALUABLE',missing=['PENDING_FEE_CONTRACT_MISMATCH'],
+                        metrics={},action_authorized=False)
     if first['decision']!='PASS_RESEARCH':return first
     # Re-evaluate the *same source snapshot* at the explicit later clock. Do not
     # refresh an old source by assigning commit time to its timestamps.

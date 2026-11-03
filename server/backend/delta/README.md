@@ -236,3 +236,21 @@ the existing research environment. No dependency installed, actual vendor file,
 reserved target, new prediction, score or source profile activation. The returned
 source hash authenticates supplied bytes, not upstream capture/PIT or valid use
 rights. This local increment awaits independent review before publication.
+
+
+## Synthetic pending fee compatibility
+
+The disabled `diagnostics.transaction_adapter.admit_synthetic` bridge supports
+unresolved unfilled parents only when their stored fee semantics match the new
+profile: aggregation, rate, minimum and quantum. Numeric spelling, profile ID
+and unrelated metadata do not define compatibility. Partial-parent mapping
+remains unqualified. Terminal parents are excluded; their existing holdings and
+payables remain in risk valuation.
+
+Existing mapping blockers and pure-gate `NOT_EVALUABLE` results retain precedence.
+A different or invalid stored fee yields a fresh `NOT_EVALUABLE` with empty
+metrics before any reservation. Incompatible valuation may be computed internally
+by the pure gate, but is neither exposed nor committed. This does not implement
+heterogeneous fee valuation, change tariffs, establish broker applicability or
+claim improved economic performance. Direct pure-gate calls have no stored-ledger
+fee context and are unchanged.
