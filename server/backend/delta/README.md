@@ -385,3 +385,47 @@ and account with synthetic labels/quotes; benchmark and control values in those
 fixtures are invented. Real source compatibility, exact-run authority and result
 audit remain separate gates. No historical reference replay is qualified by this
 implementation, and no net-value, alpha or Sharpe improvement is claimed.
+
+## Disabled reference-mean / full-risk sensitivity adapter
+
+`research.mean_sensitivity` implements one separate artificial cross-policy
+adapter. It reads the recorded reference mean, while retaining the **full model's**
+original native residual observations, as-of identities, missing masks and exact
+tail/uncentered-moment inputs. Full errors are not relabeled as reference errors.
+Mean source, residual-bank source and consumer identities are distinct; every
+proposal/report says `artificial_uncertainty_proxy=True` and
+`calibrated_reference_risk=False`. Both accepted own-risk consumers remain
+unchanged and reject the cross wrapper.
+
+`FullResidualBank` takes supplied bytes and explicit context, authenticates the
+full seven-source closure and R46 evidence, restores the original typed full
+ledger, and compares every declared cutoff's exact residual tuple, original IDs
+and missing counts. The real scope binds the previously accepted R46 result and
+audit hashes. It performs no market-file reads, new fitting or reference-error
+rederivation. Preserved code bindings are required; test fixtures are explicitly
+synthetic. No historical risk-bank qualification or replay follows from them.
+
+The reference mean enters **before** the proportional precheck and economic
+limit, native mean/lower receipt and sizing, and strict mean/lower-exit price and
+price-dependent fee calculations. A fixed bank does not imply a fixed lower-exit
+price, exposure, cash or realized portfolio risk. Original zero-missing and
+30-observed gates, strict whole-share costs, free-cash shadow denominator and
+account lifecycle are preserved. As-of selection uses the forecast information
+cutoff, even if a label is known by later entry; future unavailable labels cannot
+change earlier order instructions. Retrospective archive hashes are separately
+labeled and excluded from causal forecast identity.
+
+Optional pinned-code tests use the same `DELTA_FROZEN_CODE_ROOT` environment as
+above. They exercise equal-input native/strict and account-trace parity through
+partial fill, expiry, required exit and settlement; mean and bank perturbations;
+valid gapped-source future-label cases; exact missing/availability boundaries;
+both own-risk guard rejections; price/support/zero-moment domains and quantity
+ties. All prices, labels and coefficients in those tests are invented.
+
+This is disabled synthetic implementation only, not a historical runner. The
+planned single-cell primary contrast is all-period liquidation-mark wealth
+versus the preserved full/full policy. It is a conditional mean intervention
+under an artificial uncertainty proxy, not calibrated risk or general alpha.
+A second cross-cell would be needed for interaction/order sensitivity; Sharpe
+contrasts are not additive accounting. No historical execution, adoption,
+reserved-data release or live/external-paper activation is authorized here.
