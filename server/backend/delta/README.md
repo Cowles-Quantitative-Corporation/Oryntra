@@ -310,3 +310,36 @@ Qualifier publication handles short raw writes until the complete payload is
 written, rejects zero/invalid progress, and verifies staged size and SHA-256 against
 the encoded payload before terminal linking. This is a staged-content check, not
 a guarantee against arbitrary later external filesystem mutation.
+
+## Disabled isolated recorded-reference consumer
+
+`research.reference_consumer` is a separate, explicitly enabled research consumer;
+there is no historical launcher or market reader. It authenticates an accepted
+qualification and its source-record/calendar bytes, restores exact `Fraction`
+residuals, and checks original-attempt membership and missing masks at each cutoff.
+Recorded-reference forecasts, candidates, plans and reports have distinct identities.
+The full-model consumer and its identity guards are unchanged.
+
+Explicit hash-checked preserved code bindings reuse the original anchor validator,
+proportional economic precheck, empirical tail/second-moment sizing, strict whole-share
+fee wrapper and underlying unified account loop. The scenario builds reference
+candidates itself instead of invoking the full-model scenario's candidate/attribution
+builder. Admission uses a fresh empty shadow funded by **free settled cash minus
+reservations**, preserving the original denominator and 2% shadow loss budget;
+actual portfolio post-cost caps, partial fills, retries and required exits remain
+in the existing account machinery. No cheaper fees or full-fill assumption is added.
+
+Portable tests exercise disabled/plan guards. Optional pinned-code integration tests
+use only invented forecasts, labels and quotes; set `DELTA_FROZEN_CODE_ROOT` to the
+separately preserved code root and run, from the repository:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=server:server/tests/research/delta python -m unittest test_reference_consumer -v
+```
+
+No preserved source payload is bundled or loaded by those fixtures. This is synthetic
+consumer qualification pending independent review, **not** historical R48 replay
+parity or a paired policy result. Availability remains modeled/publication-unattested;
+adjusted open-to-terminal-close residuals are not execution fill returns. A separate
+bounded replay decision and exact full-control parity are required before economic
+interpretation. Live and external-paper authorization remain false.
