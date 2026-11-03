@@ -254,3 +254,29 @@ by the pure gate, but is neither exposed nor committed. This does not implement
 heterogeneous fee valuation, change tariffs, establish broker applicability or
 claim improved economic performance. Direct pure-gate calls have no stored-ledger
 fee context and are unchanged.
+
+
+## Disabled reference-own-risk prerequisite
+
+`research.reference_ledger.derive_reference_ledger` is a pure, disabled-by-default
+validator/deriver for supplied byte-pinned source bundles. It has no file reader,
+portfolio runner, model fit or admission path. Source closure, full-record and
+per-asset attempt identities, adjusted OPEN-to-terminal-close basis, modeled
+maturity, missingness and numeric crosschecks must validate before immutable
+reference rows are returned. Invalid inputs raise `ValueError` with a
+`NOT_EVALUABLE` reason; no partial ledger is returned.
+
+Reference identities differ from full-model identities. Exact rational arithmetic
+uses the preserved native decimal rendering of decoded numeric inputs; the fixed
+legacy-error validation tolerance is 1e-12. This does not recover unrounded prices.
+Due-but-unavailable labels remain missing at each cutoff, even when the global
+source contains every outcome. No historical input has been qualified by the
+synthetic tests. Recorded publication remains unattested, terminal labels are
+not execution returns, and the original full-model guards remain unchanged.
+This component is a prerequisite for a separately reviewed forecast-plus-own-risk
+policy comparison, not evidence of improved forecasting, net value or Sharpe.
+
+Reference label timestamps accept explicit ISO seconds with up to nine fractional
+digits and `Z` or a whole-minute numeric UTC offset. Nanoseconds are parsed
+exactly; unsupported precision is rejected. Expected-open equality is exact,
+so a label declared one nanosecond later cannot become available early.
