@@ -343,3 +343,45 @@ parity or a paired policy result. Availability remains modeled/publication-unatt
 adjusted open-to-terminal-close residuals are not execution fill returns. A separate
 bounded replay decision and exact full-control parity are required before economic
 interpretation. Live and external-paper authorization remain false.
+
+## Disabled reference-only replay preparation
+
+`research.reference_replay` supplies one explicitly disabled runner for the
+recorded-reference forecast **plus its own risk calibration**, using the accepted
+consumer and original account/lifecycle. It does not rerun the accepted full
+control, refit models, alter fees, force exposure or authorize trading.
+
+A reviewed exact one-attempt receipt binds code/config/source identities before
+historical path operations. The fixed real scope accepts only the previously
+qualified reference bank and accepted April control/cache identities. Private
+configuration and all result/price/model data stay outside published source.
+Import/help/config validation do not read configured historical files.
+
+The runner uses the original readonly SQLite query and decoder, rejects WAL,
+SHM/rollback sidecars or non-DELETE journal mode, validates strict source ordering
+and complete sessions, preserves transition/final closes, and checks every one
+of the 147 underlying source anchors against the accepted control. Raw-row and
+decoded-event digests are **new run provenance**, not a preexisting historical
+control digest. Source authentication is a checked snapshot, not perpetual
+pathname or concurrent-writer custody.
+
+Native economic abstention (including zero orders) is a valid complete outcome.
+Missing held marks retain all expected-day rows and make comparison NOT_EVALUABLE;
+no partial-period aggregate performance is published. Source/resource failure and
+uncertain publication have separate statuses. Independent state means independent
+cash, holdings, pending orders and displayed capacity; exposure differences are
+outcomes, not forced controls or alpha evidence.
+
+Fixed proposed limits are 360 cooperative seconds, 512 MiB sampled process-peak
+RSS, 128 MiB logical output and a 2 GiB disk reserve. Logical bytes count both
+retained hardlink names plus failure headroom. Existing guarded write/commit
+helpers preserve confirmed completion and distinguish uncertain links. Blocking
+operations can overrun between checks; these are not hard peak/deadline or crash
+and repeated-interruption guarantees. No child processes are spawned.
+
+Only invented archives are tested here. Optional code-bound tests reuse
+`DELTA_FROZEN_CODE_ROOT` as above and exercise the actual native decoder, consumer
+and account with synthetic labels/quotes; benchmark and control values in those
+fixtures are invented. Real source compatibility, exact-run authority and result
+audit remain separate gates. No historical reference replay is qualified by this
+implementation, and no net-value, alpha or Sharpe improvement is claimed.
