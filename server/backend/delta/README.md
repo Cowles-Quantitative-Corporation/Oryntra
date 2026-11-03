@@ -280,3 +280,33 @@ Reference label timestamps accept explicit ISO seconds with up to nine fractiona
 digits and `Z` or a whole-minute numeric UTC offset. Nanoseconds are parsed
 exactly; unsupported precision is rejected. Expected-open equality is exact,
 so a label declared one nanosecond later cannot become available early.
+
+
+## Disabled one-shot reference source qualifier
+
+`research.qualify_reference` is one script calling the pure reference component.
+Import/help/config-only modes perform no historical source I/O. An explicit exact
+authority receipt must bind operation, scope, config and code before source reads,
+stats or hashes. Receipts are reviewed scope records, not cryptographic authority.
+No historical execution receipt or source payload is bundled.
+
+The script authenticates the exact supplied bytes and rehashes before completion.
+It compares every R46 asset/cutoff membership and missing-ID set through ORIGINAL
+attempt identities, not counts alone. Actuals, residuals and rows belong only in
+ignored local outputs; no economic values are emitted in summaries. Historical
+outputs must be confined to `local-artifacts`; synthetic tests use temporary paths.
+
+Fixed guards are 60 seconds cooperative wall, 256 MiB sampled process-peak readings,
+5 MiB aggregate logical output (including retained pending/final hardlink bytes
+and failure headroom), and a 2 GiB disk reserve. Blocking operations may overrun
+between checks. Resource claims end at reported samples; final hardlink completion
+may occur later. Confirmed completion is not relabeled failed. Publication identity
+uncertainty is reported separately, with best-effort bounded evidence and no
+automatic retry. These are neither hard peak limits nor crash/repeated-interruption
+durability guarantees. Only invented bundles have been exercised; actual source
+qualification, policy integration and economic evaluation remain unapproved.
+
+Qualifier publication handles short raw writes until the complete payload is
+written, rejects zero/invalid progress, and verifies staged size and SHA-256 against
+the encoded payload before terminal linking. This is a staged-content check, not
+a guarantee against arbitrary later external filesystem mutation.
