@@ -450,3 +450,24 @@ state, fees, partial fills, retries, exits and settlement remain intact.
 Synthetic tests use invented archives and optional preserved code bindings;
 no historical replay or protected-data qualification follows from their success.
 Any empirical invocation needs a separately reviewed exact one-attempt receipt.
+
+
+### Synthetic-only WAL transaction projection
+
+`research/synthetic_wal_projection.py` is disabled by default and accepts only
+explicitly bound invented fixtures under an owned temporary root. It provides
+no actual-source mode or CLI. The existing DELETE-only source opener is unchanged.
+
+`BEGIN` alone does not establish a SQLite read snapshot: the first schema SELECT
+anchors it. All schema, key-roster and whitelisted value reads then use the same
+connection and transaction. The reader closes before exclusive publication via
+the existing guarded publisher. Tests include committed WAL-only rows, commits
+before and after the anchor, poison rows, busy/cancellation paths and publication
+uncertainty. SQLite callback errors retain the original guard/cancellation cause.
+
+This qualifies a small synthetic method, not historical input readiness or source
+ownership. Read-only WAL access may affect coordination files or checkpoint
+progress. No immutable URI, main-file copy, journal-mode change, checkpoint or
+manual source-sidecar deletion is used. No continuous-custody, hard resource,
+crash/repeated-interruption, point-in-time authenticity or real-source-access
+guarantee follows from these tests.
