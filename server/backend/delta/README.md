@@ -504,3 +504,26 @@ counts are not newly verified. Native consumer checks remain unchanged.
 No real-source query is authorized or qualified by this component. Source
 ownership, exact schema/selector, transaction/custody, row bounds, protected-data
 scope and access authority require separate review before any empirical use.
+
+
+### Frozen-fit Beta clock mechanism check
+
+`research/beta_clock_sensitivity.py` is a pure, explicitly invoked research
+component with no model or trading consumer. `analyze` verifies the original
+seven-asset and feature ordering, source/version identities, recorded baseline
+and reconstructed-state binding before substituting both Beta probability and
+centered-score interaction blocks. `reconstruct` preserves the saved coefficients,
+normalization, clipping, OOF scale, Alpha and common reference, including both
+cross-sectional centering stages. Inputs are not mutated and no fitting occurs.
+
+Tests in `tests/research/delta/test_beta_clock_sensitivity.py` use invented fits
+and independent scalar arithmetic. Historical source authentication, selective
+projection and exact-run authority are separate private research boundaries;
+this pure component does not establish them or authorize data access. No target,
+MSE, admission, order sizing, fill or portfolio calculation is performed.
+
+The output is an artificial fixed-fit input sensitivity: original-clock training
+remains fixed. Invariance can rule out only the selected event's current-input
+mechanism through that fit; a nonzero response establishes no predictive or
+clock-policy improvement, economic edge or Sharpe improvement. A descriptive
+mean-gap ratio is not a fraction of portfolio performance explained.
