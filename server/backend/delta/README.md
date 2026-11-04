@@ -471,3 +471,36 @@ progress. No immutable URI, main-file copy, journal-mode change, checkpoint or
 manual source-sidecar deletion is used. No continuous-custody, hard resource,
 crash/repeated-interruption, point-in-time authenticity or real-source-access
 guarantee follows from these tests.
+
+
+### Synthetic-only Beta metadata query contract
+
+`research/beta_metadata_contract.py` is a disabled pure contract: fixed 22-series
+SQL text and a bounded supplied-header inventory, with no database connector, CLI,
+file access, economic values, probabilities or runtime consumer. Its SQL filters
+only series, so null and malformed clock headers cannot disappear in a date
+predicate. Tests use invented rows and owned SQLite fixtures with an authorizer
+that denies value-bearing columns and unrelated tables.
+
+A separately pinned seed commitment binds source/schema/selector identity, the
+full supplied per-observation version roster and its metadata digest. It proves
+consistency with that supplied manifest, not completeness or physical-source
+authentication. Carried rows, new vintages, future headers and unresolved vintage
+metadata remain distinct from per-cutoff eligibility: a new vintage can be
+pending, and a carried seed can be unavailable. Duplicate and conflicting rows
+retain their source-row identities; bounded diagnostics never silently truncate
+a successful inventory. ALFRED observations later than their realtime vintage
+are retained as source-ordering anomalies and cannot become available through
+later clocks. Observation-dated FRED retains its separate equality contract. The fixture limits are 256 rows and 128 diagnostics.
+
+Eligibility is conditional declared metadata for the supplied clock contexts,
+not native consumer acceptance. Session opens are explicit; midnight is not
+treated as an open, and timestamp comparisons preserve nanoseconds. This does
+not validate every historical session open, publication vintage, numerical
+training support, fresh Beta artifact or May readiness. Missing disposition is
+unknown, open-ended vintage intervals remain open, and declared gap/quarantine
+counts are not newly verified. Native consumer checks remain unchanged.
+
+No real-source query is authorized or qualified by this component. Source
+ownership, exact schema/selector, transaction/custody, row bounds, protected-data
+scope and access authority require separate review before any empirical use.
