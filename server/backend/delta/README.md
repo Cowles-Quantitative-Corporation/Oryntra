@@ -429,3 +429,24 @@ under an artificial uncertainty proxy, not calibrated risk or general alpha.
 A second cross-cell would be needed for interaction/order sensitivity; Sharpe
 contrasts are not additive accounting. No historical execution, adoption,
 reserved-data release or live/external-paper activation is authorized here.
+
+
+### Disabled artificial shared-risk replay entry point
+
+`research/mean_sensitivity_replay.py` is a separate, disabled thin entry point
+for the accepted reference-mean/full-residual sensitivity consumer. It composes
+unchanged reference replay authentication, ordered SQLite decoding, anchors,
+account loop and publication helpers. It does not change the own-reference runner.
+Exact config/code/source authority precedes source reads; the original full bank
+must match its R46 proof at every declared cutoff. Source validation is observed
+snapshot/boundary checking, not continuous custody. Resource limits remain
+cooperative/sampled, not hard peak bounds.
+
+The primary descriptive contrast is exact terminal liquidation-mark wealth
+against the accepted full/full control. Missing held marks make the comparison
+not evaluable, with no partial-period primary result. Full-model residuals are an
+**artificial uncertainty proxy**, never calibrated reference risk. Independent
+state, fees, partial fills, retries, exits and settlement remain intact.
+Synthetic tests use invented archives and optional preserved code bindings;
+no historical replay or protected-data qualification follows from their success.
+Any empirical invocation needs a separately reviewed exact one-attempt receipt.
